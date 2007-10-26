@@ -1,0 +1,38 @@
+<?php
+// og_menu.install
+
+function og_menu_install() {
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      // the {tablename} syntax is so multisite installs can add a
+      // prefix to the table name as set in the settings.php file
+      db_query("CREATE TABLE {og_menu} (
+          mid int unsigned NOT NULL default '0',
+          gid int unsigned NOT NULL default '0',
+          is_primary tinyint unsigned NOT NULL default '0',
+          parent_mid int unsigned NOT NULL default '0',
+          weight int NOT NULL default '0',
+          PRIMARY KEY  (mid)
+        ) /*!40100 DEFAULT CHARACTER SET utf8 */;");
+      break;
+
+    case 'pgsql':
+      db_query("CREATE TABLE {og_menu} (
+          mid integer NOT NULL default '0' CHECK (mid >= 0),
+          gid  integer NOT NULL default '0' CHECK (gid >= 0),
+          is_primary integer NOT NULL default '0' CHECK (is_primary >= 0),
+          parent_mid integer NOT NULL default '0' CHECK (parent_mid >= 0),
+          weight integer NOT NULL default '0',
+          PRIMARY KEY  (mid)
+        )");
+
+      // Pgsql requires keys and indexes to be defined separately.
+      // It's important to name the index as {tablename}_fieldname_idx
+      // (the trailing _idx!) so update scripts can be written easily
+      db_query("CREATE INDEX {og_menu}_mid_idx
+                ON {og_menu} (mid)");
+      break;
+  }
+}
+?>
