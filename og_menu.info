@@ -1,5 +1,0 @@
-; $Id$
-name = "OG Menu"
-description = "Provides flexible menu control based on organic groups"
-dependencies = menu og
-package = "Organic groups"
