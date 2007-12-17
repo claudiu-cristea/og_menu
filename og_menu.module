@@ -107,7 +107,8 @@ function og_menu_menu($may_cache){
       'type' => MENU_CALLBACK);
     $items[] = array('path' => 'admin/build/menu/item/disable',
       'title' => t('Disable menu item'),
-      'callback' => 'menu_disable_item',
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('menu_confirm_disable_item'),
       'access' => user_access('administer og menus'),
       'type' => MENU_CALLBACK);
     $items[] = array('path' => 'admin/build/menu/item/delete',
@@ -372,9 +373,6 @@ function og_menu_check_block_status(){
     if ($data->weight != $array['weight']){
       db_query('UPDATE {blocks} SET weight = %d WHERE delta = %d', $array['weight'], $mid);
     }
-    if ($data->region != 'left'){
-      db_query('UPDATE {blocks} SET region = "%s" WHERE delta = %d', 'left', $mid);
-    }
     if ($data->visibility != 2){
       db_query('UPDATE {blocks} SET visibility = %d WHERE delta = %d', 2, $mid);
     }
@@ -401,19 +399,26 @@ function _check_block_status_generate_visibility($gid){
   if (!empty(\$nid) && arg(0) != 'admin' && arg(0) != 'user' && arg(1) != 'add'){
     \$node = node_load(\$nid);
   }
+
   \$groups = \$node->og_groups;
+  if(empty(\$groups) && og_menu_is_group_type(\$node->type) === TRUE){
+    \$groups = (int) \$node->nid;
+  }
 
   if (isset(\$groups)){
-    if (\$groups[0] == $gid){
+    if (is_array(\$groups) && \$groups[0] == $gid){
       return TRUE;
     }
+    elseif(is_numeric(\$groups) && \$groups == $gid) {
+      return TRUE;
+    }
+    else {
+      return FALSE;
+    }
+  }
   else {
     return FALSE;
   }
-}
-else {
-  return FALSE;
-}
 
 ?>";
 
@@ -444,6 +449,13 @@ function _generate_menu_listing(){
   }
 
   return $og_menus;
+}
+
+function og_menu_is_group_type($type){
+  if(module_exists('og')){
+    return og_is_group_type($type);
+  }
+  return false;
 }
 
 /**
