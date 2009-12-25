@@ -12,6 +12,9 @@
  * Review security
  */
 
+define ('OG_MENU_MULTIPLE', 0);
+define ('OG_MENU_SINGLE', 1);
+
 /**
  * Implementation of hook_perm().
  */
@@ -135,37 +138,62 @@ function theme_og_menu_node_form($form) {
 /**
  * Implementation of hook_block().
  */
-function og_menu_block($op = 'list', $delta = 0) {
+function og_menu_block($op = 'list', $delta = 0, $edit = array()) {
   if ($op == 'list') {
     $blocks[0] = array('info' => t('OG Menu'), 'cache' => BLOCK_NO_CACHE);
     return $blocks;
   }
+  else if ($op == 'configure') {
+    $form['og_menu_multiple'] = array(
+      '#type' => 'radios',
+      '#title' => t('Number of menus to show'),
+      '#default_value' => variable_get('og_menu_multiple', OG_MENU_MULTIPLE),
+      '#options' => array(OG_MENU_MULTIPLE => t('Show all menus'), OG_MENU_SINGLE => t('Show only one menu')),
+      '#description' => t('Choose whether you want to display all possible menus for the current context or simply display the first available menu.'),
+    );
+    return $form;
+  }
+  else if ($op == 'save') {
+    variable_set('og_menu_multiple', $edit['og_menu_multiple']);
+  }
   else if ($op == 'view') {
-    // Get all groups associated with the current node
-    $node = menu_get_object();
-    $gids = array();
-    if ($node) {
-      if (og_is_group_post_type($node->type)) {
-        $gids = $node->og_groups;
+    // Show all associated menus
+    if (variable_get('og_menu_multiple', OG_MENU_MULTIPLE) == OG_MENU_MULTIPLE) {
+      // Get all groups associated with the current node
+      $node = menu_get_object();
+      $gids = array();
+      if ($node) {
+        if (og_is_group_post_type($node->type)) {
+          $gids = $node->og_groups;
+        }
+        else if (og_is_group_type($node->type)) {
+          $gids = array($node->nid);
+        }
       }
-      else if (og_is_group_type($node->type)) {
-        $gids = array($node->nid);
+      // If no group was found, fallback to the regular og_get_group_context 
+      // function. Unfortunately, this function only returns one group.
+      if (empty($gids)) {
+        $group = og_get_group_context();
+        $gids = array($group->nid);
       }
+      $menus = og_menu_get_menus($gids);
+      foreach ($menus as $menu) {
+        $block = new stdClass();
+        $block->module = 'og_menu';
+        $block->delta = $delta .'-'. $menu['menu_name'];
+        $block->subject = check_plain($menu['title']);
+        $block->content = menu_tree($menu['menu_name']);
+        $content .= theme('block', $block);
+      }
+      return array('content' => $content);
     }
-    // If no group was found, fallback to the regular og_get_group_context 
-    // function. Unfortuantely, this function only returns one group.
-    if (empty($gids)) {
+    // Show only the first available menu. Markup will be cleaner.
+    else {
       $group = og_get_group_context();
-      $gids = array($group->nid);
+      $menus = og_menu_get_menus(array($group->nid));
+      $menu = array_shift($menus);
+      return array('subject' => check_plain($menu['title']), 'content' => menu_tree($menu['menu_name']));
     }
-    $menus = og_menu_get_menus($gids);
-    foreach ($menus as $menu) {
-      $block = new stdClass();
-      $block->subject = check_plain($menu['title']);
-      $block->content = menu_tree($menu['menu_name']);
-      $content .= theme('block', $block);
-    }
-    return array('content' => $content);
   }
 }
 
@@ -259,35 +287,35 @@ function og_menu_form_alter(&$form, $form_state, $form_id) {
  * Implementation of hook_nodeapi().
  */
 function og_menu_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
-	if (og_is_group_type($node->type)) {
-	  switch ($op) {
-	    case 'insert':
-	    	if ($node->og_menu) {
-	      	db_query("INSERT INTO {menu_custom} (menu_name, title, description) VALUES ('%s', '%s', '%s')", 'menu-og-'. $node->nid, $node->title, t('Menu for') .' '. check_plain($node->title));
-	      	og_menu_update_menu('menu-og-'. $node->nid, $node->nid);
-	      }
-	      break;
-	    case 'update':
-	      if ($node->og_menu) {
-	        $menu = og_menu_get_menus(array($node->nid));
-	        if (empty($menu)) {
-	          db_query("INSERT INTO {menu_custom} (menu_name, title, description) VALUES ('%s', '%s', '%s')", 'menu-og-'. $node->nid, $node->title, t('Menu for') .' '. check_plain($node->title));
-	          og_menu_update_menu('menu-og-'. $node->nid, $node->nid);
-	        }
-	      }
-	      else {
-	        db_query("DELETE FROM {menu_custom} WHERE menu_name = '%s'", 'menu-og-'. $node->nid);
-	        og_menu_update_menu('menu-og-'. $node->nid);
-	      }
-	      break;
-	    case 'prepare':
-	      $node->og_menu = og_menu_get_menus(array($node->nid));
-	      break;
-	    case 'delete':
-	      db_query("DELETE FROM {menu_custom} WHERE menu_name = '%s'", 'menu-og-'. $node->nid);
-	      og_menu_update_menu('menu-og-'. $node->nid);
-	      break;
-	  }
+  if (og_is_group_type($node->type)) {
+    switch ($op) {
+      case 'insert':
+        if ($node->og_menu) {
+          db_query("INSERT INTO {menu_custom} (menu_name, title, description) VALUES ('%s', '%s', '%s')", 'menu-og-'. $node->nid, $node->title, t('Menu for') .' '. check_plain($node->title));
+          og_menu_update_menu('menu-og-'. $node->nid, $node->nid);
+        }
+        break;
+      case 'update':
+        if ($node->og_menu) {
+          $menu = og_menu_get_menus(array($node->nid));
+          if (empty($menu)) {
+            db_query("INSERT INTO {menu_custom} (menu_name, title, description) VALUES ('%s', '%s', '%s')", 'menu-og-'. $node->nid, $node->title, t('Menu for') .' '. check_plain($node->title));
+            og_menu_update_menu('menu-og-'. $node->nid, $node->nid);
+          }
+        }
+        else {
+          db_query("DELETE FROM {menu_custom} WHERE menu_name = '%s'", 'menu-og-'. $node->nid);
+          og_menu_update_menu('menu-og-'. $node->nid);
+        }
+        break;
+      case 'prepare':
+        $node->og_menu = og_menu_get_menus(array($node->nid));
+        break;
+      case 'delete':
+        db_query("DELETE FROM {menu_custom} WHERE menu_name = '%s'", 'menu-og-'. $node->nid);
+        og_menu_update_menu('menu-og-'. $node->nid);
+        break;
+    }
   }
 }
 

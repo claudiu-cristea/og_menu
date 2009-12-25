@@ -20,6 +20,7 @@ USAGE
 - Organic group members with the right permission can also manage menus at node/[nid]/og_menu.
 - For content types that can be published in groups, users can add a menu link directly from the node creation form.
 - For groups content types, users can create an associated menu by checking "Enable menu for this group".
+- You can enable the "OG Menu" block at admin/build/block. You can configure if you want to display all available menus for the current context or only one menu (markup will be cleaner).
 
 NOTES
 -----
