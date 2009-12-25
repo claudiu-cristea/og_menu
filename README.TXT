@@ -6,13 +6,13 @@ Enable users to manage menus inside Organic Groups.
 
 REQUIREMENTS
 ------------
-- Organic Groups module.
+- Organic Groups module (http://drupal.org/project/og).
 - Menu module.
 
 INSTALLATION
 ------------
 - Enable the module.
-- Give "administer og menu" permission to dsired roles.
+- Give "administer og menu" permission to the desired roles.
 
 USAGE
 -----
