@@ -5,13 +5,11 @@
  * @file
  * Integrates Menu with Organic Groups.
  * Lots of menu forms duplication in OG context.
- *
+ */
+
+/**
  * @todo
- * Add validation handlers
  * Review security
- * Add to README : "Be aware that since menu administration forms are simply duplicated, if a contrib module adds functionality to menu 
- * administration forms without additional permissions, these additions may be available for OG menu users with 'administer og menu' permission. 
- * This could allow these users to be able to do things you don't want them to. Please report these modules if you catch one."
  */
 
 /**
@@ -261,31 +259,35 @@ function og_menu_form_alter(&$form, $form_state, $form_id) {
  * Implementation of hook_nodeapi().
  */
 function og_menu_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
-  switch ($op) {
-    case 'insert':
-      db_query("INSERT INTO {menu_custom} (menu_name, title, description) VALUES ('%s', '%s', '%s')", 'menu-og-'. $node->nid, $node->title, t('Menu for') .' '. check_plain($node->title));
-      og_menu_update_menu('menu-og-'. $node->nid, $node->nid);
-      break;
-    case 'update':
-      if (!$node->og_menu) {
-        db_query("DELETE FROM {menu_custom} WHERE menu_name = '%s'", 'menu-og-'. $node->nid);
-        og_menu_update_menu('menu-og-'. $node->nid);
-      }
-      else {
-        $menu = og_menu_get_menus(array($node->nid));
-        if (empty($menu)) {
-          db_query("INSERT INTO {menu_custom} (menu_name, title, description) VALUES ('%s', '%s', '%s')", 'menu-og-'. $node->nid, $node->title, t('Menu for') .' '. check_plain($node->title));
-          og_menu_update_menu('menu-og-'. $node->nid, $node->nid);
-        }
-      }
-      break;
-    case 'prepare':
-      $node->og_menu = og_menu_get_menus(array($node->nid));
-      break;
-    case 'delete':
-      db_query("DELETE FROM {menu_custom} WHERE menu_name = '%s'", 'menu-og-'. $node->nid);
-      og_menu_update_menu('menu-og-'. $node->nid);
-      break;
+	if (og_is_group_type($node->type)) {
+	  switch ($op) {
+	    case 'insert':
+	    	if ($node->og_menu) {
+	      	db_query("INSERT INTO {menu_custom} (menu_name, title, description) VALUES ('%s', '%s', '%s')", 'menu-og-'. $node->nid, $node->title, t('Menu for') .' '. check_plain($node->title));
+	      	og_menu_update_menu('menu-og-'. $node->nid, $node->nid);
+	      }
+	      break;
+	    case 'update':
+	      if ($node->og_menu) {
+	        $menu = og_menu_get_menus(array($node->nid));
+	        if (empty($menu)) {
+	          db_query("INSERT INTO {menu_custom} (menu_name, title, description) VALUES ('%s', '%s', '%s')", 'menu-og-'. $node->nid, $node->title, t('Menu for') .' '. check_plain($node->title));
+	          og_menu_update_menu('menu-og-'. $node->nid, $node->nid);
+	        }
+	      }
+	      else {
+	        db_query("DELETE FROM {menu_custom} WHERE menu_name = '%s'", 'menu-og-'. $node->nid);
+	        og_menu_update_menu('menu-og-'. $node->nid);
+	      }
+	      break;
+	    case 'prepare':
+	      $node->og_menu = og_menu_get_menus(array($node->nid));
+	      break;
+	    case 'delete':
+	      db_query("DELETE FROM {menu_custom} WHERE menu_name = '%s'", 'menu-og-'. $node->nid);
+	      og_menu_update_menu('menu-og-'. $node->nid);
+	      break;
+	  }
   }
 }
 
@@ -350,6 +352,7 @@ function og_menu_edit_menu_form(&$form_state, $type, $menu = array()) {
   $form['#submit'][] = 'menu_edit_menu_submit';
   $form['#submit'][] = 'og_menu_edit_menu_form_submit';
   $form['#submit'][] = 'og_menu_edit_menu_form_submit_redirect';
+  $form['#validate'][] = 'menu_edit_menu_validate';
   $form['delete']['#submit'][] = 'og_menu_delete_menu_form_submit';
   return $form;
 }
@@ -420,6 +423,7 @@ function og_menu_edit_item_form(&$form_state, $type, $item, $menu) {
   $form['#item'] = $item;
   $form['#submit'][] = 'menu_edit_item_submit';
   $form['#submit'][] = 'og_menu_redirect';
+  $form['#validate'][] = 'menu_edit_item_validate';
   $form['delete']['#submit'][] = 'og_menu_delete_item_form';
   return $form;
 }
