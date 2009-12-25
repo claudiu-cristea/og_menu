@@ -51,7 +51,7 @@ Drupal.behaviors.OGMenu = function() {
     }
     // No option is eligible, disable the menu select
     if (none) {
-    	disabledOption.appendTo('.menu-title-select');
+      disabledOption.appendTo('.menu-title-select');
       inputTitle.val('');
       inputTitle.attr("disabled", "disabled");
       inputTitle.trigger('change');
@@ -60,11 +60,11 @@ Drupal.behaviors.OGMenu = function() {
       $('.menu-title-select').val('');
     }
     else {
-    	// If an option exists with the initial value, set it. We do this because
-    	// we want to keep the original parent if user just adds a group to the node.
-    	if ($('.menu-title-select option[value='+originalParent+']')) {
-    		$('.menu-title-select').val(originalParent);
-    	}
+      // If an option exists with the initial value, set it. We do this because
+      // we want to keep the original parent if user just adds a group to the node.
+      if ($('.menu-title-select option[value='+originalParent+']')) {
+        $('.menu-title-select').val(originalParent);
+      }
     }
   };
 
@@ -87,5 +87,4 @@ Drupal.behaviors.OGMenu = function() {
 
   // Alter menu on OG checkboxes change and init
   $('.og-audience:checkbox').change(toggleCheckboxes).ready(toggleCheckboxes);
-
 }
