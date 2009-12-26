@@ -319,14 +319,6 @@ function og_menu_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
   }
 }
 
-function og_menu_node_form_edit_menu_submit($form, &$form_state) {
-  module_load_include('inc', 'menu', 'menu.admin');
-  $altered_form_state = $form_state;
-  $altered_form_state['values'] = $altered_form_state['values']['og_menu'];
-  // Tricky
-  menu_edit_menu_submit($form['og_menu'], $altered_form_state);
-}
-
 /**
  * Menu callback which shows an overview page of all the custom menus in user's groups and their descriptions.
  */
