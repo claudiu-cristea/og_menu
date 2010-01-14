@@ -206,17 +206,28 @@ function og_menu_form_alter(&$form, $form_state, $form_id) {
     // Only alter the form if user does not have the administer menu permission
     if (!user_access('administer menu') && user_access('administer og menu')) {
       $groups = array();
-      $group_options = $form['og_nodeapi']['visible']['og_groups']['#options'];
-      // Only show menus affiliated with node groups
-      foreach ($group_options as $gid => $option) {
-        // Handle checkboxes and selects
-        if (is_array($option)) {
-          $groups[] = array_shift(array_keys($option));
-        }
-        else {
-          $groups[] = $gid;
+
+      // If the user has access to more than one group, we take the options
+      // out of the OG audience form element.
+      if (!empty($form['og_nodeapi']['visible']['og_groups']['#options'])) {
+        $group_options = $form['og_nodeapi']['visible']['og_groups']['#options'];
+
+        // Only show menus affiliated with node groups
+        foreach ($group_options as $gid => $option) {
+          // Handle checkboxes and selects
+          if (is_array($option)) {
+            $groups[] = array_shift(array_keys($option));
+          }
+          else {
+            $groups[] = $gid;
+          }
         }
       }
+      // Otherwise, the user may only set to one group.
+      elseif (!empty($form['og_nodeapi']['invisible']['og_groups'])) {
+        $groups[] = $form['og_nodeapi']['invisible']['og_groups']['#value'];
+      }
+
       $list = array();
       $settings = array();
       $item = $form['menu']['#item'];
@@ -514,9 +525,11 @@ function og_menu_get_menus($gids = NULL, $user = NULL) {
     $gids = array_keys($user->og_groups);
   }
   $menus = array();
-  $result = db_query("SELECT * FROM {menu_custom} m INNER JOIN {og_menu} om ON m.menu_name = om.menu_name WHERE om.gid IN (". db_placeholders($gids, "int"). ") ORDER BY m.title", $gids);
-  while ($menu = db_fetch_array($result)) {
-    $menus[] = $menu;
+  if ($gids) {
+    $result = db_query("SELECT * FROM {menu_custom} m INNER JOIN {og_menu} om ON m.menu_name = om.menu_name WHERE om.gid IN (". db_placeholders($gids, "int"). ") ORDER BY m.title", $gids);
+    while ($menu = db_fetch_array($result)) {
+      $menus[] = $menu;
+    }
   }
   return $menus;
 }

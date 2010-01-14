@@ -83,8 +83,12 @@ Drupal.behaviors.OGMenu = function() {
   };
 
   // Alter menu on OG select change and init
-  $('select.og-audience').change(toggleSelect).ready(toggleSelect);
+  if ($('select.og-audience').size()) {
+    $('select.og-audience').change(toggleSelect).ready(toggleSelect);
+  }
 
   // Alter menu on OG checkboxes change and init
-  $('.og-audience:checkbox').change(toggleCheckboxes).ready(toggleCheckboxes);
+  if ($('.og-audience:checkbox').size()) {
+    $('.og-audience:checkbox').change(toggleCheckboxes).ready(toggleCheckboxes);
+  }
 }
