@@ -94,7 +94,7 @@ function og_menu_menu() {
   $items['node/%node/og_menu/%menu/item/%menu_link/edit']= array(
     'title' => 'Edit menu item',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('og_menu_edit_item_form', 'edit', 4, NULL),
+    'page arguments' => array('og_menu_edit_item_form', 'edit', 1, 5, NULL),
     'access callback' => 'og_menu_access',
     'access arguments' => array(1, 3),
     'type' => MENU_CALLBACK,
@@ -102,8 +102,8 @@ function og_menu_menu() {
   );
   $items['node/%node/og_menu/%menu/item/%menu_link/delete']= array(
     'title' => 'Delete menu item',
-    'page callback' => 'og_menu_delete_item_page',
-    'page arguments' => array(4),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('og_menu_delete_item_form', 5),
     'access callback' => 'og_menu_access',
     'access arguments' => array(1, 3),
     'type' => MENU_CALLBACK,
@@ -127,7 +127,7 @@ function og_menu_theme($existing, $type, $theme, $path) {
  * Theme function for node form.
  */
 function theme_og_menu_node_form($form) {
-  $menus = og_menu_get_menus($groups);
+  $menus = og_menu_get_menus();
   foreach ($menus as $menu) {
     $settings[$menu['menu_name']] = $menu['gid'];
   }
@@ -224,17 +224,26 @@ function og_menu_form_alter(&$form, $form_state, $form_id) {
         }
       }
       // Otherwise, the user may only set to one group.
-      elseif (!empty($form['og_nodeapi']['invisible']['og_groups'])) {
-        $groups[] = $form['og_nodeapi']['invisible']['og_groups']['#value'];
+      else if (!empty($form['og_nodeapi']['invisible']['og_groups'])) {
+        $groups[] = array_shift(array_keys($form['og_nodeapi']['invisible']['og_groups']['#value']));
       }
 
       $list = array();
       $settings = array();
       $item = $form['menu']['#item'];
       $menus = og_menu_get_menus($groups);
-      foreach ($menus as $menu) {
-        $list[$menu['menu_name']] = $menu['title'];
+      
+      if (!empty($menus)) {
+        foreach ($menus as $menu) {
+          $list[$menu['menu_name']] = $menu['title'];
+        }
+        $options = menu_parent_options($list, $item);
+        $form['menu']['#access'] = user_access('administer og menu');
+        $form['menu']['#theme'] = 'og_menu_node_form';
+        $form['menu']['parent']['#options'] = $options;
+        $form['#validate'][] = 'og_menu_node_form_validate';
       }
+      
       $options = menu_parent_options($list, $item);
       $form['menu']['#access'] = user_access('administer og menu');
       $form['menu']['#theme'] = 'og_menu_node_form';
@@ -355,9 +364,9 @@ function og_menu_overview_form(&$form_state, $node, $menu) {
     if (strstr($mlid, 'mlid:')) {
       $item = $form[$mlid]['#item'];
       $operations = array();
-      $operations['edit'] = l(t('edit'), 'node/'. $node->nid .'/og_menu/'. $menu['menu_name'] .'/'. $item['mlid'] .'/edit');
+      $operations['edit'] = l(t('edit'), 'node/'. $node->nid .'/og_menu/'. $menu['menu_name'] .'/item/'. $item['mlid'] .'/edit');
       if ($item['module'] == 'menu' || $item['updated'] == 1) {
-        $operations['delete'] = l(t('delete'), 'node/'. $node->nid .'/og_menu/'. $menu['menu_name'] .'/'. $item['mlid'] .'/delete');
+        $operations['delete'] = l(t('delete'), 'node/'. $node->nid .'/og_menu/'. $menu['menu_name'] .'/item/'. $item['mlid'] .'/delete');
       }
       $form[$mlid]['operations'] = array();
       foreach ($operations as $op => $value) {
@@ -442,16 +451,15 @@ function og_menu_delete_menu_confirm_submit_redirect($form, &$form_state) {
 /**
  * Menu callback; Build the menu link editing form.
  */
-function og_menu_edit_item_form(&$form_state, $type, $item, $menu) {
+function og_menu_edit_item_form(&$form_state, $type, $node, $item, $menu) {
   module_load_include('inc', 'menu', 'menu.admin');
   $form = drupal_retrieve_form('menu_edit_item', $form_state, $type, $item, $menu);
   $list = array();
-  $menus = og_menu_get_menus();
+  $menus = og_menu_get_menus(array($node->nid));
   foreach ($menus as $menu) {
     $list[$menu['menu_name']] = $menu['title'];
   }
-  $form['menu']['parent']['#options'] = menu_parent_options($list, $form['menu']['#item']);
-  $form['#item'] = $item;
+  $form['menu']['parent']['#options'] = menu_parent_options($list, $item);
   $form['#submit'][] = 'menu_edit_item_submit';
   $form['#submit'][] = 'og_menu_redirect';
   $form['#validate'][] = 'menu_edit_item_validate';
