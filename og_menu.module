@@ -27,7 +27,7 @@ function og_menu_perm() {
  */
 function og_menu_menu() {
   $items = array();
-  $items['node/%node/og_menu']= array(
+  $items['node/%node/og_menu'] = array(
     'title' => 'Menus',
     'page callback' => 'og_menu_overview_page',
     'page arguments' => array(1),
@@ -50,7 +50,7 @@ function og_menu_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 1,
   );
-  $items['node/%node/og_menu/%menu']= array(
+  $items['node/%node/og_menu/%menu'] = array(
     'title' => 'Customize menu',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('og_menu_overview_form', 1, 3),
@@ -64,7 +64,7 @@ function og_menu_menu() {
     'weight' => -10,
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
-  $items['node/%node/og_menu/%menu/add']= array(
+  $items['node/%node/og_menu/%menu/add'] = array(
     'title' => 'Add item',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('og_menu_edit_item_form', 'add', NULL, 3),
@@ -73,7 +73,7 @@ function og_menu_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 1,
   );
-  $items['node/%node/og_menu/%menu/edit']= array(
+  $items['node/%node/og_menu/%menu/edit'] = array(
     'title' => 'Edit menu',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('og_menu_edit_menu_form', 'edit', 3),
@@ -82,7 +82,7 @@ function og_menu_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 1,
   );
-  $items['node/%node/og_menu/%menu/delete']= array(
+  $items['node/%node/og_menu/%menu/delete'] = array(
     'title' => 'Delete menu',
     'page callback' => 'og_menu_delete_menu_page',
     'page arguments' => array(3),
@@ -91,7 +91,7 @@ function og_menu_menu() {
     'type' => MENU_CALLBACK,
     'weight' => 1,
   );
-  $items['node/%node/og_menu/%menu/item/%menu_link/edit']= array(
+  $items['node/%node/og_menu/%menu/item/%menu_link/edit'] = array(
     'title' => 'Edit menu item',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('og_menu_edit_item_form', 'edit', 1, 5, NULL),
@@ -100,7 +100,7 @@ function og_menu_menu() {
     'type' => MENU_CALLBACK,
     'weight' => 1,
   );
-  $items['node/%node/og_menu/%menu/item/%menu_link/delete']= array(
+  $items['node/%node/og_menu/%menu/item/%menu_link/delete'] = array(
     'title' => 'Delete menu item',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('og_menu_delete_item_form', 5),
