@@ -67,7 +67,7 @@ function og_menu_menu() {
   $items['node/%node/og_menu/%menu/add'] = array(
     'title' => 'Add item',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('og_menu_edit_item_form', 'add', NULL, 3),
+    'page arguments' => array('og_menu_edit_item_form', 'add', 1, NULL, 3),
     'access callback' => 'og_menu_access',
     'access arguments' => array(1, 3),
     'type' => MENU_LOCAL_TASK,
@@ -375,6 +375,7 @@ function og_menu_overview_form(&$form_state, $node, $menu) {
       $form['delete']['#submit'][] = 'og_menu_item_delete_submit';
     }
   }
+  $form['submit']['#submit'] = array('menu_overview_form_submit');
   return $form;
 }
 
