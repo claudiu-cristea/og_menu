@@ -1,19 +1,45 @@
 $Id$
 
-OG Menu
----------------------------------------------------------
+DESCRIPTION
+-----------
+Enable users to manage menus inside Organic Groups.
 
-OG Menu is a module that alters the menu module so that groups can create menus which are only visible to them and not other groups. For the moment these menus are created automatically for groups; if a group is created, and a member of that group goes to admin/build/menu, a new menu is created. Members of that OG can add/delete links to the menu but cannot delete the menu itself or see menus for groups to which they are not a member; only users with the "administer all menus" permission have full control over all menus. The menus are automatically activated using a SQL query to {block} in the database.
+REQUIREMENTS
+------------
+- Organic Groups module (http://drupal.org/project/og).
+- Menu module.
 
-In addition, OG Menu limits the audience of a node to those in the user's groups, so that they cannot post in other groups. OG Menu also modifies the menu settings in node_form so that, when selecting a menu, the user is only presented with the menus of their groups as options for "Parent item". Finally OG Menu provides minor functionality to allow users to control publishing options without the need for "administer nodes" permission.
+INSTALLATION
+------------
+- Enable the module.
+- Give "administer og menu" permission to the desired roles.
 
-Note About Access Control
----------------------------------------------------------
-Even though I've effectively removed the use of "administer menus" in my module with my own access controls, it is still important to grant this permission to the user - it is necessary in order to allow the user to add a link to their menu without creating the page, traversing to the OG Menu page, and adding it there. I tried to override this functionality in OG Menu but I didn't have much success in doing so. If anyone can help out with this, that would be excellent.
+USAGE
+-----
+- Administrators can create OG menus through the regular menu interface at admin/build/menu/add. Choose a group to associate with the menu.
+- Organic group members with the right permission can also manage menus at node/[nid]/og_menu.
+- For content types that can be published in groups, users can add a menu link directly from the node creation form.
+- For groups content types, users can create an associated menu by checking "Enable menu for this group".
+- You can enable the "OG Menu : single" and the "OG Menu : multiple" blocks at admin/build/block.
+  - OG Menu : single will display the first available menu for the first available group in the context.
+  - OG Menu : multiple will display all available menus for all available groups in the context.
+  - To theme the block, use the block-og_menu-0.tpl.php and the block-og_menu-1.tpl.php files, respectively.
 
-Things That Need Work
----------------------------------------------------------
-- Allow for creation of submenus
-- For "Menu settings" on node_form, the "Parent item" normally allows the user to select a menu or any of its children as a parent. This needs to be reintroduced - I had no intentions of leaving it out, it was simply a low priority to get it to work for my needs at the time.
-- Get the "Menu settings" fieldset on node_form to work using OG Menu permissions and not Menu permissions
-- Create settings page?
+NOTES
+-----
+Be aware that since menu administration forms are mostly duplicated, if a contrib module adds functionality to menu administration
+forms without additional permissions, these additions may be available for OG menu users with 'administer og menu' permission. 
+This could allow these users to be able to do things you don't want them to. Please report these modules if you catch one.
+
+TODO/BUGS/FEATURE REQUESTS
+--------------------------
+- See http://drupal.org/project/issues/og_menu. Please search before filing issues in order to prevent duplicates.
+
+UPGRADING FROM 6.1.x TO 6.2.x
+-----------------------------
+- Visit update.php to update the database.
+
+CREDITS
+-------
+Originaly authored and maintained by Scott Ash (ashsc).
+New maintainer for 6.2.x version : Julien De Luca (jide).
