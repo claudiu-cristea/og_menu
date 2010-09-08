@@ -183,6 +183,18 @@ function og_menu_block($op = 'list', $delta = 0, $edit = array()) {
 }
 
 /**
+ * Implementation of hook_og_links_alter().
+ */
+function og_menu_og_links_alter($links, $node) {
+  if (variable_get('og_block_og_menu', TRUE)) {
+    $menus = og_menu_get_group_menus(array($node->nid));
+    foreach ($menus as $menu) {
+      $links[$menu['menu_name']] = check_plain($menu['title']) . menu_tree($menu['menu_name']);
+    }
+  }
+}
+
+/**
  * Implementation of hook_form_alter().
  */
 function og_menu_form_alter(&$form, $form_state, $form_id) {
@@ -218,22 +230,27 @@ function og_menu_form_alter(&$form, $form_state, $form_id) {
       $item = $form['menu']['#item'];
       $menus = og_menu_get_group_menus($groups);
       
+      // Only enable menus if a menu actually exists.
       if (!empty($menus)) {
         foreach ($menus as $menu) {
           $list[$menu['menu_name']] = $menu['title'];
         }
-        $options = menu_parent_options($list, $item);
-        $form['menu']['#access'] = user_access('administer og menu');
-        $form['menu']['#theme'] = 'og_menu_node_form';
-        $form['menu']['parent']['#options'] = $options;
-        $form['#validate'][] = 'og_menu_node_form_validate';
+        $options = array('' => '--') + menu_parent_options($list, $item);
+        
+        // Only enable menus if there are options.
+        if (isset($options)) {
+          $form['menu']['#access'] = user_access('administer og menu');
+          $form['menu']['#theme'] = 'og_menu_node_form';
+          $form['menu']['parent']['#options'] = $options;
+          $form['#validate'][] = 'og_menu_node_form_validate';
+        }
+        else {
+          $form['menu']['#access'] = FALSE;
+        }
       }
-      
-      $options = menu_parent_options($list, $item);
-      $form['menu']['#access'] = user_access('administer og menu');
-      $form['menu']['#theme'] = 'og_menu_node_form';
-      $form['menu']['parent']['#options'] = $options;
-      $form['#validate'][] = 'og_menu_node_form_validate';
+      else {
+        $form['menu']['#access'] = FALSE;
+      }
     }
   }
   // Group form
@@ -285,7 +302,22 @@ function og_menu_form_alter(&$form, $form_state, $form_id) {
     case 'menu_delete_menu_confirm':
       $form['#submit'][] = 'og_menu_delete_menu_confirm_submit';
       break;
+     case 'block_admin_configure':
+       if ($form['module']['#value'] == 'og') {
+         $form['block_settings']['og_block_og_menu'] = array(
+           '#type' => 'checkbox',
+           '#title' => t('Show group menus'),
+           '#description' => t('Display group menus inside this block.'),
+           '#default_value' => variable_get('og_block_og_menu', TRUE),
+         );
+         $form['#submit'][] = 'og_block_og_menu_submit';
+       }
+       break;
   }
+}
+
+function og_block_og_menu_submit($form, &$form_state) {
+  variable_set("og_block_og_menu", $form_state['values']['og_block_og_menu'] == 1);
 }
 
 /**
@@ -474,31 +506,39 @@ function og_menu_delete_item_form(&$form_state, $item) {
 }
 
 function og_menu_node_form_validate($form, &$form_state) {
-  $menus = og_menu_get_group_menus();
-  $parents = explode(':', $form_state['values']['menu']['parent']);
-  $parent = $parents[0];
-  $gids = array();
-  $has_menu_access = FALSE;
-  
-  // Populate $gids with selected groups
-  foreach ($form_state['values']['og_groups'] as $gid => $enabled) {
-    if ($enabled) {
-      $gids[] = $gid;
-    }
+  // If parent is empty, we remove the link title to force menu module to
+  // not create a menu entry.
+  if (empty($form_state['values']['menu']['parent'])) {
+    $form_state['values']['menu']['link_title'] = '';
   }
-
-  foreach ($menus as $menu) {
-    if ($menu['menu_name'] == $parent) {
-      // Check if user has access to the chosen menu parent
-      $has_menu_access = TRUE;
-      // Check if menu belongs to one of the selected groups
-      if (!in_array($menu['gid'], $gids)) {
-        form_set_error('og_groups', t('The menu you chose does not belong to the selected groups.'));
+  // Otherwise, let's create a menu.
+  else {
+    $menus = og_menu_get_group_menus();
+    $parents = explode(':', $form_state['values']['menu']['parent']);
+    $parent = $parents[0];
+    $gids = array();
+    $has_menu_access = FALSE;
+    
+    // Populate $gids with selected groups
+    foreach ($form_state['values']['og_groups'] as $gid => $enabled) {
+      if ($enabled) {
+        $gids[] = $gid;
       }
     }
-  }
-  if (!$has_menu_access) {
-    form_set_error('menu][parent', t('You cannot add menu items to this menu. Choose another parent menu.'));
+  
+    foreach ($menus as $menu) {
+      if ($menu['menu_name'] == $parent) {
+        // Check if user has access to the chosen menu parent
+        $has_menu_access = TRUE;
+        // Check if menu belongs to one of the selected groups
+        if (!in_array($menu['gid'], $gids)) {
+          form_set_error('og_groups', t('The menu you chose does not belong to the selected groups.'));
+        }
+      }
+    }
+    if (!$has_menu_access) {
+      form_set_error('menu][parent', t('You cannot add menu items to this menu. Choose another parent menu.'));
+    }
   }
 }
 

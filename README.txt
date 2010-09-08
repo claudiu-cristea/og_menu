@@ -20,7 +20,8 @@ USAGE
 - Organic group members with the right permission can also manage menus at node/[nid]/og_menu.
 - For content types that can be published in groups, users can add a menu link directly from the node creation form.
 - For groups content types, users can create an associated menu by checking "Enable menu for this group".
-- You can enable the "OG Menu : single" and the "OG Menu : multiple" blocks at admin/build/block.
+- The menu will be appended to the "Group details" block by default. You can disable this by configuring the block and unchecking "Show group menus".
+- You can also enable the "OG Menu : single" and the "OG Menu : multiple" blocks at admin/build/block.
   - OG Menu : single will display the first available menu for the first available group in the context.
   - OG Menu : multiple will display all available menus for all available groups in the context.
   - To theme the block, use the block-og_menu-0.tpl.php and the block-og_menu-1.tpl.php files, respectively.
