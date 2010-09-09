@@ -200,8 +200,10 @@ function og_menu_og_links_alter($links, $node) {
 function og_menu_form_alter(&$form, $form_state, $form_id) {
   // Node form
   if (isset($form['#node']) && $form['#node']->type .'_node_form' == $form_id && og_is_group_post_type($form['#node']->type)) {
-    // Only alter the form if user does not have the administer menu permission
-    if (!user_access('administer menu') && user_access('administer og menu')) {
+    // Only alter the form if user does not have the administer menu permission.
+    // If og_menu_force_admin variable is set to TRUE, even users with
+    // "administer menu" permission will have an altered menu form.
+    if ((!user_access('administer menu') || (user_access('administer menu') && variable_get('og_menu_force_admin', FALSE))) && user_access('administer og menu')) {
       $groups = array();
 
       // If the user has access to more than one group, we take the options
