@@ -231,37 +231,39 @@ function og_menu_form_alter(&$form, $form_state, $form_id) {
       else if (!empty($form_state['og_gids'])) {
         $groups = $form_state['og_gids'];
       }
-
-      $list = array();
-      $settings = array();
-      $item = $form['menu']['#item'];
-      $menus = og_menu_get_group_menus($groups);
-      
-      // Only enable menus if a menu actually exists.
-      if (!empty($menus)) {
-        foreach ($menus as $menu) {
-          $list[$menu['menu_name']] = $menu['title'];
-        }
-        $options = menu_parent_options($list, $item);
-        
-        // Only enable menus if there are options.
-        if (isset($options)) {
-          $form['menu']['#access'] = user_access('administer og menu');
-          $form['menu']['#theme'] = 'og_menu_node_form';
-          $form['menu']['parent']['#options'] = array('' => '--') + $options;
-          $form['#validate'][] = 'og_menu_node_form_validate';
-          
-          // If a group is already set, let's activate it by default.
-          if (!empty($form_state['og_gids'])) {
-            $menus = og_menu_get_group_menus($form_state['og_gids']);
-            $form['menu']['parent']['#default_value'] = $menus[0]['menu_name'] . ':0';
-          }
-        }
-        else {
-          $form['menu']['#access'] = FALSE;
-        }
+			
+			if (!empty($groups)) {
+	      $list = array();
+	      $settings = array();
+	      $item = $form['menu']['#item'];
+	      $menus = og_menu_get_group_menus($groups);
+	      
+	      // Only enable menus if a menu actually exists.
+	      if (!empty($menus)) {
+	        foreach ($menus as $menu) {
+	          $list[$menu['menu_name']] = $menu['title'];
+	        }
+	        $options = menu_parent_options($list, $item);
+	        
+	        // Only enable menus if there are options.
+	        if (isset($options)) {
+	          $form['menu']['#access'] = user_access('administer og menu');
+	          $form['menu']['#theme'] = 'og_menu_node_form';
+	          $form['menu']['parent']['#options'] = array('' => '--') + $options;
+	          $form['#validate'][] = 'og_menu_node_form_validate';
+	          
+	          // If a group is already set, let's activate it by default.
+	          if (!empty($form_state['og_gids'])) {
+	            $menus = og_menu_get_group_menus($form_state['og_gids']);
+	            $form['menu']['parent']['#default_value'] = $menus[0]['menu_name'] . ':0';
+	          }
+	        }
+	        else if (!user_access('administer menu')) {
+	          $form['menu']['#access'] = FALSE;
+	        }
+	      }
       }
-      else {
+      else if (!user_access('administer menu')) {
         $form['menu']['#access'] = FALSE;
       }
     }
