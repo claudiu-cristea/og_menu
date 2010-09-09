@@ -258,7 +258,7 @@ function og_menu_form_alter(&$form, $form_state, $form_id) {
     $form['og_menu'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable menu for this group'),
-      '#default_value' => empty($form['#node']->og_menu) ? 0 : 1,
+      '#default_value' => empty($form['#node']->og_menu) ? variable_get('og_menu_enable_default', TRUE) : 1,
       '#description' => t('Check to create a menu for this group. Uncheck to delete the menu of this group.'),
     );
   }
