@@ -203,7 +203,7 @@ function og_menu_form_alter(&$form, $form_state, $form_id) {
     // Only alter the form if user does not have the administer menu permission.
     // If og_menu_force_admin variable is set to TRUE, even users with
     // "administer menu" permission will have an altered menu form.
-    if ((!user_access('administer menu') || (user_access('administer menu') && variable_get('og_menu_force_admin', FALSE))) && user_access('administer og menu')) {
+    if ((!user_access('administer menu') && user_access('administer og menu')) || (user_access('administer menu') && variable_get('og_menu_force_admin', FALSE))) {
       $groups = array();
 
       // If the user has access to more than one group, we take the options
