@@ -1,4 +1,3 @@
-; $Id$
 name = OG Menu
 description = "Allow group creators and site admins to edit their own group menu."
 dependencies[] = menu
