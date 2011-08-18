@@ -4,13 +4,23 @@
  * @file
  * Integrates Menu with Organic Groups.
  * Lots of menu forms duplication in OG context.
+ * 6.x-2.x to 7.x-2.x port contributors:
+ *  - Stefan Vaduva (http://vamist.ro)
+ *  - Nick Santamaria (http://www.itomic.com.au)
+ *  - Frederik Grunta (Aeternum)
+ *  - Wim Vanheste (rv0)
  */
 
 /**
  * Implementation of hook_perm().
  */
-function og_menu_perm() {
-  return array('administer og menu');
+function og_menu_permission() {
+  return array(
+      'administer og menu' => array(
+          'title' => t('Administer OG menus'),
+          'description' => t('Administer custom menus for each group'),
+      ),
+  );
 }
 
 /**
@@ -19,88 +29,125 @@ function og_menu_perm() {
 function og_menu_menu() {
   $items = array();
   $items['node/%node/og_menu'] = array(
-    'title' => 'Menus',
-    'page callback' => 'og_menu_overview_page',
-    'page arguments' => array(1),
-    'access callback' => 'og_menu_access',
-    'access arguments' => array(1),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 10,
+      'title' => 'Menus',
+      'page callback' => 'og_menu_overview_page',
+      'page arguments' => array(1),
+      'access callback' => 'og_menu_access',
+      'access arguments' => array(1),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 10,
+      'file' => 'og_menu.pages.inc',
   );
   $items['node/%node/og_menu/list'] = array(
-    'title' => 'List menus',
-    'weight' => -10,
-    'type' => MENU_DEFAULT_LOCAL_TASK,
+      'title' => 'List menus',
+      'weight' => -10,
+      'type' => MENU_DEFAULT_LOCAL_TASK,
   );
   $items['node/%node/og_menu/add'] = array(
-    'title' => 'Add menu',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('og_menu_edit_menu_form', 'add'),
-    'access callback' => 'og_menu_access',
-    'access arguments' => array(1),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 1,
+      'title' => 'Add menu',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('og_menu_edit_menu_form', 'add'),
+      'access callback' => 'og_menu_access',
+      'access arguments' => array(1, NULL, 'new-menu'),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 1,
+      'file' => 'og_menu.pages.inc',
   );
   $items['node/%node/og_menu/%menu'] = array(
-    'title' => 'Customize menu',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('og_menu_overview_form', 1, 3),
-    'access callback' => 'og_menu_access',
-    'access arguments' => array(1, 3),
-    'type' => MENU_CALLBACK,
-    'weight' => 1,
+      'title' => 'Customize menu',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('og_menu_overview_form', 3, 1),
+      'access callback' => 'og_menu_access',
+      'access arguments' => array(1, 3),
+      'type' => MENU_CALLBACK,
+      'weight' => 1,
+      'file' => 'og_menu.pages.inc',
   );
   $items['node/%node/og_menu/%menu/list'] = array(
-    'title' => 'List items',
-    'weight' => -10,
-    'type' => MENU_DEFAULT_LOCAL_TASK,
+      'title' => 'List items',
+      'weight' => -10,
+      'type' => MENU_DEFAULT_LOCAL_TASK,
   );
   $items['node/%node/og_menu/%menu/add'] = array(
-    'title' => 'Add item',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('og_menu_edit_item_form', 'add', 1, NULL, 3),
-    'access callback' => 'og_menu_access',
-    'access arguments' => array(1, 3),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 1,
+      'title' => 'Add item',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('og_menu_edit_item_form', 'add', 1, 3, 1),
+      'access callback' => 'og_menu_access',
+      'access arguments' => array(1, 3),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 1,
+      'file' => 'og_menu.pages.inc',
   );
   $items['node/%node/og_menu/%menu/edit'] = array(
-    'title' => 'Edit menu',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('og_menu_edit_menu_form', 'edit', 3),
-    'access callback' => 'og_menu_access',
-    'access arguments' => array(1, 3),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 1,
+      'title' => 'Edit menu',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('og_menu_edit_menu_form', 'edit', 3),
+      'access callback' => 'og_menu_access',
+      'access arguments' => array(1, 3),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 1,
+      'file' => 'og_menu.pages.inc',
   );
   $items['node/%node/og_menu/%menu/delete'] = array(
-    'title' => 'Delete menu',
-    'page callback' => 'og_menu_delete_menu_page',
-    'page arguments' => array(3),
-    'access callback' => 'og_menu_access',
-    'access arguments' => array(1, 3),
-    'type' => MENU_CALLBACK,
-    'weight' => 1,
+      'title' => 'Delete menu',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('og_menu_delete_menu_confirm', 3),
+      'access callback' => 'og_menu_access',
+      'access arguments' => array(1, 3),
+      'type' => MENU_CALLBACK,
+      'weight' => 1,
+      'file' => 'og_menu.pages.inc',
   );
   $items['node/%node/og_menu/%menu/item/%menu_link/edit'] = array(
-    'title' => 'Edit menu item',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('og_menu_edit_item_form', 'edit', 1, 5, NULL),
-    'access callback' => 'og_menu_access',
-    'access arguments' => array(1, 3),
-    'type' => MENU_CALLBACK,
-    'weight' => 1,
+      'title' => 'Edit menu item',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('og_menu_edit_item_form', 'edit', 5, 3, 1),
+      'access callback' => 'og_menu_access',
+      'access arguments' => array(1, 3),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 1,
+      'file' => 'og_menu.pages.inc',
   );
   $items['node/%node/og_menu/%menu/item/%menu_link/delete'] = array(
-    'title' => 'Delete menu item',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('og_menu_delete_item_form', 5),
-    'access callback' => 'og_menu_access',
-    'access arguments' => array(1, 3),
-    'type' => MENU_CALLBACK,
-    'weight' => 1,
+      'title' => 'Delete menu item',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('og_menu_delete_item_form', 5),
+      'access callback' => 'og_menu_access',
+      'access arguments' => array(1, 3),
+      'type' => MENU_CALLBACK,
+      'weight' => 1,
+      'file' => 'og_menu.pages.inc',
+  );
+  $items['admin/config/group/og_menu'] = array(
+      'title' => 'Organic groups menu settings',
+      'description' => 'Configuration for Organic groups menu',
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('og_menu_config_form'),
+      'access arguments' => array('access administration pages'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'og_menu.pages.inc',
+  );
+  $items['admin/structure/og_menu'] = array(
+      'title' => 'Organic groups menus',
+      'description' => 'Add new organic groups menus to your site, edit existing ones, and rename and reorganize menu links.',
+      'page callback' => 'og_admin_menu_overview_page',
+      'access callback' => 'user_access',
+      'access arguments' => array('administer menu'),
+      'file' => 'og_menu.pages.inc',
+  );
+  $items['og_menu/autocomplete'] = array(
+      'page callback' => '_og_menu_autocomplete',
+      'access arguments' => array('og_menu_access'),
+      'type' => MENU_CALLBACK
   );
   return $items;
+}
+
+/**
+ * Implementation of hook_theme_registry_alter().
+ */
+function og_menu_theme_registry_alter(&$theme_registry) {
+  $theme_registry['block']['theme paths'][] = drupal_get_path('module', 'og_menu');
 }
 
 /**
@@ -108,9 +155,9 @@ function og_menu_menu() {
  */
 function og_menu_theme($existing, $type, $theme, $path) {
   return array(
-    'og_menu_node_form' => array(
-      'arguments' => array('form' => NULL),
-    ),
+      'og_menu_node_form' => array(
+          'render element' => 'form',
+      ),
   );
 }
 
@@ -120,82 +167,96 @@ function og_menu_theme($existing, $type, $theme, $path) {
 function theme_og_menu_node_form($form) {
   $menus = og_menu_get_menus();
   foreach ($menus as $menu) {
-    $settings[$menu['menu_name']] = $menu['gid'];
+    $settings[$menu->mname] = $menu->gid;
   }
   drupal_add_js(array('og_menu' => $settings), 'setting');
   drupal_add_js(drupal_get_path('module', 'og_menu') . '/og_menu.js');
 }
 
 /**
- * Implementation of hook_theme_registry_alter().
+ * Implementation of hook_block_info()
  */
-function og_menu_theme_registry_alter(&$theme_registry) {  
-	$theme_registry['block']['theme paths'][] = drupal_get_path('module', 'og_menu');
+function og_menu_block_info() {
+  $blocks = array(
+      'og_single_menu_block' => array('info' => t('OG Menu : single'), 'cache' => DRUPAL_NO_CACHE),
+      'og_multi_menu_block' => array('info' => t('OG Menu : multiple'), 'cache' => DRUPAL_NO_CACHE),
+  );
+  return $blocks;
 }
 
 /**
- * Implementation of hook_block().
+ * Implementation of hook_block_view()
  */
-function og_menu_block($op = 'list', $delta = 0, $edit = array()) {
-  if ($op == 'list') {
-    $blocks = array(
-    	0 => array('info' => t('OG Menu : single'), 'cache' => BLOCK_NO_CACHE),
-    	1 => array('info' => t('OG Menu : multiple'), 'cache' => BLOCK_NO_CACHE),
-    );
-    return $blocks;
-  }
-  else if ($op == 'view' && $delta == 0) {
-    $group = og_get_group_context();
-    $menus = og_menu_get_menus(array($group->nid));
+function og_menu_block_view($delta = '') {
+  $block = array();
+  if ($delta == 'og_single_menu_block') {
+    $context = og_context();
+    $group = isset($context->gid) ? $context->gid : 0;
+    $menus = og_menu_get_menus(array($group));
     $menu = array_shift($menus);
-    return array('subject' => check_plain($menu['title']), 'content' => menu_tree($menu['menu_name']));
+
+    if ($menu) {
+      if (variable_get('og_menu_block_links', FALSE)) {
+        $block['subject'] = l(check_plain($menu->mtitle), 'node/' . $context->etid);
+      }
+      else {
+        $block['subject'] = check_plain($menu->mtitle);
+      }
+      $block['content'] = menu_tree($menu->mname);
+    }
   }
-  else if ($op == 'view' && $delta == 1) {
+  if ($delta == 'og_multi_menu_block') {
     // Get all groups associated with the current node
     $node = menu_get_object();
     $gids = array();
     if ($node) {
-      if (og_is_group_post_type($node->type)) {
-        $gids = $node->og_groups;
+      if (og_is_group_content_type('node', $node->type)) {
+        $nodegroups = og_load_multiple(og_get_entity_groups('node', $node));
+        foreach ($nodegroups as $ng)
+          $gids[] = $ng->etid;
       }
-      else if (og_is_group_type($node->type)) {
-        $gids = array($node->nid);
+      elseif (og_is_group_type('node', $node->type)) {
+        $gids = array($node->nid); //todo: Pretty sure this line is wrong...
       }
     }
-    // If no group was found, fallback to the regular og_get_group_context 
+    // If no group was found, fallback to the regular og_get_group_context
     // function. Unfortunately, this function only returns one group.
     if (empty($gids)) {
-      $group = og_get_group_context();
-      $gids = array($group->nid);
+      $group = og_menu_get_context();
+      $gids = array($group);
     }
     $menus = og_menu_get_menus($gids);
+    $block['subject'] = check_plain($node->title);
+    $block['content'] = '';
     foreach ($menus as $menu) {
-      $block = new stdClass();
-      $block->module = 'og_menu';
-      $block->delta = $delta .'-'. $menu['menu_name'];
-      $block->subject = check_plain($menu['title']);
-      $block->content = menu_tree($menu['menu_name']);
-      $content .= theme('block', $block);
+      $block['content'] .= render(menu_tree($menu->mname));
     }
-    return array('content' => $content, 'multiple' => TRUE);
   }
+
+  return $block;
+}
+
+/**
+ * Returns the current group context's nid.
+ */
+function og_menu_get_context() {
+  $context = og_context();
+  return (isset($context->gid) ? $context->gid : 0);
 }
 
 /**
  * Implementation of hook_form_alter().
  */
 function og_menu_form_alter(&$form, $form_state, $form_id) {
-  // Node form
-  if (isset($form['#node']) && $form['#node']->type .'_node_form' == $form_id && og_is_group_post_type($form['#node']->type)) {
+  // Node edit/add form for group content
+  if (isset($form['#node']) && $form['#node']->type . '_node_form' == $form_id && og_is_group_content_type('node', $form['#node']->type)) {
     // Only alter the form if user does not have the administer menu permission
-    if (!user_access('administer menu') && user_access('administer og menu')) {
+    if (user_access('administer og menu')) {
       $groups = array();
-
       // If the user has access to more than one group, we take the options
       // out of the OG audience form element.
-      if (!empty($form['og_nodeapi']['visible']['og_groups']['#options'])) {
-        $group_options = $form['og_nodeapi']['visible']['og_groups']['#options'];
-
+      if (!empty($form['group_audience']['und']['#options'])) {
+        $group_options = $form['group_audience']['und']['#options'];
         // Only show menus affiliated with node groups
         foreach ($group_options as $gid => $option) {
           // Handle checkboxes and selects
@@ -208,70 +269,118 @@ function og_menu_form_alter(&$form, $form_state, $form_id) {
         }
       }
       // Otherwise, the user may only set to one group.
-      else if (!empty($form['og_nodeapi']['invisible']['og_groups'])) {
+      elseif (!empty($form['og_nodeapi']['invisible']['og_groups'])) {
         $groups[] = array_shift(array_keys($form['og_nodeapi']['invisible']['og_groups']['#value']));
       }
 
       $list = array();
       $settings = array();
-      $item = $form['menu']['#item'];
+      $item = $form['type']['#value'];
       $menus = og_menu_get_menus($groups);
-      
+      // add users menus here too
       if (!empty($menus)) {
         foreach ($menus as $menu) {
-          $list[$menu['menu_name']] = $menu['title'];
+          $list[$menu->mname] = $menu->mtitle;
         }
-        $options = menu_parent_options($list, $item);
+        // Gets menus available to this content type - code courtesy _menu_get_options from core menu.module
+        if (user_access('administer menu')) {
+          $type_menus = variable_get('menu_options_' . $item, array('main-menu' => 'main-menu'));
+          foreach ($type_menus as $menu) {
+            $available_menus[$menu] = $menu;
+          }
+          // We want to merge the menus the user has available anyway and the OG ones
+          $newlist = array_merge($available_menus, $list);
+        }
+        else {
+          $newlist = $list;
+        }
+        // Menu parent options will format the list in a way Drupal expects and give children, etc
+        $options = menu_parent_options($newlist, array('mlid' => 0));
+        if ($nid = $form['nid']['#value']) {
+          // for some reason menu_get_item(); wasn't giving good results, so meanwhile:
+          $mlid = db_select('menu_links', 'ml')
+                  ->condition('ml.link_path', 'node/' . $nid)
+                  ->fields('ml', array('mlid'))
+                  ->execute()
+                  ->fetchField();
+          if ($mlid) {
+            $menu_link = menu_link_load($mlid);
+            $form['menu']['link']['parent']['#default_value'] = $menu_link['menu_name'] . ':' . $menu_link['plid'];
+          }
+        }
         $form['menu']['#access'] = user_access('administer og menu');
         $form['menu']['#theme'] = 'og_menu_node_form';
-        $form['menu']['parent']['#options'] = $options;
+        $form['menu']['link']['parent']['#options'] = $options;
         $form['#validate'][] = 'og_menu_node_form_validate';
       }
-      
-      $options = menu_parent_options($list, $item);
-      $form['menu']['#access'] = user_access('administer og menu');
-      $form['menu']['#theme'] = 'og_menu_node_form';
-      $form['menu']['parent']['#options'] = $options;
-      $form['#validate'][] = 'og_menu_node_form_validate';
     }
   }
   // Group form
-  else if (isset($form['#node']) && $form['#node']->type .'_node_form' == $form_id && og_is_group_type($form['#node']->type)) {
+  elseif (isset($form['#node']) && $form['#node']->type . '_node_form' == $form_id && og_is_group_type('node', $form['#node']->type)) {
     $form['og_menu'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Enable menu for this group'),
-      '#default_value' => empty($form['#node']->og_menu) ? 0 : 1,
-      '#description' => t('Check to create a menu for this group. Uncheck to delete the menu of this group.'),
+        '#type' => 'checkbox',
+        '#title' => t('Enable menu for this group'),
+        '#default_value' => empty($form['#node']->og_menu) ? 0 : 1,
+        '#description' => t('Check to create a menu for this group. Uncheck to delete all menus associated with this group.'),
     );
+    // @todo If we're going to be deleteing all of a groups menus, we should ask the user for confirmation
+    //$form['#submit'][] = 'og_menu_group_form_validate';
   }
   // Administration forms
   switch ($form_id) {
     case 'menu_edit_menu':
-      if ($types = og_get_types('group')) {
+      $types = node_type_get_types();
+      $gtypes = array();
+      foreach ($types as $type) {
+        if (og_is_group_type('node', $type->type))
+          $gtypes[] = $type->type;
+      }
+
+      $types = $gtypes;
+
+      if (count($types) > 0) {
         $options = array('' => '--');
         $values = array();
         // Populate gids
         if (user_access('administer organic groups')) {
-          $result = db_query("SELECT nid, title FROM {node} WHERE type IN (". db_placeholders($types, "varchar"). ")", $types);
-          while ($group = db_fetch_object($result)) {
-            $options[$group->nid] = $group->title;
+          $result = db_query("SELECT gid, label FROM {og} WHERE entity_type='node'");
+          foreach ($result as $group) {
+            $options[$group->gid] = $group->label;
           }
         }
         else {
           global $user;
-          foreach ($user->og_groups as $group) {
-            $options[$group['nid']] = $group['title'];
-          }
+          $nodegroups = og_load_multiple(og_get_entity_groups('user', $user));
+          foreach ($nodegroups as $ng)
+            $options[$ng->tid] = $ng->title;
         }
-        $value = db_result(db_query("SELECT gid FROM {og_menu} WHERE menu_name = '%s'", $form['menu_name']['#value']));
-        // Add OG checkboxes to the form
-        $form['og_menu_gid'] = array(
-          '#title' => t('Enable this menu for the following group'),
-          '#type' => 'select',
-          '#options' => $options,
-          '#default_value' => $value,
-          '#weight' => 1,
-        );
+        $ogm = db_select('og_menu', 'gid')
+                ->fields('gid')
+                ->condition('menu_name', $form['menu_name']['#default_value'], '=')
+                ->execute()
+                ->fetchAssoc();
+        $gid = $ogm['gid'];
+        $og = og_load($gid);
+        // Add menu og assignment to the form
+        switch (variable_get('og_menu_assignment', 'autocomplete')) {
+          case 'autocomplete':
+            $form['og_menu_gid'] = array(
+                '#title' => t('Enable this menu for the following group'),
+                '#type' => 'textfield',
+                '#default_value' => $gid != NULL ? $og->label . ' [gid:' . $gid . ']' : '',
+                '#autocomplete_path' => 'og_menu/autocomplete',
+            );
+            break;
+          case 'select':
+            $form['og_menu_gid'] = array(
+                '#title' => t('Enable this menu for the following group'),
+                '#type' => 'select',
+                '#options' => $options,
+                '#default_value' => $gid != NULL ? $gid : '',
+                '#weight' => 1,
+            );
+            break;
+        }
         if (!user_access('administer menu')) {
           $form['og_menu_gid']['#required'] = TRUE;
         }
@@ -281,6 +390,13 @@ function og_menu_form_alter(&$form, $form_state, $form_id) {
         $form['#submit'][] = 'og_menu_edit_menu_form_submit';
       }
       break;
+    case 'block_admin_display_form':
+      // hide og menu blocks from block admin page
+      $result = db_query("SELECT menu_custom.menu_name FROM {menu_custom}, {og_menu} WHERE og_menu.menu_name = menu_custom.menu_name")->fetchCol();
+      foreach ($result as $ogblock) {
+        unset($form['blocks']['menu_' . $ogblock]);
+      }
+      break;
     case 'menu_delete_menu_confirm':
       $form['#submit'][] = 'og_menu_delete_menu_confirm_submit';
       break;
@@ -288,201 +404,151 @@ function og_menu_form_alter(&$form, $form_state, $form_id) {
 }
 
 /**
- * Implementation of hook_nodeapi().
+ * Implementation of hook_node_prepare()
  */
-function og_menu_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
-  if (og_is_group_type($node->type)) {
-    switch ($op) {
-      case 'insert':
-        if ($node->og_menu) {
-          db_query("INSERT INTO {menu_custom} (menu_name, title, description) VALUES ('%s', '%s', '%s')", 'menu-og-'. $node->nid, $node->title, t('Menu for') .' '. check_plain($node->title));
-          og_menu_update_menu('menu-og-'. $node->nid, $node->nid);
+function og_menu_node_prepare($node) {
+  if (og_is_group_type('node', $node->type)) {
+    $node->og_menu = og_menu_get_menus();
+  }
+  elseif ((!empty($node->menu)) && (strcmp($node->menu['link_title'], '') == 0) && (!user_access('administer menu')) && (user_access('administer og menu'))) {
+    if (empty($node->nid)) // Are we on the node creation form? If so, it obviously won't have a menu item - bail out
+      return;
+    // menu.modules node_prepare was unable to find a menu link for this node - perhaps an og menu one exists?
+    // We check !user_access('administer menu') because a user with administer menu might have a totally different menu layout - ie system menus
+    // but not the og menu. Then the form for by default insert in incorrect menu link.
+    /* First we need to check what kind of menu item we are expecting. Note that we can't just use 'menu-og-[gid]' because the user could
+     * have chosen a custom name for the menu */
+    $gids = array();
+    // @todo We can probably do this more intelligently
+    if (isset($node->group_audience)) {
+      foreach ($node->group_audience['und'] as $item) {
+        $gids[] = $item['gid'];
+      }
+      $type_menus = db_query("SELECT menu_name FROM {og_menu} WHERE gid IN (:gids)", array(':gids' => array_values($gids)))->fetchCol();
+
+      $mlid;
+      // This query comes from menu.modules node_prepare, and is how it does it.
+      if (!empty($type_menus)) {
+        $mlid = db_query_range("SELECT mlid FROM {menu_links} WHERE link_path = :path AND module = 'menu' AND menu_name IN (:type_menus) ORDER BY mlid ASC", 0, 1, array(
+                    ':path' => 'node/' . $node->nid,
+                    ':type_menus' => array_values($type_menus),
+                ))->fetchField();
+      }
+      if ($mlid) {
+        // We've found something, so load the item and set that in the node form
+        $item = menu_link_load($mlid);
+        $node->menu = $item;
+
+        // Find the depth limit for the parent select.
+        if (!isset($node->menu['parent_depth_limit'])) {
+          $node->menu['parent_depth_limit'] = _menu_parent_depth_limit($node->menu);
         }
-        break;
-      case 'update':
-        if ($node->og_menu) {
-          $menu = og_menu_get_menus(array($node->nid));
-          if (empty($menu)) {
-            db_query("INSERT INTO {menu_custom} (menu_name, title, description) VALUES ('%s', '%s', '%s')", 'menu-og-'. $node->nid, $node->title, t('Menu for') .' '. check_plain($node->title));
-            og_menu_update_menu('menu-og-'. $node->nid, $node->nid);
-          }
-        }
-        else {
-          db_query("DELETE FROM {menu_custom} WHERE menu_name = '%s'", 'menu-og-'. $node->nid);
-          og_menu_update_menu('menu-og-'. $node->nid);
-        }
-        break;
-      case 'prepare':
-        $node->og_menu = og_menu_get_menus(array($node->nid));
-        break;
-      case 'delete':
-        db_query("DELETE FROM {menu_custom} WHERE menu_name = '%s'", 'menu-og-'. $node->nid);
-        og_menu_update_menu('menu-og-'. $node->nid);
-        break;
+      }
     }
   }
 }
 
 /**
- * Menu callback which shows an overview page of all the custom menus in user's groups and their descriptions.
+ * Implementation of hook_node_insert()
  */
-function og_menu_overview_page($node) {
-  $result = db_query("SELECT * FROM {menu_custom} m INNER JOIN {og_menu} om ON m.menu_name = om.menu_name WHERE om.gid = %d ORDER BY title", $node->nid);
-  $content = array();
-  while ($menu = db_fetch_array($result)) {
-    $menu['href'] = 'node/'. $node->nid .'/og_menu/'. $menu['menu_name'];
-    $menu['localized_options'] = array();
-    $content[] = $menu;
-  }
-  return theme('admin_block_content', $content);
-}
-
-/**
- * Menu callback which shows an entire menu tree at once.
- */
-function og_menu_overview_form(&$form_state, $node, $menu) {
-  module_load_include('inc', 'menu', 'menu.admin');
-  $form = drupal_retrieve_form('menu_overview_form', $form_state, $menu);
-  $form['#theme'] = 'menu_overview_form';
-  foreach (element_children($form) as $mlid) {
-    if (strstr($mlid, 'mlid:')) {
-      $item = $form[$mlid]['#item'];
-      $operations = array();
-      $operations['edit'] = l(t('edit'), 'node/'. $node->nid .'/og_menu/'. $menu['menu_name'] .'/item/'. $item['mlid'] .'/edit');
-      if ($item['module'] == 'menu' || $item['updated'] == 1) {
-        $operations['delete'] = l(t('delete'), 'node/'. $node->nid .'/og_menu/'. $menu['menu_name'] .'/item/'. $item['mlid'] .'/delete');
-      }
-      $form[$mlid]['operations'] = array();
-      foreach ($operations as $op => $value) {
-        $form[$mlid]['operations'][$op] = array('#value' => $value);
-      }
-      $form['delete']['#submit'][] = 'og_menu_item_delete_submit';
+function og_menu_node_insert($node) {
+  if (og_is_group_type('node', $node->type)) {
+    $og = og_get_group('node', $node->nid, FALSE, array(OG_STATE_ACTIVE, OG_STATE_PENDING));
+    if ($node->og_menu) {
+      menu_save(array(
+          'menu_name' => 'menu-og-' . $og->gid,
+          'title' => $node->title,
+          'description' => t('OG Menu for') . ' ' . check_plain($node->title),
+      ));
+      og_menu_update_menu('menu-og-' . $og->gid, $og->gid);
     }
   }
-  $form['submit']['#submit'] = array('menu_overview_form_submit');
-  return $form;
 }
 
 /**
- * Menu callback; Build the form that handles the adding/editing of a custom menu.
+ * Implementation of hook_node_update()
  */
-function og_menu_edit_menu_form(&$form_state, $type, $menu = array()) {
-  module_load_include('inc', 'menu', 'menu.admin');
-  $node = menu_get_object('node', 1);
-  $form = drupal_retrieve_form('menu_edit_menu', $form_state, $type, $menu);
-  $form['og_menu_gid'] = array(
-    '#type' => 'value',
-    '#value' => $node->nid,
-  );
-  $form['#submit'][] = 'menu_edit_menu_submit';
-  $form['#submit'][] = 'og_menu_edit_menu_form_submit';
-  $form['#submit'][] = 'og_menu_edit_menu_form_submit_redirect';
-  $form['#validate'][] = 'menu_edit_menu_validate';
-  $form['delete']['#submit'][] = 'og_menu_delete_menu_form_submit';
-  return $form;
-}
-
-function og_menu_edit_menu_form_submit_redirect($form, &$form_state) {
-  $node = menu_get_object('node', 1);
-  if ($form['#insert']) {
-    $menu = array();
-    $menu['menu_name'] = 'menu-'. $form_state['values']['menu_name'];
+function og_menu_node_update($node) {
+  if (og_is_group_type('node', $node->type)) {
+    $og = og_get_group('node', $node->nid, FALSE, array(OG_STATE_ACTIVE, OG_STATE_PENDING));
+    if ($node->og_menu) {
+      $menu = og_menu_get_menus(array($node->nid));
+      if (empty($menu)) {
+        menu_save(array(
+            'menu_name' => 'menu-og-' . $og->gid,
+            'title' => $node->title,
+            'description' => t('OG Menu for') . ' ' . check_plain($node->title),
+        ));
+        og_menu_update_menu('menu-og-' . $og->gid, $og->gid);
+      }
+    }
+    else {
+      // We can't assume that the menu name is 'menu-og-[gid]' - we need to look up menus associated with this group
+      $result = db_query('SELECT menu_name FROM {og_menu} WHERE gid = :gid', array(':gid' => $og->gid))->fetchCol();
+      foreach ($result as $menu_name) {
+        menu_delete(array(
+            'menu_name' => $menu_name,
+            'title' => $node->title,
+            'description' => t('OG Menu for') . ' ' . check_plain($node->title),
+        ));
+        og_menu_update_menu($menu_name);
+      }
+    }
   }
-  else {
-    $menu = menu_get_object('menu', 3);
-  }
-  $form_state['redirect'] = 'node/'. $node->nid .'/og_menu/'. $menu['menu_name'];
-}
-
-function og_menu_edit_menu_form_submit($form, &$form_state) {
-  $menu_name = $form_state['values']['menu_name'];
-  $gid = $form_state['values']['og_menu_gid'];
-  // Add 'menu-' if this is a new menu
-  if (strpos($menu_name, 'menu-') === FALSE) {
-    $menu_name = 'menu-'. $menu_name;
-  }
-  og_menu_update_menu($menu_name, $gid);
-}
-
-function og_menu_delete_menu_form_submit($form, &$form_state) {
-  $node = menu_get_object('node', 1);
-  $menu = menu_get_object('menu', 3);
-  $form_state['redirect'] = 'node/'. $node->nid .'/og_menu/'. $menu['menu_name'] .'/delete';
-}
-
-function og_menu_delete_menu_page($menu) {
-  return drupal_get_form('og_menu_delete_menu_confirm', $menu);
-}
-
-function og_menu_delete_menu_confirm(&$form_state, $menu) {
-  module_load_include('inc', 'menu', 'menu.admin');
-  $form = drupal_retrieve_form('menu_delete_menu_confirm', $form_state, $menu);
-  $form['#submit'][] = 'menu_delete_menu_confirm_submit';
-  $form['#submit'][] = 'og_menu_delete_menu_confirm_submit';
-  $form['#submit'][] = 'og_menu_delete_menu_confirm_submit_redirect';
-  return $form;
-}
-
-function og_menu_delete_menu_confirm_submit($form, &$form_state) {
-  $menu = $form['#menu'];
-  db_query("DELETE FROM {og_menu} WHERE menu_name = '%s'", $menu['menu_name']);
-}
-
-function og_menu_delete_menu_confirm_submit_redirect($form, &$form_state) {
-  $node = menu_get_object('node', 1);
-  $form_state['redirect'] = 'node/'. $node->nid .'/og_menu';
 }
 
 /**
- * Menu callback; Build the menu link editing form.
+ * Implementation of hook_node_delete()
  */
-function og_menu_edit_item_form(&$form_state, $type, $node, $item, $menu) {
-  module_load_include('inc', 'menu', 'menu.admin');
-  $form = drupal_retrieve_form('menu_edit_item', $form_state, $type, $item, $menu);
-  $list = array();
-  $menus = og_menu_get_menus(array($node->nid));
-  foreach ($menus as $menu) {
-    $list[$menu['menu_name']] = $menu['title'];
+function og_menu_node_delete($node) {
+  if (og_is_group_type('node', $node->type)) {
+    /* We need to be careful here. As users can create menu of whatever name, we can't just delete from menu_custom looking for 
+     * 'menu-og-' . [gid] - we need the gid of the group being deleted, see if its an og assosiated menu from og_menu and then from
+     * that menu name, delete it.
+     */
+    $gid = og_get_group('node', $node->nid, FALSE, array(OG_STATE_ACTIVE, OG_STATE_PENDING))->gid;
+
+    $results = db_query('SELECT menu_name FROM {og_menu} WHERE gid = :gid', array(':gid' => $gid))->fetchCol();
+
+    // @todo This can be replaced with two db_delete queries
+    foreach ($results as $menu_name) {
+      db_query("DELETE FROM {menu_custom} WHERE menu_name = :mname", array(':mname' => $menu_name));
+      og_menu_update_menu($menu_name);
+    }
   }
-  $form['menu']['parent']['#options'] = menu_parent_options($list, $item);
-  $form['#submit'][] = 'menu_edit_item_submit';
-  $form['#submit'][] = 'og_menu_redirect';
-  $form['#validate'][] = 'menu_edit_item_validate';
-  $form['delete']['#submit'][] = 'og_menu_delete_item_form';
-  return $form;
 }
 
-function og_menu_delete_item_form(&$form_state, $item) {
-  module_load_include('inc', 'menu', 'menu.admin');
-  $form = drupal_retrieve_form('menu_item_delete_form', $form_state, $item);
-  $node = menu_get_object('node', 1);
-  $menu = menu_get_object('menu', 3);
-  $form['#submit'][] = 'menu_item_delete_form_submit';
-  $form['#submit'][] = 'og_menu_redirect';
-  $form['actions']['cancel']['#value'] = l(t('Cancel'), 'node/'. $node->nid .'/og_menu/'. $menu['menu_name']);
-  return $form;
-}
-
+/**
+ * Validation handler for OG group node forms. 
+ * We will only end up here if we have confirmed that the node is a group type content
+ */
 function og_menu_node_form_validate($form, &$form_state) {
+  // If the user didn't ask for a menu, we have nothing to do
+  if ($form_state['values']['menu']['enabled'] !== 1)
+    return;
+
   $menus = og_menu_get_menus();
   $parents = explode(':', $form_state['values']['menu']['parent']);
   $parent = $parents[0];
   $gids = array();
   $has_menu_access = FALSE;
-  
-  // Populate $gids with selected groups
-  foreach ($form_state['values']['og_groups'] as $gid => $enabled) {
-    if ($enabled) {
-      $gids[] = $gid;
+
+  if (isset($form_state['values']['group_audience']['und'])) {
+    foreach ($form_state['values']['group_audience']['und'] as $item => $gid) {
+      $gids[] = $gid['gid'];
     }
+  }
+  else { // It's possible that the user doesn't have permission to change the group audience once a piece of content has been created. In this case,
+    // we need to look it up
+    $gids = og_get_entity_groups('node', $form_state['node']);
   }
 
   foreach ($menus as $menu) {
-    if ($menu['menu_name'] == $parent) {
+    if ($menu->mname == $parent) {
       // Check if user has access to the chosen menu parent
       $has_menu_access = TRUE;
       // Check if menu belongs to one of the selected groups
-      if (!in_array($menu['gid'], $gids)) {
+      if (!in_array($menu->gid, $gids)) {
         form_set_error('og_groups', t('The menu you chose does not belong to the selected groups.'));
       }
     }
@@ -492,11 +558,14 @@ function og_menu_node_form_validate($form, &$form_state) {
   }
 }
 
+/**
+ * Updates internal record of group's menu id
+ */
 function og_menu_update_menu($menu_name, $gid = NULL) {
   // Do it the lazy way
-  db_query("DELETE FROM {og_menu} WHERE menu_name = '%s'", $menu_name);
+  db_query("DELETE FROM {og_menu} WHERE menu_name = :mname", array(':mname' => $menu_name));
   if ($gid) {
-    db_query("INSERT INTO {og_menu} (gid, menu_name) VALUES (%d, '%s')", $gid, $menu_name);
+    db_query("INSERT INTO {og_menu} (gid, menu_name) VALUES (:gid, :mname)", array(':gid' => $gid, ':mname' => $menu_name));
   }
 }
 
@@ -515,15 +584,27 @@ function og_menu_get_menus($gids = NULL, $user = NULL) {
     global $user;
   }
   if (!$gids) {
-    $gids = array_keys($user->og_groups);
+    $nodegroups = og_load_multiple(og_get_entity_groups('user', $user));
+    foreach ($nodegroups as $ng)
+      $gids[] = $ng->gid;
   }
   $menus = array();
   if ($gids) {
-    $result = db_query("SELECT * FROM {menu_custom} m INNER JOIN {og_menu} om ON m.menu_name = om.menu_name WHERE om.gid IN (". db_placeholders($gids, "int"). ") ORDER BY m.title", $gids);
-    while ($menu = db_fetch_array($result)) {
+    // @todo Convert this query to use db_select().
+    $result = db_query("SELECT 
+                          om.gid, 
+                          om.menu_name as omname, 
+                          m.menu_name as mname, 
+                          m.title as mtitle 
+                        FROM {og_menu} om
+                         LEFT JOIN {menu_custom} m ON om.menu_name = m.menu_name
+                        WHERE om.gid IN (:gids)
+                        ORDER BY mtitle", array(':gids' => $gids));
+    foreach ($result as $menu) {
       $menus[] = $menu;
     }
   }
+
   return $menus;
 }
 
@@ -535,22 +616,37 @@ function og_menu_get_menus($gids = NULL, $user = NULL) {
  * @param menu
  *    The edited menu.
  */
-function og_menu_access($node, $menu = NULL) {
-  if (!og_is_group_type($node->type)) {
+function og_menu_access($node, $menu = NULL, $op = NULL) {
+  if (!og_is_group_type('node', $node->type)) {
     return FALSE;
   }
-  else if (user_access('administer menu')) {
+  elseif (user_access('administer menu')) {
     return TRUE;
   }
-  else if (user_access('administer og menu')) {
-    if ($node && og_is_group_member($node)) {
+  elseif (user_access('administer og menu')) {
+    if (!$node) {
+      return FALSE;
+    }
+
+    if ($op == 'new-menu') {
+      $group = og_get_group('node', $node->nid, FALSE, array(OG_STATE_ACTIVE, OG_STATE_PENDING));
+      $query = db_select('og_menu', 'ogm');
+      $query->condition('ogm.gid', $group->gid, '=');
+      $count = $query->countQuery()->execute()->fetchField();
+      $max = variable_get('og_menu_max_menus_per_group', 1);
+      if ($max > 0 && $count >= $max) {
+        return FALSE;
+      }
+    }
+
+    if (node_access('update', $node)) {
       return TRUE;
     }
-    else if ($menu) {
+    elseif ($menu) {
       $gids = array();
-      $result = db_query("SELECT gid FROM {og_menu} WHERE menu_name = '%s'", $menu['menu_name']);
-      while ($group = db_fetch_object($result)) {
-        if ($group->gid && og_is_group_member($group->gid)) {
+      $result = db_query("SELECT gid FROM {og_menu} WHERE menu_name = :mname", array(':maname' => $menu['menu_name']));
+      foreach ($result as $group) {
+        if ($group->gid && og_is_member($group->gid)) {
           return TRUE;
         }
       }
@@ -568,7 +664,116 @@ function og_menu_access($node, $menu = NULL) {
  *    The form_state array.
  */
 function og_menu_redirect($form, &$form_state) {
+  drupal_set_message("In redirect function");
   $node = menu_get_object('node', 1);
   $menu = menu_get_object('menu', 3);
-  $form_state['redirect'] = 'node/'. $node->nid .'/og_menu/'. $menu['menu_name'];
+  $form_state['redirect'] = 'node/' . $node->nid . '/og_menu/' . $menu['menu_name'];
+}
+
+/**
+ * Submit handler used on various forms.
+ */
+function og_menu_edit_menu_form_submit($form, &$form_state) {
+  $menu_name = $form_state['values']['menu_name'];
+  $value = $form_state['values']['og_menu_gid'];
+  // Add 'menu-' if this is a new menu
+  if (strncmp($menu_name, 'menu-', 5) != 0) {
+    $menu_name = 'menu-' . $menu_name;
+  }
+  if (is_numeric($value)) {
+    og_menu_update_menu($menu_name, $value);
+  }
+  else {
+    preg_match('/^(?:\s*|(.*) )?\[\s*gid\s*:\s*(\d+)\s*\]$/', $value, $matches);
+    if (!empty($matches)) {
+      $value = $matches[count($matches) - 1];
+      if (is_numeric($value)) {
+        og_menu_update_menu($menu_name, $value);
+      }
+    }
+    else {
+      drupal_set_message(t('Cannot assign menu to invalid group, please retry'), 'error');
+    }
+  }
+}
+
+/**
+ * Submit handler used on various forms.
+ */
+function og_menu_delete_menu_confirm_submit($form, &$form_state) {
+  $menu = $form['#menu'];
+  db_query("DELETE FROM {og_menu} WHERE menu_name = :mname", array(':mname' => $menu['menu_name']));
+}
+
+/**
+ * Submit handler used on various forms.
+ */
+function og_menu_delete_menu_confirm_submit_redirect($form, &$form_state) {
+  $node = menu_get_object('node', 1);
+  $form_state['redirect'] = 'node/' . $node->nid . '/og_menu';
+}
+
+/**
+ * Looks like og_menu didn't used to catch the case where a menu item was deleted in the admin area, and forgot to delete it's own db_record
+ * Implements hook_menu_delete
+ */
+function og_menu_menu_delete($menu) {
+  db_delete('og_menu')->condition('menu_name', $menu['menu_name'])->execute();
+}
+
+/**
+ * Override menu.module's menu_overview_page(). We do this so that we can filter out og_menu created menus from the listing
+ * so that we don't flood the admin pages
+ * 
+ * Note that this function really belongs in og_menu.pages.inc, but I can't seem to get that working
+ */
+function og_admin_standard_menu_overview_page() {
+  $result = db_query("SELECT *
+                      FROM {menu_custom}
+                      WHERE NOT EXISTS (SELECT og_menu.menu_name
+                      FROM {og_menu}
+                      WHERE og_menu.menu_name = menu_custom.menu_name)
+                      ORDER BY title;", array(), array('fetch' => PDO::FETCH_ASSOC));
+  $header = array(t('Title'), array(
+          'data' => t('Operations'),
+          'colspan' => '3',
+          ));
+  $rows = array();
+  foreach ($result as $menu) {
+    $row = array(theme('menu_admin_overview', array('title' => $menu['title'], 'name' => $menu['menu_name'], 'description' => $menu['description'])));
+    $row[] = array('data' => l(t('list links'), 'admin/structure/menu/manage/' . $menu['menu_name']));
+    $row[] = array('data' => l(t('edit menu'), 'admin/structure/menu/manage/' . $menu['menu_name'] . '/edit'));
+    $row[] = array('data' => l(t('add link'), 'admin/structure/menu/manage/' . $menu['menu_name'] . '/add'));
+    $rows[] = $row;
+  }
+
+  return theme('table', array('header' => $header, 'rows' => $rows));
+}
+
+/**
+ * hook_menu_alter()
+ * We use this to override the /admin/structure/menu callback and replace it with our own og_admin_menu_overview_page()
+ */
+function og_menu_menu_alter(&$items) {
+  $items['admin/structure/menu']['page callback'] = 'og_admin_standard_menu_overview_page';
+  $items['admin/structure/menu']['file'] = 'og_menu.module';
+  $items['admin/structure/menu']['module'] = 'og_menu';
+}
+
+/**
+ * Retrieve autocomplete suggestions for organic groups
+ */
+function _og_menu_autocomplete($string) {
+  $matches = array();
+  $query = db_select('og', 'og');
+  $return = $query
+          ->fields('og', array('gid', 'label'))
+          ->condition('og.label', '%' . db_like($string) . '%', 'LIKE')
+          ->range(0, 10)
+          ->execute();
+  foreach ($return as $row) {
+    $matches[$row->label . " [gid:$row->gid]"] = '<div class="og-autocomplete">' . $row->label . '</div>';
+  }
+  // return for JS
+  drupal_json_output($matches);
 }

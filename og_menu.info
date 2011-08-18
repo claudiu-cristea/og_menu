@@ -1,11 +1,8 @@
 name = OG Menu
 description = "Allow group creators and site admins to edit their own group menu."
+files[] = og_menu.module
 dependencies[] = menu
 dependencies[] = og
+dependencies[] = og_context
 package = "Organic groups"
-core = 6.x
-; Information added by drupal.org packaging script on 2009-01-30
-version = "6.x-2.0"
-core = "6.x"
-project = "og_menu"
-datestamp = "1233343236"
+core = 7.x

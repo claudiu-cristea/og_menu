@@ -42,3 +42,4 @@ CREDITS
 -------
 Originaly authored and maintained by Scott Ash (ashsc).
 New maintainer for 6.2.x version : Julien De Luca (jide).
+

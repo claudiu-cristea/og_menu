@@ -22,27 +22,10 @@ function og_menu_schema() {
 }
 
 /**
- * Implementation of hook_install().
- */
-function og_menu_install() {
-  drupal_install_schema('og_menu');
-}
-
-/**
- * Implementation of hook_uninstall().
+ * Implementation of hook_uninstall.
+ * Deletes menus that were created through og_menu
  */
 function og_menu_uninstall() {
-  drupal_uninstall_schema('og_menu');
-}
-
-/**
- * Implementation of hook_update_N().
- */
-function og_menu_update_6200() {
-  drupal_install_schema('og_menu');
-  $result = db_query("SELECT * FROM {og_menu_groups}");
-  while ($menu = db_fetch_array($result)) {
-    db_query("INSERT INTO {og_menu} (gid, menu_name) VALUES (%d, '%s')", $menu['gid'], $menu['mid']);
-  }
-  db_query('DROP TABLE {og_menu_groups}');
+  variable_del('og_menu_block_links');
+  variable_del('og_menu_max_menus_per_group');
 }
