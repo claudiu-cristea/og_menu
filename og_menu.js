@@ -1,4 +1,3 @@
-
 /**
  * @file
  * Javascript magic. Shows the eligible menu options when switching groups.
@@ -17,7 +16,7 @@
       disabledOption.text('--').attr('value', '').attr('class', 'value-none').prependTo('.menu-parent-select');
 
       // Toggle menu alteration
-      var toggle = function(values) {
+      function toggle(values) {
         var title = inputTitle.val()
         var none = true;
     
@@ -67,7 +66,7 @@
             $('.menu-parent-select').val(originalParent);
           }
         }
-      };
+      }
 
       // Toggle function for OG select
       var toggleSelect = function() {
@@ -92,7 +91,9 @@
       if ($('.group-audience:checkbox').size()) {
         $('.group-audience:checkbox').change(toggleCheckboxes).ready(toggleCheckboxes);
       }
-     	
+      
+      // init
+      toggle($('select.group-audience').val());
     }
    	   
   };
