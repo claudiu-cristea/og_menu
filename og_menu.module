@@ -337,7 +337,7 @@ function og_menu_form_alter(&$form, $form_state, $form_id) {
       }
 
       $types = $gtypes;
-
+      
       if (count($types) > 0) {
         $options = array('' => '--');
         $values = array();
@@ -360,7 +360,8 @@ function og_menu_form_alter(&$form, $form_state, $form_id) {
                 ->execute()
                 ->fetchAssoc();
         $gid = $ogm['gid'];
-        $og = og_load($gid);
+        
+        $og = $gid ? og_load($gid) : NULL;
         // Add menu og assignment to the form
         switch (variable_get('og_menu_assignment', 'autocomplete')) {
           case 'autocomplete':
@@ -392,9 +393,11 @@ function og_menu_form_alter(&$form, $form_state, $form_id) {
       break;
     case 'block_admin_display_form':
       // hide og menu blocks from block admin page
-      $result = db_query("SELECT menu_custom.menu_name FROM {menu_custom}, {og_menu} WHERE og_menu.menu_name = menu_custom.menu_name")->fetchCol();
-      foreach ($result as $ogblock) {
-        unset($form['blocks']['menu_' . $ogblock]);
+      if (! variable_get('og_menu_show_blocks', FALSE)) {
+        $result = db_query("SELECT menu_custom.menu_name FROM {menu_custom}, {og_menu} WHERE og_menu.menu_name = menu_custom.menu_name")->fetchCol();
+        foreach ($result as $ogblock) {
+          unset($form['blocks']['menu_' . $ogblock]);
+        }
       }
       break;
     case 'menu_delete_menu_confirm':

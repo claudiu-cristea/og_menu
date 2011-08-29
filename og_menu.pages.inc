@@ -177,6 +177,12 @@ function og_menu_config_form($form, &$form_state) {
       '#default_value' => variable_get('og_menu_block_links', FALSE),
       '#description' => t('If enabled, OG Menu block titles will link to the group node.'),
   );
+    $form['og_menu_show_blocks'] = array(
+      '#type' => 'checkbox',
+      '#title' => t("Show blocks for individual OG Menu's"),
+      '#default_value' => variable_get('og_menu_show_blocks', FALSE),
+      '#description' => t("If disabled, blocks for OG Menu's will be hidden from the block administration page."),
+  );
   $form['og_menu_max_menus_per_group'] = array(
       '#type' => 'textfield',
       '#title' => t('Maximum number of menus per group'),
