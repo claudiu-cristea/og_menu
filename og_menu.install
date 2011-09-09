@@ -28,4 +28,6 @@ function og_menu_schema() {
 function og_menu_uninstall() {
   variable_del('og_menu_block_links');
   variable_del('og_menu_max_menus_per_group');
+
+  // @todo Decide whether we want to delete all menu's created by og_menu.
 }

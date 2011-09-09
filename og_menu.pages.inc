@@ -9,13 +9,20 @@
  * Menu callback which shows an overview page of all the custom menus in user's groups and their descriptions.
  */
 function og_menu_overview_page($node) {
-  $og = og_get_group('node', $node->nid, FALSE, array(OG_STATE_ACTIVE, OG_STATE_PENDING));
+  $gid = og_get_group_ids('node', array($node->nid), FALSE, array(OG_STATE_ACTIVE, OG_STATE_PENDING));
+  $gid = $gid[$node->nid];
+
+
+  // Set the title of the page.
+  drupal_set_title(t('List menus for @title', array('@title' => $node->title)));
+
+
   $result = db_query("
     SELECT om.gid, om.menu_name as name, m.title as title, m.description as description FROM {og_menu} om
     LEFT JOIN {menu_custom} m
     ON om.menu_name = m.menu_name
     WHERE om.gid = :gid
-    ORDER BY title", array(':gid' => $og->gid));
+    ORDER BY title", array(':gid' => $gid));
   $header = array(t('Title'), array('data' => t('Operations'), 'colspan' => '3'));
   $rows = array();
   foreach ($result as $menu) {
@@ -41,15 +48,28 @@ function og_menu_edit_menu_form($form, &$form_state, $type, $menu = array()) {
   module_load_include('inc', 'menu', 'menu.admin');
   $node = menu_get_object('node', 1);
   $og = og_get_group('node', $node->nid, FALSE, array(OG_STATE_ACTIVE, OG_STATE_PENDING));
+
+  // Set the title of the page.
+  switch($type) {
+    case 'add': drupal_set_title(t('Add menu for @title', array('@title' => $node->title)));
+      break;
+
+    case 'edit':   drupal_set_title(t('Edit menu for @title', array('@title' => $node->title)));
+      break;
+  }
+
+  // Build the form.
   $form = drupal_retrieve_form('menu_edit_menu', $form_state, $type, $menu);
   $form['og_menu_gid'] = array(
       '#type' => 'value',
       '#value' => $og->gid,
   );
+  // Add submit handlers.
   $form['#submit'][] = 'menu_edit_menu_submit';
   $form['#submit'][] = 'og_menu_edit_menu_form_submit';
   $form['#submit'][] = 'og_menu_edit_menu_form_submit_redirect';
   $form['actions']['delete']['#submit'][] = 'og_menu_delete_menu_form_submit';
+
   return $form;
 }
 
@@ -78,11 +98,11 @@ function og_menu_edit_menu_form_submit_redirect($form, &$form_state) {
 }
 
 /**
- * Menu callback which shows an entire menu tree at once.
+ * Form callback which shows an entire menu tree at once.
  */
 function og_menu_overview_form($form, &$form_state, $menu, $node) {
   module_load_include('inc', 'menu', 'menu.admin');
-  drupal_set_title(t($menu['menu_name']));
+  drupal_set_title(t('List items for menu @mtitle', array('@mtitle' => $menu['title'])));
   $b = drupal_get_breadcrumb();
   $b[] = l($node->title, 'node/' . $node->nid);
   $b[] = l(t('Menus'), 'node/' . $node->nid . '/og_menu');
@@ -123,7 +143,7 @@ function og_menu_overview_form_submit($form, &$form_state) {
 }
 
 /**
- * Form callback for node/%node/og_menu/%menu/delete
+ * Form callback for node/%node/og_menu/%menu/delete.
  */
 function og_menu_delete_menu_confirm($form, &$form_state, $menu) {
   module_load_include('inc', 'menu', 'menu.admin');
@@ -135,7 +155,7 @@ function og_menu_delete_menu_confirm($form, &$form_state, $menu) {
 }
 
 /**
- * Menu callback; Build the menu link editing form.
+ * Form callback; Build the menu link editing form.
  */
 function og_menu_edit_item_form($form, &$form_state, $type, $item, $menu, $node) {
   $b = drupal_get_breadcrumb();
@@ -148,6 +168,12 @@ function og_menu_edit_item_form($form, &$form_state, $type, $item, $menu, $node)
   foreach ($menus as $menu) {
     $list[$menu->mname] = $menu->mtitle;
   }
+
+  // Set the title of the page.
+  drupal_set_title(t('Add item into menu @mtitle', array('@mtitle' => $menu->mtitle)));
+
+
+  // Build the form.
   $form['parent']['#options'] = menu_parent_options($list, array('mlid' => 0));
   $form['#submit'][] = 'menu_edit_item_submit';
   $form['#submit'][] = 'og_menu_redirect';
@@ -170,6 +196,9 @@ function og_menu_delete_item_form($form, &$form_state, $item) {
   return $form;
 }
 
+/**
+ * Form callback for OG Menu configuration.
+ */
 function og_menu_config_form($form, &$form_state) {
   $form['og_menu_block_links'] = array(
       '#type' => 'checkbox',
@@ -177,7 +206,7 @@ function og_menu_config_form($form, &$form_state) {
       '#default_value' => variable_get('og_menu_block_links', FALSE),
       '#description' => t('If enabled, OG Menu block titles will link to the group node.'),
   );
-    $form['og_menu_show_blocks'] = array(
+  $form['og_menu_show_blocks'] = array(
       '#type' => 'checkbox',
       '#title' => t("Show blocks for individual OG Menu's"),
       '#default_value' => variable_get('og_menu_show_blocks', FALSE),
@@ -203,6 +232,9 @@ function og_menu_config_form($form, &$form_state) {
   return system_settings_form($form);
 }
 
+/**
+ * Validation for OG Menu config form.
+ */
 function og_menu_config_form_validate($form, &$form_state) {
   $max_num = $form_state['values']['og_menu_max_menus_per_group'];
   if (!is_numeric($max_num)) {

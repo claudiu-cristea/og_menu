@@ -4,11 +4,6 @@
  * @file
  * Integrates Menu with Organic Groups.
  * Lots of menu forms duplication in OG context.
- * 6.x-2.x to 7.x-2.x port contributors:
- *  - Stefan Vaduva (http://vamist.ro)
- *  - Nick Santamaria (http://www.itomic.com.au)
- *  - Frederik Grunta (Aeternum)
- *  - Wim Vanheste (rv0)
  */
 
 /**
@@ -24,7 +19,20 @@ function og_menu_permission() {
 }
 
 /**
+ * Implements hook_help().
+ */
+function og_menu_help($path, $arg) {
+  switch ($path) {
+    case 'admin/structure/og_menu':
+      return '<p>' . t('Add new menus on the <a href="@menu">Menu administration page</a>.', array('@menu' => url('admin/structure/menu'))) . '</p>';
+      break;
+  }
+}
+
+/**
  * Implementation of hook_menu().
+ *
+ * @todo Add MENU_LOCAL_ACTION for adding an OG Menu? Meanwhile fix it in hook_help().
  */
 function og_menu_menu() {
   $items = array();
@@ -245,165 +253,171 @@ function og_menu_get_context() {
 }
 
 /**
- * Implementation of hook_form_alter().
+ * Implements hook_form_FORMID_alter().
+ *
+ * Alter the node form's menu form.
  */
-function og_menu_form_alter(&$form, $form_state, $form_id) {
-  // Node edit/add form for group content
-  if (isset($form['#node']) && $form['#node']->type . '_node_form' == $form_id && og_is_group_content_type('node', $form['#node']->type)) {
-    // Only alter the form if user does not have the administer menu permission
-    if (user_access('administer og menu')) {
-      $groups = array();
-      // If the user has access to more than one group, we take the options
-      // out of the OG audience form element.
-      if (!empty($form['group_audience']['und']['#options'])) {
-        $group_options = $form['group_audience']['und']['#options'];
-        // Only show menus affiliated with node groups
-        foreach ($group_options as $gid => $option) {
-          // Handle checkboxes and selects
-          if (is_array($option)) {
-            $groups[] = array_shift(array_keys($option));
-          }
-          else {
-            $groups[] = $gid;
-          }
-        }
-      }
-      // Otherwise, the user may only set to one group.
-      elseif (!empty($form['og_nodeapi']['invisible']['og_groups'])) {
-        $groups[] = array_shift(array_keys($form['og_nodeapi']['invisible']['og_groups']['#value']));
-      }
+function og_menu_form_node_form_alter(&$form, &$form_state) {
+  // We modify the forms for group content and group content types.
+  // Group content.
+  if (user_access('administer og menu')
+          && og_is_group_content_type('node', $form['#node']->type)) {
+    $groups = array();
+    // If the user has access to more than one group, we take the options
+    // out of the OG audience form element.
+    if (!empty($form['group_audience'][LANGUAGE_NONE]['#options'])) {
+      $group_options = $form['group_audience'][LANGUAGE_NONE]['#options'];
+      $groups = array_keys(array_shift($group_options));
+    }
+    $list = array();
+    $settings = array();
+    $item = $form['type']['#value'];
+    $menus = og_menu_get_menus($groups);
 
-      $list = array();
-      $settings = array();
-      $item = $form['type']['#value'];
-      $menus = og_menu_get_menus($groups);
-      // add users menus here too
-      if (!empty($menus)) {
-        foreach ($menus as $menu) {
-          $list[$menu->mname] = $menu->mtitle;
-        }
-        // Gets menus available to this content type - code courtesy _menu_get_options from core menu.module
-        if (user_access('administer menu')) {
-          $type_menus = variable_get('menu_options_' . $item, array('main-menu' => 'main-menu'));
-          foreach ($type_menus as $menu) {
-            $available_menus[$menu] = $menu;
-          }
-          // We want to merge the menus the user has available anyway and the OG ones
-          $newlist = array_merge($available_menus, $list);
-        }
-        else {
-          $newlist = $list;
-        }
-        // Menu parent options will format the list in a way Drupal expects and give children, etc
-        $options = menu_parent_options($newlist, array('mlid' => 0));
-        if ($nid = $form['nid']['#value']) {
-          // for some reason menu_get_item(); wasn't giving good results, so meanwhile:
-          $mlid = db_select('menu_links', 'ml')
-                  ->condition('ml.link_path', 'node/' . $nid)
-                  ->fields('ml', array('mlid'))
-                  ->execute()
-                  ->fetchField();
-          if ($mlid) {
-            $menu_link = menu_link_load($mlid);
-            $form['menu']['link']['parent']['#default_value'] = $menu_link['menu_name'] . ':' . $menu_link['plid'];
-          }
-        }
-        $form['menu']['#access'] = user_access('administer og menu');
-        $form['menu']['#theme'] = 'og_menu_node_form';
-        $form['menu']['link']['parent']['#options'] = $options;
-        $form['#validate'][] = 'og_menu_node_form_validate';
+    if (!empty($menus)) {
+      foreach ($menus as $menu) {
+        $list[$menu->mname] = $menu->mtitle;
       }
+      // If user has administer menu permission, also show other menu options.
+      if (user_access('administer menu')) {
+        // Gets menus available to this content type.
+        $type_menus = variable_get('menu_options_' . $type, array('main-menu' => 'main-menu'));
+        // Get all existing menu's with their name.
+        $result = db_query("SELECT menu_name, title FROM {menu_custom} ORDER BY title");
+        while ($menuObj = $result->fetchObject()) {
+          if (in_array($menuObj->menu_name, $type_menus)) {
+            $available_menus[$menuObj->menu_name] = $menuObj->title;
+          }
+        }
+        // We want to merge the menus the user has available anyway and the OG ones
+        $newlist = array_merge($available_menus, $list);
+      }
+      else {
+        $newlist = $list;
+      }
+      // Menu parent options will format the list in a way Drupal expects and give children, etc
+      $options = menu_parent_options($newlist, array('mlid' => 0));
+      if ($nid = $form['nid']['#value']) {
+        // for some reason menu_get_item(); wasn't giving good results, so meanwhile:
+        $mlid = db_select('menu_links', 'ml')
+                ->condition('ml.link_path', 'node/' . $nid)
+                ->fields('ml', array('mlid'))
+                ->execute()
+                ->fetchField();
+        if ($mlid) {
+          $menu_link = menu_link_load($mlid);
+          $form['menu']['link']['parent']['#default_value'] = $menu_link['menu_name'] . ':' . $menu_link['plid'];
+        }
+      }
+      $form['menu']['#access'] = user_access('administer og menu');
+      $form['menu']['#theme'] = 'og_menu_node_form';
+      $form['menu']['link']['parent']['#options'] = $options;
+      $form['#validate'][] = 'og_menu_node_form_validate';
     }
   }
-  // Group form
-  elseif (isset($form['#node']) && $form['#node']->type . '_node_form' == $form_id && og_is_group_type('node', $form['#node']->type)) {
+
+  // Group type.
+  if (og_is_group_type('node', $form['#node']->type)) {
     $form['og_menu'] = array(
         '#type' => 'checkbox',
         '#title' => t('Enable menu for this group'),
         '#default_value' => empty($form['#node']->og_menu) ? 0 : 1,
         '#description' => t('Check to create a menu for this group. Uncheck to delete all menus associated with this group.'),
     );
-    // @todo If we're going to be deleteing all of a groups menus, we should ask the user for confirmation
+    // @todo If we're going to delete all of the groups menus,
+    //       we should ask the user for confirmation
     //$form['#submit'][] = 'og_menu_group_form_validate';
   }
-  // Administration forms
-  switch ($form_id) {
-    case 'menu_edit_menu':
-      $types = node_type_get_types();
-      $gtypes = array();
-      foreach ($types as $type) {
-        if (og_is_group_type('node', $type->type))
-          $gtypes[] = $type->type;
-      }
+}
 
-      $types = $gtypes;
-      
-      if (count($types) > 0) {
-        $options = array('' => '--');
-        $values = array();
-        // Populate gids
-        if (user_access('administer organic groups')) {
-          $result = db_query("SELECT gid, label FROM {og} WHERE entity_type='node'");
-          foreach ($result as $group) {
-            $options[$group->gid] = $group->label;
-          }
-        }
-        else {
-          global $user;
-          $nodegroups = og_load_multiple(og_get_entity_groups('user', $user));
-          foreach ($nodegroups as $ng)
-            $options[$ng->tid] = $ng->title;
-        }
-        $ogm = db_select('og_menu', 'gid')
-                ->fields('gid')
-                ->condition('menu_name', $form['menu_name']['#default_value'], '=')
-                ->execute()
-                ->fetchAssoc();
-        $gid = $ogm['gid'];
-        
-        $og = $gid ? og_load($gid) : NULL;
-        // Add menu og assignment to the form
-        switch (variable_get('og_menu_assignment', 'autocomplete')) {
-          case 'autocomplete':
-            $form['og_menu_gid'] = array(
-                '#title' => t('Enable this menu for the following group'),
-                '#type' => 'textfield',
-                '#default_value' => $gid != NULL ? $og->label . ' [gid:' . $gid . ']' : '',
-                '#autocomplete_path' => 'og_menu/autocomplete',
-            );
-            break;
-          case 'select':
-            $form['og_menu_gid'] = array(
-                '#title' => t('Enable this menu for the following group'),
-                '#type' => 'select',
-                '#options' => $options,
-                '#default_value' => $gid != NULL ? $gid : '',
-                '#weight' => 1,
-            );
-            break;
-        }
-        if (!user_access('administer menu')) {
-          $form['og_menu_gid']['#required'] = TRUE;
-        }
-        if (!isset($form['submit']['#weight'])) {
-          $form['submit']['#weight'] = 2;
-        }
-        $form['#submit'][] = 'og_menu_edit_menu_form_submit';
-      }
-      break;
-    case 'block_admin_display_form':
-      // hide og menu blocks from block admin page
-      if (! variable_get('og_menu_show_blocks', FALSE)) {
-        $result = db_query("SELECT menu_custom.menu_name FROM {menu_custom}, {og_menu} WHERE og_menu.menu_name = menu_custom.menu_name")->fetchCol();
-        foreach ($result as $ogblock) {
-          unset($form['blocks']['menu_' . $ogblock]);
-        }
-      }
-      break;
-    case 'menu_delete_menu_confirm':
-      $form['#submit'][] = 'og_menu_delete_menu_confirm_submit';
-      break;
+/**
+ * Implements hook_form_FORMID_alter().
+ */
+function og_menu_form_menu_edit_menu_alter(&$form, &$form_state) {
+  $types = node_type_get_types();
+  $gtypes = array();
+  foreach ($types as $type) {
+    if (og_is_group_type('node', $type->type))
+      $gtypes[] = $type->type;
   }
+
+  $types = $gtypes;
+
+  if (count($types) > 0) {
+    $options = array('' => '--');
+    $values = array();
+    // Populate gids
+    if (user_access('administer organic groups')) {
+      $result = db_query("SELECT gid, label FROM {og} WHERE entity_type='node'");
+      foreach ($result as $group) {
+        $options[$group->gid] = $group->label;
+      }
+    }
+    else {
+      global $user;
+      $nodegroups = og_load_multiple(og_get_entity_groups('user', $user));
+      foreach ($nodegroups as $ng)
+        $options[$ng->tid] = $ng->title;
+    }
+    $ogm = db_select('og_menu', 'gid')
+            ->fields('gid')
+            ->condition('menu_name', $form['menu_name']['#default_value'], '=')
+            ->execute()
+            ->fetchAssoc();
+    $gid = $ogm['gid'];
+
+    $og = $gid ? og_load($gid) : NULL;
+    // Add menu og assignment to the form
+    switch (variable_get('og_menu_assignment', 'autocomplete')) {
+      case 'autocomplete':
+        $form['og_menu_gid'] = array(
+            '#title' => t('Enable this menu for the following group'),
+            '#type' => 'textfield',
+            '#default_value' => $gid != NULL ? $og->label . ' [gid:' . $gid . ']' : '',
+            '#autocomplete_path' => 'og_menu/autocomplete',
+        );
+        break;
+
+      case 'select':
+        $form['og_menu_gid'] = array(
+            '#title' => t('Enable this menu for the following group'),
+            '#type' => 'select',
+            '#options' => $options,
+            '#default_value' => $gid != NULL ? $gid : '',
+            '#weight' => 1,
+        );
+        break;
+      default;
+    }
+    if (!user_access('administer menu')) {
+      $form['og_menu_gid']['#required'] = TRUE;
+    }
+    if (!isset($form['submit']['#weight'])) {
+      $form['submit']['#weight'] = 2;
+    }
+    $form['#submit'][] = 'og_menu_edit_menu_form_submit';
+  }
+}
+
+/**
+ * Implements hook_form_FORMID_alter().
+ */
+function og_menu_form_block_admin_display_form_alter(&$form, &$form_state) {
+// Only show og menu blocks on the block admin page if the user wants it.
+  if (!variable_get('og_menu_show_blocks', FALSE)) {
+    // @todo convert to new database api functions
+    $result = db_query("SELECT menu_custom.menu_name FROM {menu_custom}, {og_menu} WHERE og_menu.menu_name = menu_custom.menu_name")->fetchCol();
+    foreach ($result as $ogblock) {
+      unset($form['blocks']['menu_' . $ogblock]);
+    }
+  }
+}
+
+/**
+ * Implements hook_form_FORMID_alter().
+ */
+function og_menu_form_menu_delete_menu_confirm_alter(&$form, &$form_state) {
+  $form['#submit'][] = 'og_menu_delete_menu_confirm_submit';
 }
 
 /**
@@ -424,7 +438,7 @@ function og_menu_node_prepare($node) {
     $gids = array();
     // @todo We can probably do this more intelligently
     if (isset($node->group_audience)) {
-      foreach ($node->group_audience['und'] as $item) {
+      foreach ($node->group_audience[LANGUAGE_NONE] as $item) {
         $gids[] = $item['gid'];
       }
       $type_menus = db_query("SELECT menu_name FROM {og_menu} WHERE gid IN (:gids)", array(':gids' => array_values($gids)))->fetchCol();
@@ -505,7 +519,7 @@ function og_menu_node_update($node) {
  */
 function og_menu_node_delete($node) {
   if (og_is_group_type('node', $node->type)) {
-    /* We need to be careful here. As users can create menu of whatever name, we can't just delete from menu_custom looking for 
+    /* We need to be careful here. As users can create menu of whatever name, we can't just delete from menu_custom looking for
      * 'menu-og-' . [gid] - we need the gid of the group being deleted, see if its an og assosiated menu from og_menu and then from
      * that menu name, delete it.
      */
@@ -522,7 +536,7 @@ function og_menu_node_delete($node) {
 }
 
 /**
- * Validation handler for OG group node forms. 
+ * Validation handler for OG group node forms.
  * We will only end up here if we have confirmed that the node is a group type content
  */
 function og_menu_node_form_validate($form, &$form_state) {
@@ -536,8 +550,8 @@ function og_menu_node_form_validate($form, &$form_state) {
   $gids = array();
   $has_menu_access = FALSE;
 
-  if (isset($form_state['values']['group_audience']['und'])) {
-    foreach ($form_state['values']['group_audience']['und'] as $item => $gid) {
+  if (isset($form_state['values']['group_audience'][LANGUAGE_NONE])) {
+    foreach ($form_state['values']['group_audience'][LANGUAGE_NONE] as $item => $gid) {
       $gids[] = $gid['gid'];
     }
   }
@@ -594,11 +608,11 @@ function og_menu_get_menus($gids = NULL, $user = NULL) {
   $menus = array();
   if ($gids) {
     // @todo Convert this query to use db_select().
-    $result = db_query("SELECT 
-                          om.gid, 
-                          om.menu_name as omname, 
-                          m.menu_name as mname, 
-                          m.title as mtitle 
+    $result = db_query("SELECT
+                          om.gid,
+                          om.menu_name as omname,
+                          m.menu_name as mname,
+                          m.title as mtitle
                         FROM {og_menu} om
                          LEFT JOIN {menu_custom} m ON om.menu_name = m.menu_name
                         WHERE om.gid IN (:gids)
@@ -717,18 +731,23 @@ function og_menu_delete_menu_confirm_submit_redirect($form, &$form_state) {
 }
 
 /**
- * Looks like og_menu didn't used to catch the case where a menu item was deleted in the admin area, and forgot to delete it's own db_record
- * Implements hook_menu_delete
+ * Implements hook_menu_delete().
+ *
+ * Looks like og_menu didn't used to catch the case where a menu item was deleted
+ * in the admin area, and forgot to delete it's own db_record
  */
 function og_menu_menu_delete($menu) {
   db_delete('og_menu')->condition('menu_name', $menu['menu_name'])->execute();
 }
 
 /**
- * Override menu.module's menu_overview_page(). We do this so that we can filter out og_menu created menus from the listing
- * so that we don't flood the admin pages
- * 
- * Note that this function really belongs in og_menu.pages.inc, but I can't seem to get that working
+ * Override menu.module's menu_overview_page().
+ *
+ * We do this so that we can filter out og_menu created menus from the listing
+ * so that we don't flood the admin pages.
+ *
+ * @todo get this into og_menu_pages.inc
+ *
  */
 function og_admin_standard_menu_overview_page() {
   $result = db_query("SELECT *
@@ -754,8 +773,10 @@ function og_admin_standard_menu_overview_page() {
 }
 
 /**
- * hook_menu_alter()
- * We use this to override the /admin/structure/menu callback and replace it with our own og_admin_menu_overview_page()
+ * Implements hook_menu_alter().
+ *
+ * We use this to override the /admin/structure/menu callback and replace it with
+ * our own og_admin_menu_overview_page().
  */
 function og_menu_menu_alter(&$items) {
   $items['admin/structure/menu']['page callback'] = 'og_admin_standard_menu_overview_page';
