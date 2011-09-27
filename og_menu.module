@@ -262,13 +262,10 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
   // Group content.
   if (user_access('administer og menu')
           && og_is_group_content_type('node', $form['#node']->type)) {
+    global $user;
     $groups = array();
-    // If the user has access to more than one group, we take the options
-    // out of the OG audience form element.
-    if (!empty($form['group_audience'][LANGUAGE_NONE]['#options'])) {
-      $group_options = $form['group_audience'][LANGUAGE_NONE]['#options'];
-      $groups = array_keys(array_shift($group_options));
-    }
+    $groups = og_get_entity_groups('user', $user);
+
     $list = array();
     $settings = array();
     $type = $form['type']['#value'];
