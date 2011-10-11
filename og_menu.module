@@ -538,9 +538,10 @@ function og_menu_node_delete($node) {
  * We will only end up here if we have confirmed that the node is a group type content
  */
 function og_menu_node_form_validate($form, &$form_state) {
-  // If the user didn't ask for a menu, we have nothing to do
-  if ($form_state['values']['menu']['enabled'] !== 1)
+  // If the user didn't ask for a menu, we have nothing to do.
+  if (!isset($form_state['values']['menu']['enabled']) || $form_state['values']['menu']['enabled'] !== 1) {
     return;
+  }
 
   $menus = og_menu_get_menus();
   $parents = explode(':', $form_state['values']['menu']['parent']);
