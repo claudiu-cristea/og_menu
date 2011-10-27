@@ -680,7 +680,6 @@ function og_menu_access($node, $menu = NULL, $op = NULL) {
  *    The form_state array.
  */
 function og_menu_redirect($form, &$form_state) {
-  drupal_set_message("In redirect function");
   $node = menu_get_object('node', 1);
   $menu = menu_get_object('menu', 3);
   $form_state['redirect'] = 'node/' . $node->nid . '/og_menu/' . $menu['menu_name'];
