@@ -50,19 +50,19 @@ function og_menu_edit_menu_form($form, &$form_state, $type, $menu = array()) {
   $og = og_get_group('node', $node->nid, FALSE, array(OG_STATE_ACTIVE, OG_STATE_PENDING));
 
   // Set the title of the page.
-  switch($type) {
+  switch ($type) {
     case 'add': drupal_set_title(t('Add menu for @title', array('@title' => $node->title)));
       break;
 
-    case 'edit':   drupal_set_title(t('Edit menu for @title', array('@title' => $node->title)));
+    case 'edit': drupal_set_title(t('Edit menu for @title', array('@title' => $node->title)));
       break;
   }
 
   // Build the form.
   $form = drupal_retrieve_form('menu_edit_menu', $form_state, $type, $menu);
   $form['og_menu_gid'] = array(
-      '#type' => 'value',
-      '#value' => $og->gid,
+    '#type' => 'value',
+    '#value' => $og->gid,
   );
   // Add submit handlers.
   $form['#submit'][] = 'menu_edit_menu_submit';
@@ -117,16 +117,16 @@ function og_menu_overview_form($form, &$form_state, $menu, $node) {
       $item = $form[$mlid]['#item'];
       $operations = array();
       $operations['edit'] = array(
-          '#type' => 'link',
-          '#title' => 'edit',
-          '#href' => 'node/' . $node->nid . '/og_menu/' . $menu['menu_name'] . '/item/' . $item['mlid'] . '/edit',
+        '#type' => 'link',
+        '#title' => 'edit',
+        '#href' => 'node/' . $node->nid . '/og_menu/' . $menu['menu_name'] . '/item/' . $item['mlid'] . '/edit',
       );
 
       if ($item['module'] == 'menu' || $item['updated'] == 1) {
         $operations['delete'] = array(
-            '#type' => 'link',
-            '#title' => 'delete',
-            '#href' => 'node/' . $node->nid . '/og_menu/' . $menu['menu_name'] . '/item/' . $item['mlid'] . '/delete',
+          '#type' => 'link',
+          '#title' => 'delete',
+          '#href' => 'node/' . $node->nid . '/og_menu/' . $menu['menu_name'] . '/item/' . $item['mlid'] . '/delete',
         );
       }
       $form[$mlid]['operations'] = $operations;
@@ -201,33 +201,33 @@ function og_menu_delete_item_form($form, &$form_state, $item) {
  */
 function og_menu_config_form($form, &$form_state) {
   $form['og_menu_block_links'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Convert OG Menu block titles into links'),
-      '#default_value' => variable_get('og_menu_block_links', FALSE),
-      '#description' => t('If enabled, OG Menu block titles will link to the group node.'),
+    '#type' => 'checkbox',
+    '#title' => t('Convert OG Menu block titles into links'),
+    '#default_value' => variable_get('og_menu_block_links', FALSE),
+    '#description' => t('If enabled, OG Menu block titles will link to the group node.'),
   );
   $form['og_menu_show_blocks'] = array(
-      '#type' => 'checkbox',
-      '#title' => t("Show blocks for individual OG Menu's"),
-      '#default_value' => variable_get('og_menu_show_blocks', FALSE),
-      '#description' => t("If disabled, blocks for OG Menu's will be hidden from the block administration page."),
+    '#type' => 'checkbox',
+    '#title' => t("Show blocks for individual OG Menu's"),
+    '#default_value' => variable_get('og_menu_show_blocks', FALSE),
+    '#description' => t("If disabled, blocks for OG Menu's will be hidden from the block administration page."),
   );
   $form['og_menu_max_menus_per_group'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Maximum number of menus per group'),
-      '#default_value' => variable_get('og_menu_max_menus_per_group', 1),
-      '#size' => 20,
-      '#maxlength' => 5,
-      '#required' => TRUE,
-      '#description' => t('Enter 0 for no limit. Users with the \'administer menu\' permission will be able to bypass this.'),
+    '#type' => 'textfield',
+    '#title' => t('Maximum number of menus per group'),
+    '#default_value' => variable_get('og_menu_max_menus_per_group', 1),
+    '#size' => 20,
+    '#maxlength' => 5,
+    '#required' => TRUE,
+    '#description' => t('Enter 0 for no limit. Users with the \'administer menu\' permission will be able to bypass this.'),
   );
   $form['og_menu_assignment'] = array(
-      '#type' => 'radios',
-      '#options' => array('select' => t('Select list'), 'autocomplete' => t('Textbox with autocomplete')),
-      '#title' => t('Use autocomplete field on menu admin page'),
-      '#default_value' => variable_get('og_menu_assignment', 'autocomplete'),
-      '#required' => 'TRUE',
-      '#description' => t('Autocomplete is recommended when you have a lot of organic groups.'),
+    '#type' => 'radios',
+    '#options' => array('select' => t('Select list'), 'autocomplete' => t('Textbox with autocomplete')),
+    '#title' => t('Use autocomplete field on menu admin page'),
+    '#default_value' => variable_get('og_menu_assignment', 'autocomplete'),
+    '#required' => 'TRUE',
+    '#description' => t('Autocomplete is recommended when you have a lot of organic groups.'),
   );
   return system_settings_form($form);
 }
@@ -252,8 +252,8 @@ function og_menu_config_form_validate($form, &$form_state) {
 function og_admin_menu_overview_page() {
   $result = db_query("SELECT * FROM {menu_custom}, {og_menu} WHERE menu_custom.menu_name = og_menu.menu_name ORDER BY title", array(), array('fetch' => PDO::FETCH_ASSOC));
   $header = array(t('Title'), array(
-          'data' => t('Operations'),
-          'colspan' => '3',
+      'data' => t('Operations'),
+      'colspan' => '3',
           ));
   $rows = array();
   foreach ($result as $menu) {
