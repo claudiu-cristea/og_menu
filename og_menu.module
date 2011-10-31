@@ -419,45 +419,37 @@ function og_menu_form_menu_delete_menu_confirm_alter(&$form, &$form_state) {
 }
 
 /**
- * Implementation of hook_node_prepare()
+ * Implementation of hook_node_prepare().
  */
 function og_menu_node_prepare($node) {
+  // $node is a group type.
   if (og_is_group_type('node', $node->type)) {
     $node->og_menu = og_menu_get_menus();
   }
-  elseif ((!empty($node->menu)) && (strcmp($node->menu['link_title'], '') == 0) && (!user_access('administer menu')) && (user_access('administer og menu'))) {
-    if (empty($node->nid)) // Are we on the node creation form? If so, it obviously won't have a menu item - bail out
-      return;
-    // menu.modules node_prepare was unable to find a menu link for this node - perhaps an og menu one exists?
-    // We check !user_access('administer menu') because a user with administer menu might have a totally different menu layout - ie system menus
-    // but not the og menu. Then the form for by default insert in incorrect menu link.
-    /* First we need to check what kind of menu item we are expecting. Note that we can't just use 'menu-og-[gid]' because the user could
-     * have chosen a custom name for the menu */
-    $gids = array();
-    // @todo We can probably do this more intelligently
-    if (isset($node->group_audience)) {
-      foreach ($node->group_audience[LANGUAGE_NONE] as $item) {
-        $gids[] = $item['gid'];
-      }
-      $type_menus = db_query("SELECT menu_name FROM {og_menu} WHERE gid IN (:gids)", array(':gids' => array_values($gids)))->fetchCol();
+  // $node is not a new node and is a group content type, menu link is not set.
+  // @todo This used to exclude users with user_access('administer menu'), test the consequences of this change.
+  if ((!empty($node->nid))
+          && og_is_group_content_type('node', $node->type)
+          && empty($node->menu['link_title'])) {
+    global $user;
+    $gids = og_get_entity_groups('user', $user);
+    $og_menus = db_query("SELECT menu_name FROM {og_menu} WHERE gid IN (:gids)", array(':gids' => $gids))->fetchCol();
 
-      $mlid;
-      // This query comes from menu.modules node_prepare, and is how it does it.
-      if (!empty($type_menus)) {
-        $mlid = db_query_range("SELECT mlid FROM {menu_links} WHERE link_path = :path AND module = 'menu' AND menu_name IN (:type_menus) ORDER BY mlid ASC", 0, 1, array(
-                  ':path' => 'node/' . $node->nid,
-                  ':type_menus' => array_values($type_menus),
-                ))->fetchField();
-      }
-      if ($mlid) {
-        // We've found something, so load the item and set that in the node form
-        $item = menu_link_load($mlid);
-        $node->menu = $item;
-
-        // Find the depth limit for the parent select.
-        if (!isset($node->menu['parent_depth_limit'])) {
-          $node->menu['parent_depth_limit'] = _menu_parent_depth_limit($node->menu);
-        }
+    $mlid = FALSE;
+    // This query comes from menu.modules node_prepare, and is how it does it.
+    if (!empty($og_menus)) {
+      $mlid = db_query_range("SELECT mlid FROM {menu_links} WHERE link_path = :path AND module = 'menu' AND menu_name IN (:type_menus) ORDER BY mlid ASC", 0, 1, array(
+                ':path' => 'node/' . $node->nid,
+                ':type_menus' => array_values($og_menus),
+              ))->fetchField();
+    }
+    if ($mlid) {
+      // We've found something, so load the item and set that in the node form
+      $item = menu_link_load($mlid);
+      $node->menu = $item;
+      // Find the depth limit for the parent select.
+      if (!isset($node->menu['parent_depth_limit'])) {
+        $node->menu['parent_depth_limit'] = _menu_parent_depth_limit($node->menu);
       }
     }
   }
