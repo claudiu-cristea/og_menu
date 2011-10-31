@@ -213,7 +213,7 @@ function og_menu_block_view($delta = '') {
       $block['content'] = menu_tree($menu->mname);
     }
   }
-  if ($delta == 'og_multi_menu_block') {
+  if ($delta == 'og_multi_menu_block') { // @todo Test this!!
     // Get all groups associated with the current node
     $node = menu_get_object();
     $gids = array();
@@ -224,7 +224,8 @@ function og_menu_block_view($delta = '') {
           $gids[] = $ng->etid;
       }
       elseif (og_is_group_type('node', $node->type)) {
-        $gids = array($node->nid); //todo: Pretty sure this line is wrong...
+        $group = og_get_group('node', $node->nid);
+        $gids = array($group->gid);
       }
     }
     // If no group was found, fallback to the regular og_get_group_context
@@ -234,7 +235,9 @@ function og_menu_block_view($delta = '') {
       $gids = array($group);
     }
     $menus = og_menu_get_menus($gids);
-    $block['subject'] = check_plain($node->title);
+    if($node) {
+      $block['subject'] = check_plain($node->title);
+    }
     $block['content'] = '';
     foreach ($menus as $menu) {
       $block['content'] .= render(menu_tree($menu->mname));
