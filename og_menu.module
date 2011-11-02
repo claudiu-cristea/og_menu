@@ -427,7 +427,8 @@ function og_menu_form_menu_delete_menu_confirm_alter(&$form, &$form_state) {
 function og_menu_node_prepare($node) {
   // $node is a group type.
   if (og_is_group_type('node', $node->type)) {
-    $node->og_menu = og_menu_get_menus();
+    $og = og_get_group('node', $node->nid);
+    $node->og_menu = og_menu_get_menus(array($og->gid));
   }
   // $node is not a new node and is a group content type, menu link is not set.
   // @todo This used to exclude users with user_access('administer menu'), test the consequences of this change.
