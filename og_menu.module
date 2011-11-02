@@ -483,7 +483,7 @@ function og_menu_node_update($node) {
   if (og_is_group_type('node', $node->type)) {
     $og = og_get_group('node', $node->nid, FALSE, array(OG_STATE_ACTIVE, OG_STATE_PENDING));
     if ($node->og_menu) {
-      $menu = og_menu_get_menus(array($node->nid));
+      $menu = og_menu_get_menus(array($og->gid));
       if (empty($menu)) {
         menu_save(array(
           'menu_name' => 'menu-og-' . $og->gid,
