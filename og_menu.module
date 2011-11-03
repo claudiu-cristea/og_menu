@@ -745,10 +745,10 @@ function og_menu_menu_delete($menu) {
  */
 function og_admin_standard_menu_overview_page() {
   $result = db_query("SELECT *
-                      FROM {menu_custom}
-                      WHERE NOT EXISTS (SELECT og_menu.menu_name
-                      FROM {og_menu}
-                      WHERE og_menu.menu_name = menu_custom.menu_name)
+                      FROM {menu_custom} mc
+                      WHERE NOT EXISTS (SELECT om.menu_name
+                      FROM {og_menu} om
+                      WHERE om.menu_name = mc.menu_name)
                       ORDER BY title;", array(), array('fetch' => PDO::FETCH_ASSOC));
   $header = array(t('Title'), array(
       'data' => t('Operations'),
