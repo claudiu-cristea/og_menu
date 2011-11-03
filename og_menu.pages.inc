@@ -250,7 +250,7 @@ function og_menu_config_form_validate($form, &$form_state) {
  * Just duplicates the standard menu list, but only displays those created through og_menu
  */
 function og_admin_menu_overview_page() {
-  $result = db_query("SELECT * FROM {menu_custom}, {og_menu} WHERE menu_custom.menu_name = og_menu.menu_name ORDER BY title", array(), array('fetch' => PDO::FETCH_ASSOC));
+  $result = db_query("SELECT * FROM {menu_custom} mc, {og_menu} om WHERE mc.menu_name = om.menu_name ORDER BY title", array(), array('fetch' => PDO::FETCH_ASSOC));
   $header = array(t('Title'), array(
       'data' => t('Operations'),
       'colspan' => '3',
