@@ -205,7 +205,7 @@ function og_menu_block_view($delta = '') {
 
     if ($menu) {
       if (variable_get('og_menu_block_links', FALSE)) {
-        $block['subject'] = l(check_plain($menu->mtitle), 'node/' . $context->etid);
+        $block['subject'] = l($menu->mtitle, 'node/' . $context->etid);
       }
       else {
         $block['subject'] = check_plain($menu->mtitle);
