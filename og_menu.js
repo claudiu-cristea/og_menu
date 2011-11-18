@@ -4,7 +4,7 @@
  */
 (function ($) {
   Drupal.behaviors.og_menu = {
-  	
+
     attach: function() {
       // Initialize variables
       var savedTitle = '';
@@ -19,7 +19,7 @@
       function toggle(values) {
         var title = inputTitle.val()
         var none = true;
-    
+
         // Reset menu form elements
         disabledOption.remove();
         inputDelete.attr('checked', '');
@@ -73,28 +73,14 @@
         toggle($(this).val());
       };
 
-      // Toggle function for OG checkboxes
-      var toggleCheckboxes = function() {
-        var values = [];
-        $('.group-audience:checkbox:checked').each(function() {
-          values.push($(this).val());
-        });
-        toggle(values);
-      };
-
       // Alter menu on OG select change and init
       if ($('select.group-audience').size()) {
         $('select.group-audience').change(toggleSelect).ready(toggleSelect);
       }
 
-      // Alter menu on OG checkboxes change and init
-      if ($('.group-audience:checkbox').size()) {
-        $('.group-audience:checkbox').change(toggleCheckboxes).ready(toggleCheckboxes);
-      }
-      
       // init
       toggle($('select.group-audience').val());
     }
-   	   
+
   };
 }(jQuery));
