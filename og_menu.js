@@ -17,6 +17,13 @@
 
       // Toggle menu alteration
       function toggle(values) {
+        // make sure 'values' is always an array, i.e. when using single value select
+        if (!(values instanceof Array)) {
+          var v = values;
+          values = [];
+          values[0] = v;
+        }
+
         var title = inputTitle.val()
         var none = true;
 
