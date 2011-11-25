@@ -12,10 +12,8 @@ function og_menu_overview_page($node) {
   $gid = og_get_group_ids('node', array($node->nid), FALSE, array(OG_STATE_ACTIVE, OG_STATE_PENDING));
   $gid = $gid[$node->nid];
 
-
   // Set the title of the page.
   drupal_set_title(t('List menus for @title', array('@title' => $node->title)));
-
 
   $result = db_query("
     SELECT om.gid, om.menu_name as name, m.title as title, m.description as description FROM {og_menu} om
@@ -102,7 +100,7 @@ function og_menu_edit_menu_form_submit_redirect($form, &$form_state) {
  */
 function og_menu_overview_form($form, &$form_state, $menu, $node) {
   module_load_include('inc', 'menu', 'menu.admin');
-  drupal_set_title(t('List items for menu @mtitle', array('@mtitle' => $menu['title'])));
+  drupal_set_title(t('List items for menu !mtitle', array('!mtitle' => $menu['title'])));
   $b = drupal_get_breadcrumb();
   $b[] = l($node->title, 'node/' . $node->nid);
   $b[] = l(t('Menus'), 'node/' . $node->nid . '/og_menu');
@@ -170,7 +168,7 @@ function og_menu_edit_item_form($form, &$form_state, $type, $item, $menu, $node)
   }
 
   // Set the title of the page.
-  drupal_set_title(t('Add item into menu @mtitle', array('@mtitle' => $menu->mtitle)));
+  drupal_set_title(t('Add item into menu !mtitle', array('!mtitle' => $menu->mtitle)));
 
 
   // Build the form.
