@@ -407,7 +407,7 @@ function og_menu_form_block_admin_display_form_alter(&$form, &$form_state) {
 // Only show og menu blocks on the block admin page if the user wants it.
   if (!variable_get('og_menu_show_blocks', FALSE)) {
     // @todo convert to new database api functions
-    $result = db_query("SELECT menu_custom.menu_name FROM {menu_custom}, {og_menu} WHERE og_menu.menu_name = menu_custom.menu_name")->fetchCol();
+    $result = db_query("SELECT mc.menu_name FROM {menu_custom} mc, {og_menu} ogm WHERE ogm.menu_name = mc.menu_name")->fetchCol();
     foreach ($result as $ogblock) {
       unset($form['blocks']['menu_' . $ogblock]);
     }
