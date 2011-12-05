@@ -655,7 +655,7 @@ function og_menu_access($node, $menu = NULL, $op = NULL) {
     }
     elseif ($menu) {
       $gids = array();
-      $result = db_query("SELECT gid FROM {og_menu} WHERE menu_name = :mname", array(':maname' => $menu['menu_name']));
+      $result = db_query("SELECT gid FROM {og_menu} WHERE menu_name = :mname", array(':mname' => $menu['menu_name']));
       foreach ($result as $group) {
         if ($group->gid && og_is_member($group->gid)) {
           return TRUE;
