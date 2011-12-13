@@ -163,12 +163,12 @@ function og_menu_edit_item_form($form, &$form_state, $type, $item, $menu, $node)
   $form = drupal_retrieve_form('menu_edit_item', $form_state, $form, $type, $item, $menu);
   $list = array();
   $menus = og_menu_get_menus(array(og_get_group('node', $node->nid)->gid));
-  foreach ($menus as $menu) {
-    $list[$menu->mname] = $menu->mtitle;
+  foreach ($menus as $option) {
+    $list[$option->mname] = $option->mtitle;
   }
 
   // Set the title of the page.
-  drupal_set_title(t('Add item into menu !mtitle', array('!mtitle' => $menu->mtitle)));
+  drupal_set_title(t('Add item into menu !mtitle', array('!mtitle' => $menu['title'])));
 
 
   // Build the form.
