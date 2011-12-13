@@ -686,23 +686,25 @@ function og_menu_redirect($form, &$form_state) {
 function og_menu_edit_menu_form_submit($form, &$form_state) {
   $menu_name = $form_state['values']['menu_name'];
   $value = $form_state['values']['og_menu_gid'];
-  // Add 'menu-' if this is a new menu
-  if (strncmp($menu_name, 'menu-', 5) != 0) {
-    $menu_name = 'menu-' . $menu_name;
-  }
-  if (is_numeric($value)) {
-    og_menu_update_menu($menu_name, $value);
-  }
-  else {
-    preg_match('/^(?:\s*|(.*) )?\[\s*gid\s*:\s*(\d+)\s*\]$/', $value, $matches);
-    if (!empty($matches)) {
-      $value = $matches[count($matches) - 1];
-      if (is_numeric($value)) {
-        og_menu_update_menu($menu_name, $value);
-      }
+  if (!empty($value)) {
+    // Add 'menu-' if this is a new menu
+    if (strncmp($menu_name, 'menu-', 5) != 0) {
+      $menu_name = 'menu-' . $menu_name;
+    }
+    if (is_numeric($value)) {
+      og_menu_update_menu($menu_name, $value);
     }
     else {
-      drupal_set_message(t('Cannot assign menu to invalid group, please retry'), 'error');
+      preg_match('/^(?:\s*|(.*) )?\[\s*gid\s*:\s*(\d+)\s*\]$/', $value, $matches);
+      if (!empty($matches)) {
+        $value = $matches[count($matches) - 1];
+        if (is_numeric($value)) {
+          og_menu_update_menu($menu_name, $value);
+        }
+      }
+      else {
+        drupal_set_message(t('Cannot assign menu to invalid group, please retry'), 'error');
+      }
     }
   }
 }
