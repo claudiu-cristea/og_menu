@@ -320,7 +320,9 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
       $form['menu']['#access'] = user_access('administer og menu');
       $form['menu']['#theme'] = 'og_menu_node_form';
       $form['menu']['link']['parent']['#options'] = $options;
-      $form['#validate'][] = 'og_menu_node_form_validate';
+      if (!user_access('administer menu')) {
+        $form['#validate'][] = 'og_menu_node_form_validate';
+      }
     }
   }
 
