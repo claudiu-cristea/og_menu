@@ -228,7 +228,7 @@ function og_menu_block_view($delta = '') {
       if (og_is_group_content_type('node', $node->type)) {
         $nodegroups = og_load_multiple(og_get_entity_groups('node', $node));
         foreach ($nodegroups as $ng)
-          $gids[] = $ng->etid;
+          $gids[] = $ng->gid;
       }
       elseif (og_is_group_type('node', $node->type)) {
         $group = og_get_group('node', $node->nid);
