@@ -182,8 +182,9 @@ function og_menu_theme($existing, $type, $theme, $path) {
 function theme_og_menu_node_form($form) {
   $menus = og_menu_get_menus();
   foreach ($menus as $menu) {
-    $settings[$menu->mname] = $menu->gid;
+    $settings['menus'][$menu->mname] = $menu->gid;
   }
+  $settings['admin'] = user_access('administer menu');
   drupal_add_js(array('og_menu' => $settings), 'setting');
   drupal_add_js(drupal_get_path('module', 'og_menu') . '/og_menu.js');
 }
@@ -268,10 +269,11 @@ function og_menu_get_context() {
  * Alter the node form's menu form.
  */
 function og_menu_form_node_form_alter(&$form, &$form_state) {
+  $is_group_type = og_is_group_type('node', $form['#node']->type);
+  $is_group_content = og_is_group_content_type('node', $form['#node']->type);
   // We modify the forms for group content and group content types.
   // Group content.
-  if (user_access('administer og menu')
-          && og_is_group_content_type('node', $form['#node']->type)) {
+  if (user_access('administer og menu') && $is_group_content) {
     global $user;
     $groups = array();
     $groups = og_get_entity_groups('user', $user);
@@ -284,6 +286,7 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
     if (!empty($menus)) {
       foreach ($menus as $menu) {
         $list[$menu->mname] = $menu->mtitle;
+        $settings[$menu->mname] = $menu->gid;
       }
       // If user has administer menu permission, also show other menu options.
       if (user_access('administer menu')) {
@@ -298,13 +301,19 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
           }
         }
         // We want to merge the menus the user has available anyway and the OG ones
-        $newlist = array_merge($available_menus, $list);
+        $merged_list = array_merge($available_menus, $list);
       }
       else {
-        $newlist = $list;
+        $merged_list = $list;
       }
+
+        $menus = og_menu_get_menus();
+      foreach ($menus as $menu) {
+        $settings[$menu->mname] = $menu->gid;
+      }
+
       // Menu parent options will format the list in a way Drupal expects and give children, etc
-      $options = menu_parent_options($newlist, array('mlid' => 0));
+      $options = menu_parent_options($merged_list, array('mlid' => 0));
       if ($nid = $form['nid']['#value']) {
         // for some reason menu_get_item(); wasn't giving good results, so meanwhile:
         $mlid = db_select('menu_links', 'ml')
@@ -317,17 +326,18 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
           $form['menu']['link']['parent']['#default_value'] = $menu_link['menu_name'] . ':' . $menu_link['plid'];
         }
       }
+
       $form['menu']['#access'] = user_access('administer og menu');
       $form['menu']['#theme'] = 'og_menu_node_form';
+      $form['menu']['#settings'] = $merged_list;
       $form['menu']['link']['parent']['#options'] = $options;
       if (!user_access('administer menu')) {
         $form['#validate'][] = 'og_menu_node_form_validate';
       }
     }
   }
-
   // Group type.
-  if (og_is_group_type('node', $form['#node']->type)) {
+  if ($is_group_type) {
     $form['og_menu'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable menu for this group'),
