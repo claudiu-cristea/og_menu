@@ -18,8 +18,8 @@ USAGE
 -----
 - Administrators can create OG menus through the regular menu interface at
   admin/structure/menu/add. Choose a group to associate with the menu.
-- Organic group members with the right permission can also manage menus at
-  node/[nid]/og_menu.
+- Organic group members with the "administer og menu" permission can also manage
+  menus at node/[nid]/og_menu.
 - For content types that can be published in groups, users can add a menu link
   directly from the node creation form.
 - For groups content types, users can create an associated menu by checking
