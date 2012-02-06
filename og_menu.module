@@ -468,6 +468,12 @@ function og_menu_node_prepare($node) {
   // $node is a group type.
   if (og_is_group_type('node', $node->type)) {
     $node->og_menu = og_menu_get_menus();
+    if (!empty($node->nid)) {
+      $og = og_get_group('node', $node->nid, FALSE, array(OG_STATE_ACTIVE, OG_STATE_PENDING));
+      if (isset($og->gid)) {
+        $node->og_menu = og_menu_get_menus(array($og->gid));
+      }
+    }
   }
   // $node is not a new node and is a group content type, menu link is not set.
   // @todo This used to exclude users with user_access('administer menu'), test the consequences of this change.
@@ -636,8 +642,9 @@ function og_menu_get_menus($gids = NULL, $user = NULL) {
   }
   if (!$gids) {
     $nodegroups = og_load_multiple(og_get_entity_groups('user', $user));
-    foreach ($nodegroups as $ng)
+    foreach ($nodegroups as $ng) {
       $gids[] = $ng->gid;
+    }
   }
   $menus = array();
   if ($gids) {
@@ -655,7 +662,6 @@ function og_menu_get_menus($gids = NULL, $user = NULL) {
       $menus[] = $menu;
     }
   }
-
   return $menus;
 }
 
