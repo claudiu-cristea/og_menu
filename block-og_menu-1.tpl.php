@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @file block.tpl.php
  *

@@ -118,7 +118,7 @@ function og_menu_theme($existing, $type, $theme, $path) {
  * Theme function for node form.
  */
 function theme_og_menu_node_form($form) {
-  $menus = og_menu_get_menus();
+  $menus = og_menu_get_group_menus();
   foreach ($menus as $menu) {
     $settings[$menu['menu_name']] = $menu['gid'];
   }
@@ -130,7 +130,7 @@ function theme_og_menu_node_form($form) {
  * Implementation of hook_theme_registry_alter().
  */
 function og_menu_theme_registry_alter(&$theme_registry) {  
-	$theme_registry['block']['theme paths'][] = drupal_get_path('module', 'og_menu');
+  $theme_registry['block']['theme paths'][] = drupal_get_path('module', 'og_menu');
 }
 
 /**
@@ -139,14 +139,14 @@ function og_menu_theme_registry_alter(&$theme_registry) {
 function og_menu_block($op = 'list', $delta = 0, $edit = array()) {
   if ($op == 'list') {
     $blocks = array(
-    	0 => array('info' => t('OG Menu : single'), 'cache' => BLOCK_NO_CACHE),
-    	1 => array('info' => t('OG Menu : multiple'), 'cache' => BLOCK_NO_CACHE),
+      0 => array('info' => t('OG Menu : single'), 'cache' => BLOCK_NO_CACHE),
+      1 => array('info' => t('OG Menu : multiple'), 'cache' => BLOCK_NO_CACHE),
     );
     return $blocks;
   }
   else if ($op == 'view' && $delta == 0) {
     $group = og_get_group_context();
-    $menus = og_menu_get_menus(array($group->nid));
+    $menus = og_menu_get_group_menus(array($group->nid));
     $menu = array_shift($menus);
     return array('subject' => check_plain($menu['title']), 'content' => menu_tree($menu['menu_name']));
   }
@@ -168,7 +168,7 @@ function og_menu_block($op = 'list', $delta = 0, $edit = array()) {
       $group = og_get_group_context();
       $gids = array($group->nid);
     }
-    $menus = og_menu_get_menus($gids);
+    $menus = og_menu_get_group_menus($gids);
     foreach ($menus as $menu) {
       $block = new stdClass();
       $block->module = 'og_menu';
@@ -182,13 +182,27 @@ function og_menu_block($op = 'list', $delta = 0, $edit = array()) {
 }
 
 /**
+ * Implementation of hook_og_links_alter().
+ */
+function og_menu_og_links_alter($links, $node) {
+  if (variable_get('og_block_og_menu', TRUE)) {
+    $menus = og_menu_get_group_menus(array($node->nid));
+    foreach ($menus as $menu) {
+      $links[$menu['menu_name']] = check_plain($menu['title']) . menu_tree($menu['menu_name']);
+    }
+  }
+}
+
+/**
  * Implementation of hook_form_alter().
  */
 function og_menu_form_alter(&$form, $form_state, $form_id) {
   // Node form
   if (isset($form['#node']) && $form['#node']->type .'_node_form' == $form_id && og_is_group_post_type($form['#node']->type)) {
-    // Only alter the form if user does not have the administer menu permission
-    if (!user_access('administer menu') && user_access('administer og menu')) {
+    // Only alter the form if user does not have the administer menu permission.
+    // If og_menu_force_admin variable is set to TRUE, even users with
+    // "administer menu" permission will have an altered menu form.
+    if ((!user_access('administer menu') && user_access('administer og menu')) || (user_access('administer menu') && variable_get('og_menu_force_admin', FALSE))) {
       $groups = array();
 
       // If the user has access to more than one group, we take the options
@@ -211,28 +225,46 @@ function og_menu_form_alter(&$form, $form_state, $form_id) {
       else if (!empty($form['og_nodeapi']['invisible']['og_groups'])) {
         $groups[] = array_shift(array_keys($form['og_nodeapi']['invisible']['og_groups']['#value']));
       }
-
-      $list = array();
-      $settings = array();
-      $item = $form['menu']['#item'];
-      $menus = og_menu_get_menus($groups);
-      
-      if (!empty($menus)) {
-        foreach ($menus as $menu) {
-          $list[$menu['menu_name']] = $menu['title'];
-        }
-        $options = menu_parent_options($list, $item);
-        $form['menu']['#access'] = user_access('administer og menu');
-        $form['menu']['#theme'] = 'og_menu_node_form';
-        $form['menu']['parent']['#options'] = $options;
-        $form['#validate'][] = 'og_menu_node_form_validate';
+      // If nothing until here, it means og checkboxes are hidden, let's see if
+      // we can get gids from form_state.
+      else if (!empty($form_state['og_gids'])) {
+        $groups = $form_state['og_gids'];
       }
-      
-      $options = menu_parent_options($list, $item);
-      $form['menu']['#access'] = user_access('administer og menu');
-      $form['menu']['#theme'] = 'og_menu_node_form';
-      $form['menu']['parent']['#options'] = $options;
-      $form['#validate'][] = 'og_menu_node_form_validate';
+			
+			if (!empty($groups)) {
+	      $list = array();
+	      $settings = array();
+	      $item = $form['menu']['#item'];
+	      $menus = og_menu_get_group_menus($groups);
+	      
+	      // Only enable menus if a menu actually exists.
+	      if (!empty($menus)) {
+	        foreach ($menus as $menu) {
+	          $list[$menu['menu_name']] = $menu['title'];
+	        }
+	        $options = menu_parent_options($list, $item);
+	        
+	        // Only enable menus if there are options.
+	        if (isset($options)) {
+	          $form['menu']['#access'] = user_access('administer og menu');
+	          $form['menu']['#theme'] = 'og_menu_node_form';
+	          $form['menu']['parent']['#options'] = array('' => '--') + $options;
+	          $form['#validate'][] = 'og_menu_node_form_validate';
+	          
+	          // If a group is already set, let's activate it by default.
+	          if (!empty($form_state['og_gids'])) {
+	            $menus = og_menu_get_group_menus($form_state['og_gids']);
+	            $form['menu']['parent']['#default_value'] = $menus[0]['menu_name'] . ':0';
+	          }
+	        }
+	        else if (!user_access('administer menu')) {
+	          $form['menu']['#access'] = FALSE;
+	        }
+	      }
+      }
+      else if (!user_access('administer menu')) {
+        $form['menu']['#access'] = FALSE;
+      }
     }
   }
   // Group form
@@ -240,7 +272,7 @@ function og_menu_form_alter(&$form, $form_state, $form_id) {
     $form['og_menu'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable menu for this group'),
-      '#default_value' => empty($form['#node']->og_menu) ? 0 : 1,
+      '#default_value' => empty($form['#node']->og_menu) ? variable_get('og_menu_enable_default', TRUE) : 1,
       '#description' => t('Check to create a menu for this group. Uncheck to delete the menu of this group.'),
     );
   }
@@ -284,7 +316,22 @@ function og_menu_form_alter(&$form, $form_state, $form_id) {
     case 'menu_delete_menu_confirm':
       $form['#submit'][] = 'og_menu_delete_menu_confirm_submit';
       break;
+     case 'block_admin_configure':
+       if ($form['module']['#value'] == 'og') {
+         $form['block_settings']['og_block_og_menu'] = array(
+           '#type' => 'checkbox',
+           '#title' => t('Show group menus'),
+           '#description' => t('Display group menus inside this block.'),
+           '#default_value' => variable_get('og_block_og_menu', TRUE),
+         );
+         $form['#submit'][] = 'og_block_og_menu_submit';
+       }
+       break;
   }
+}
+
+function og_block_og_menu_submit($form, &$form_state) {
+  variable_set("og_block_og_menu", $form_state['values']['og_block_og_menu'] == 1);
 }
 
 /**
@@ -301,7 +348,7 @@ function og_menu_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         break;
       case 'update':
         if ($node->og_menu) {
-          $menu = og_menu_get_menus(array($node->nid));
+          $menu = og_menu_get_group_menus(array($node->nid));
           if (empty($menu)) {
             db_query("INSERT INTO {menu_custom} (menu_name, title, description) VALUES ('%s', '%s', '%s')", 'menu-og-'. $node->nid, $node->title, t('Menu for') .' '. check_plain($node->title));
             og_menu_update_menu('menu-og-'. $node->nid, $node->nid);
@@ -313,7 +360,7 @@ function og_menu_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
         }
         break;
       case 'prepare':
-        $node->og_menu = og_menu_get_menus(array($node->nid));
+        $node->og_menu = og_menu_get_group_menus(array($node->nid));
         break;
       case 'delete':
         db_query("DELETE FROM {menu_custom} WHERE menu_name = '%s'", 'menu-og-'. $node->nid);
@@ -332,6 +379,8 @@ function og_menu_overview_page($node) {
   while ($menu = db_fetch_array($result)) {
     $menu['href'] = 'node/'. $node->nid .'/og_menu/'. $menu['menu_name'];
     $menu['localized_options'] = array();
+    $menu['title'] = filter_xss_admin($menu['title']);
+    $menu['description'] = filter_xss_admin($menu['description']);
     $content[] = $menu;
   }
   return theme('admin_block_content', $content);
@@ -377,9 +426,16 @@ function og_menu_edit_menu_form(&$form_state, $type, $menu = array()) {
   $form['#submit'][] = 'menu_edit_menu_submit';
   $form['#submit'][] = 'og_menu_edit_menu_form_submit';
   $form['#submit'][] = 'og_menu_edit_menu_form_submit_redirect';
+  $form['#validate'][] = 'og_menu_edit_menu_validate';
   $form['#validate'][] = 'menu_edit_menu_validate';
   $form['delete']['#submit'][] = 'og_menu_delete_menu_form_submit';
   return $form;
+}
+
+function og_menu_edit_menu_validate($form, &$form_state) {
+  if (preg_match('/^menu-/', $form_state['values']['menu_name'])) {
+    form_set_error('menu_name', t('The menu name cannot begin with "menu-".'));
+  }
 }
 
 function og_menu_edit_menu_form_submit_redirect($form, &$form_state) {
@@ -440,7 +496,7 @@ function og_menu_edit_item_form(&$form_state, $type, $node, $item, $menu) {
   module_load_include('inc', 'menu', 'menu.admin');
   $form = drupal_retrieve_form('menu_edit_item', $form_state, $type, $item, $menu);
   $list = array();
-  $menus = og_menu_get_menus(array($node->nid));
+  $menus = og_menu_get_group_menus(array($node->nid));
   foreach ($menus as $menu) {
     $list[$menu['menu_name']] = $menu['title'];
   }
@@ -464,31 +520,39 @@ function og_menu_delete_item_form(&$form_state, $item) {
 }
 
 function og_menu_node_form_validate($form, &$form_state) {
-  $menus = og_menu_get_menus();
-  $parents = explode(':', $form_state['values']['menu']['parent']);
-  $parent = $parents[0];
-  $gids = array();
-  $has_menu_access = FALSE;
-  
-  // Populate $gids with selected groups
-  foreach ($form_state['values']['og_groups'] as $gid => $enabled) {
-    if ($enabled) {
-      $gids[] = $gid;
-    }
+  // If parent is empty, we remove the link title to force menu module to
+  // not create a menu entry.
+  if (empty($form_state['values']['menu']['parent'])) {
+    $form_state['values']['menu']['link_title'] = '';
   }
-
-  foreach ($menus as $menu) {
-    if ($menu['menu_name'] == $parent) {
-      // Check if user has access to the chosen menu parent
-      $has_menu_access = TRUE;
-      // Check if menu belongs to one of the selected groups
-      if (!in_array($menu['gid'], $gids)) {
-        form_set_error('og_groups', t('The menu you chose does not belong to the selected groups.'));
+  // Otherwise, let's create a menu.
+  else {
+    $menus = og_menu_get_group_menus();
+    $parents = explode(':', $form_state['values']['menu']['parent']);
+    $parent = $parents[0];
+    $gids = array();
+    $has_menu_access = FALSE;
+    
+    // Populate $gids with selected groups
+    foreach ($form_state['values']['og_groups'] as $gid => $enabled) {
+      if ($enabled) {
+        $gids[] = $gid;
       }
     }
-  }
-  if (!$has_menu_access) {
-    form_set_error('menu][parent', t('You cannot add menu items to this menu. Choose another parent menu.'));
+  
+    foreach ($menus as $menu) {
+      if ($menu['menu_name'] == $parent) {
+        // Check if user has access to the chosen menu parent
+        $has_menu_access = TRUE;
+        // Check if menu belongs to one of the selected groups
+        if (!in_array($menu['gid'], $gids)) {
+          form_set_error('og_groups', t('The menu you chose does not belong to the selected groups.'));
+        }
+      }
+    }
+    if (!$has_menu_access) {
+      form_set_error('menu][parent', t('You cannot add menu items to this menu. Choose another parent menu.'));
+    }
   }
 }
 
@@ -510,7 +574,7 @@ function og_menu_update_menu($menu_name, $gid = NULL) {
  * @return
  *    A structured array with menus list.
  */
-function og_menu_get_menus($gids = NULL, $user = NULL) {
+function og_menu_get_group_menus($gids = NULL, $user = NULL) {
   if (!$user) {
     global $user;
   }
@@ -521,6 +585,8 @@ function og_menu_get_menus($gids = NULL, $user = NULL) {
   if ($gids) {
     $result = db_query("SELECT * FROM {menu_custom} m INNER JOIN {og_menu} om ON m.menu_name = om.menu_name WHERE om.gid IN (". db_placeholders($gids, "int"). ") ORDER BY m.title", $gids);
     while ($menu = db_fetch_array($result)) {
+      $menu['title'] = check_plain($menu['title']);
+      $menu['description'] = check_plain($menu['description']);
       $menus[] = $menu;
     }
   }
