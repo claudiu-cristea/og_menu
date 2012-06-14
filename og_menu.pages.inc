@@ -10,9 +10,6 @@
  * user's group and along with their description.
  */
 function og_menu_overview_page($node) {
-  $gid = og_get_group_ids('node', array($node->nid), FALSE, array(OG_STATE_ACTIVE, OG_STATE_PENDING));
-  $gid = $gid[$node->nid];
-
   // Set the title of the page.
   drupal_set_title(t('List menus for @title', array('@title' => $node->title)), PASS_THROUGH);
 
@@ -22,7 +19,7 @@ function og_menu_overview_page($node) {
     LEFT JOIN {menu_custom} m
     ON om.menu_name = m.menu_name
     WHERE om.gid = :gid
-    ORDER BY title", array(':gid' => $gid));
+    ORDER BY title", array(':gid' => $node->nid));
   $header = array(t('Title'), array('data' => t('Operations'), 'colspan' => '3'));
   $rows = array();
   foreach ($result as $menu) {
@@ -47,7 +44,6 @@ function og_menu_overview_page($node) {
 function og_menu_edit_menu_form($form, &$form_state, $type, $menu = array()) {
   module_load_include('inc', 'menu', 'menu.admin');
   $node = menu_get_object('node', 1);
-  $og = og_get_group('node', $node->nid, FALSE, array(OG_STATE_ACTIVE, OG_STATE_PENDING));
 
   // Set the title of the page.
   switch ($type) {
@@ -62,7 +58,7 @@ function og_menu_edit_menu_form($form, &$form_state, $type, $menu = array()) {
   $form = drupal_retrieve_form('menu_edit_menu', $form_state, $type, $menu);
   $form['og_menu_gid'] = array(
     '#type' => 'value',
-    '#value' => $og->gid,
+    '#value' => $node->nid,
   );
   // Add submit handlers.
   $form['#submit'][] = 'menu_edit_menu_submit';
@@ -164,7 +160,7 @@ function og_menu_edit_item_form($form, &$form_state, $type, $item, $menu, $node)
   module_load_include('inc', 'menu', 'menu.admin');
   $form = drupal_retrieve_form('menu_edit_item', $form_state, $form, $type, $item, $menu);
   $list = array();
-  $menus = og_menu_get_group_menus(array(og_get_group('node', $node->nid)->gid));
+  $menus = og_menu_get_group_menus(array($node->nid));
   foreach ($menus as $option) {
     $list[$option->mname] = $option->mtitle;
   }
