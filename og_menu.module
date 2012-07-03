@@ -227,10 +227,7 @@ function og_menu_block_view($delta = '') {
     $gids = array();
     if ($node) {
       if (og_is_group_content_type('node', $node->type)) {
-        $nodegroups = og_get_entity_groups('node', $node);
-        if (!empty($nodegroups['node'])) {
-          $gids = $nodegroups['node'];
-        }
+        $gids = og_menu_get_node_groups('node', $node);
       }
       elseif (og_is_group_type('node', $node->type)) {
         $gids = array($node->nid);
@@ -315,10 +312,10 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
     if (user_access('administer og menu') || $context_based_access || $group_based_access) {
       global $user;
       $groups = array();
-      $groups = og_get_entity_groups('user', $user);
+      $gids = og_menu_get_node_groups('user', $user);
       $list = array();
       $settings = array();
-      $menus = og_menu_get_group_menus($groups['node']);
+      $menus = og_menu_get_group_menus($gids);
       if (!empty($menus)) {
         foreach ($menus as $menu) {
           $list[$menu->mname] = $menu->mtitle;
@@ -398,9 +395,10 @@ function og_menu_form_menu_edit_menu_alter(&$form, &$form_state) {
     }
     else {
       global $user;
-      $entities = og_get_entity_groups('user', $user);
-      foreach (array_keys($entities) as $entity_type) {
-        $groups = entity_load($entity_type, $entities[$entity_type]);
+
+      $gids = og_menu_get_node_groups('user', $user);
+      $groups = node_load_multiple($gids);
+      if (!empty($groups)) {
         foreach ($groups as $gid => $group) {
           $options[$gid] = $group->title;
         }
@@ -544,7 +542,7 @@ function og_menu_node_prepare($node) {
           && og_is_group_content_type('node', $node->type)
           && empty($node->menu['link_title'])) {
     global $user;
-    if ($gids = og_get_entity_groups('user', $user)) {
+    if ($gids = og_menu_get_node_groups('user', $user)) {
       $og_menus = db_query("SELECT menu_name FROM {og_menu} WHERE gid IN (:gids)", array(':gids' => $gids))->fetchCol();
     }
     $mlid = FALSE;
@@ -660,7 +658,7 @@ function og_menu_node_form_validate($form, &$form_state) {
     // It's possible that the user doesn't have permission to change
     // the group audience once a piece of content has been created.
     // In this case, we need to look it up.
-    $gids = og_get_entity_groups('node', $form_state['node']);
+    $gids = og_menu_get_node_groups('node', $form_state['node']);
   }
 
   foreach ($menus as $menu) {
@@ -704,10 +702,7 @@ function og_menu_get_group_menus($gids = NULL, $user = NULL) {
     global $user;
   }
   if (!$gids) {
-    $nodegroups = og_get_entity_groups('user', $user);
-    if (!empty($nodegroups['node'])) {
-      $gids = $nodegroups['node'];
-    }
+    $gids = og_menu_get_node_groups('user', $user);
   }
   $menus = array();
   if ($gids) {
@@ -898,4 +893,25 @@ function _og_menu_autocomplete($string) {
   }
   // return for JS
   drupal_json_output($matches);
+}
+
+/**
+ * Return a list of node groups corresponding to nodes
+ *
+ * @see og_get_entity_groups()
+ * @param string $group_type the entity type .eg node, user
+ * @param object the object in question .eg node user
+ * @return array the gids corresponding to the criteria or empty
+ */
+function og_menu_get_node_groups($group_type, $object) {
+  $groups = og_get_entity_groups($group_type, $object);
+
+  if (!empty($nodegroups['node'])) {
+    $gids = $nodegroups['node'];
+  }
+  else {
+    $gids = array();
+  }
+
+  return $gids;
 }
