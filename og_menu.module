@@ -298,6 +298,12 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
 
   // Group content.
   if ($is_group_content) {
+    // Check if we are here thanks to an ajax call, if so, add url context
+    if (isset($form_state['complete form']) && $form_state['complete form']['#action']) {
+      $action = parse_url($form_state['complete form']['#action']);
+      parse_str($action['query'], $_GET);
+    }
+    
     // Check if we get any group context from the url
     $gids = array_values(og_get_context_by_url());
     $context_based_access = FALSE;
