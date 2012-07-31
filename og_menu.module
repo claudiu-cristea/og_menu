@@ -303,7 +303,7 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
       $action = parse_url($form_state['complete form']['#action']);
       parse_str($action['query'], $_GET);
     }
-    
+
     // Check if we get any group context from the url
     $gids = array_values(og_get_context_by_url());
     $context_based_access = FALSE;
@@ -358,7 +358,14 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
         }
 
         // Menu parent options will format the list in a way Drupal expects and give children, etc
-        $options = menu_parent_options($merged_list, array('mlid' => 0));
+        $item = array();
+        if (isset($form['menu']['link']['mlid']['#value'])) {
+          $item = menu_link_load($form['menu']['link']['mlid']['#value']);
+        }
+        else {
+          $item['mlid'] = 0;
+        }
+        $options = menu_parent_options($merged_list, $item);
         if ($nid = $form['nid']['#value']) {
           $form['menu']['link']['parent']['#default_value'] = $link['menu_name'] . ':' . $link['plid'];
         }
