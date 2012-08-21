@@ -1,0 +1,67 @@
+diff --git a/og_menu.module
+index e7637bc..3260849 100644
+--- a/og_menu.module
++++ b/og_menu.module
+@@ -586,30 +586,34 @@ function og_menu_node_insert($node) {
+  */
+ function og_menu_node_update($node) {
+   if (og_is_group_type('node', $node->type)) {
+-    if ($node->og_menu) {
+-      $menu = og_menu_get_group_menus(array($node->nid));
+-      if (empty($menu)) {
+-        menu_save(array(
+-          'menu_name' => 'menu-og-' . $node->nid,
+-          'title' => $node->title,
+-          'description' => t('OG Menu for') . ' ' . check_plain($node->title),
+-        ));
+-        og_menu_update_menu('menu-og-' . $node->nid, $node->nid);
++    if (isset($node->og_menu)) {
++      if ($node->og_menu) {
++        $menu = og_menu_get_group_menus(array($node->nid));
++        if (empty($menu)) {
++          menu_save(array(
++            'menu_name' => 'menu-og-' . $node->nid,
++            'title' => $node->title,
++            'description' => t('OG Menu for') . ' ' . check_plain($node->title),
++          ));
++          og_menu_update_menu('menu-og-' . $node->nid, $node->nid);
++        }
+       }
+-    }
+-    else {
+-      // We can't assume that the menu name is 'menu-og-[gid]'
+-      // we need to look up menus associated with this group
+-      $result = db_query('SELECT menu_name FROM {og_menu} WHERE gid = :gid', array(':gid' => $node->nid))->fetchCol();
+-      foreach ($result as $menu_name) {
+-        menu_delete(array(
+-          'menu_name' => $menu_name,
+-          'title' => $node->title,
+-          'description' => t('OG Menu for') . ' ' . check_plain($node->title),
+-        ));
+-        og_menu_update_menu($menu_name);
++      else {
++        // Delete the associated menus.
++        // We can't assume that the menu name is 'menu-og-[gid]'
++        // we need to look up menus associated with this group
++        $result = db_query('SELECT menu_name FROM {og_menu} WHERE gid = :gid', array(':gid' => $node->nid))->fetchCol();
++        foreach ($result as $menu_name) {
++          menu_delete(array(
++            'menu_name' => $menu_name,
++            'title' => $node->title,
++            'description' => t('OG Menu for') . ' ' . check_plain($node->title),
++          ));
++          og_menu_update_menu($menu_name);
++        }
+       }
+     }
++    // else = programmatic node save, do nothing.
+   }
+ }
+ 
+@@ -914,4 +918,4 @@ function og_menu_get_node_groups($group_type, $object) {
+   }
+ 
+   return $gids;
+-}
+\ No newline at end of file
++}

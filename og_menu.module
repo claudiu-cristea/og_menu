@@ -623,30 +623,34 @@ function og_menu_node_insert($node) {
  */
 function og_menu_node_update($node) {
   if (og_is_group_type('node', $node->type)) {
-    if ($node->og_menu) {
-      $menu = og_menu_get_group_menus(array($node->nid));
-      if (empty($menu)) {
-        menu_save(array(
-          'menu_name' => 'menu-og-' . $node->nid,
-          'title' => $node->title,
-          'description' => t('OG Menu for') . ' ' . check_plain($node->title),
-        ));
-        og_menu_update_menu('menu-og-' . $node->nid, $node->nid);
+    if (isset($node->og_menu)) {
+      if ($node->og_menu) {
+        $menu = og_menu_get_group_menus(array($node->nid));
+        if (empty($menu)) {
+          menu_save(array(
+            'menu_name' => 'menu-og-' . $node->nid,
+            'title' => $node->title,
+            'description' => t('OG Menu for') . ' ' . check_plain($node->title),
+          ));
+          og_menu_update_menu('menu-og-' . $node->nid, $node->nid);
+        }
+      }
+      else {
+        // Delete the associated menus.
+        // We can't assume that the menu name is 'menu-og-[gid]'
+        // we need to look up menus associated with this group
+        $result = db_query('SELECT menu_name FROM {og_menu} WHERE gid = :gid', array(':gid' => $node->nid))->fetchCol();
+        foreach ($result as $menu_name) {
+          menu_delete(array(
+            'menu_name' => $menu_name,
+            'title' => $node->title,
+            'description' => t('OG Menu for') . ' ' . check_plain($node->title),
+          ));
+          og_menu_update_menu($menu_name);
+        }
       }
     }
-    else {
-      // We can't assume that the menu name is 'menu-og-[gid]'
-      // we need to look up menus associated with this group
-      $result = db_query('SELECT menu_name FROM {og_menu} WHERE gid = :gid', array(':gid' => $node->nid))->fetchCol();
-      foreach ($result as $menu_name) {
-        menu_delete(array(
-          'menu_name' => $menu_name,
-          'title' => $node->title,
-          'description' => t('OG Menu for') . ' ' . check_plain($node->title),
-        ));
-        og_menu_update_menu($menu_name);
-      }
-    }
+    // else = programmatic node save, do nothing.
   }
 }
 
