@@ -145,9 +145,11 @@ function og_menu_menu() {
   $items['admin/structure/og_menu'] = array(
     'title' => 'Organic groups menus',
     'description' => 'Add new organic groups menus to your site, edit existing ones, and rename and reorganize menu links.',
-    'page callback' => 'og_admin_menu_overview_page',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('og_admin_menu_overview_form'),
     'access callback' => 'user_access',
     'access arguments' => array('administer menu'),
+    'type' => MENU_NORMAL_ITEM,
     'file' => 'og_menu.pages.inc',
   );
   $items['og_menu/autocomplete'] = array(

@@ -327,20 +327,101 @@ function og_menu_config_form_validate($form, &$form_state) {
  * Callback for admin/structure/og_menu
  * Just duplicates the standard menu list, but only displays those created through og_menu
  */
-function og_admin_menu_overview_page() {
-  $result = db_query("SELECT * FROM {menu_custom} mc, {og_menu} om WHERE mc.menu_name = om.menu_name ORDER BY title", array(), array('fetch' => PDO::FETCH_ASSOC));
+function og_admin_menu_overview_form($form, $form_state) {
+  $session = isset($_SESSION['og_menu_filter']) ? $_SESSION['og_menu_filter'] : array();  
+
+  // Get filter value from $_SESSION variable.
+  foreach ($session as $filter) {
+    list($type, $value) = $filter;
+  }
+  
+  $form['filters'] = array(
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => (isset($type)) ? FALSE : TRUE,
+    '#title' => 'Filter',
+    '#description' => 'Filter on the title of the OG menu.',
+  );
+  
+  $form['filters']['og_menu_filter'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Filter this out'),
+    '#required' => FALSE,
+    '#size' => 20,
+    '#default_value' => isset($type) ? $value : '',
+  );
+  
+  $form['filters']['og_menu_actions'] = array(
+    '#type' => 'actions',
+    '#attributes' => array('class' => array('container-inline')),
+  );
+  $form['filters']['og_menu_actions']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Filter'),
+  );
+  if (count($session)) {
+    $form['filters']['og_menu_actions']['reset'] = array('#type' => 'submit', '#value' => t('Reset'));
+  }
+  
   $header = array(t('Title'), array(
-      'data' => t('Operations'),
-      'colspan' => '3',
-          ));
+    'data' => t('Operations'),
+    'colspan' => '3',
+  ));
+  $header = array(
+    array('data' => 'Title', 'field' => 'title', 'sort' => 'asc'),
+    array('data' => 'Operations', 'colspan' => '3'),
+  );
+  
+  // Build Query (extend for paging and sorting).
+  $query = db_select('menu_custom', 'mc')->extend('PagerDefault')->limit(20);
+  $query->join('og_menu', 'om', 'mc.menu_name = om.menu_name');    //Pager Extender
+  $query->fields('mc')
+    ->fields('om')
+    ->orderBy('title')
+    ->extend('TableSort')
+    ->orderByHeader($header);  
+
+  // Add conditional filter if enter by user.
+  if (isset($type)) {
+    $query->condition('title', '%' . $value . '%', 'LIKE');
+  }
+  
+  $result = $query->execute();
+  
+  // Build table.
   $rows = array();
   foreach ($result as $menu) {
-    $row = array(theme('menu_admin_overview', array('title' => $menu['title'], 'name' => $menu['menu_name'], 'description' => $menu['description'])));
-    $row[] = array('data' => l(t('list links'), 'admin/structure/menu/manage/' . $menu['menu_name']));
-    $row[] = array('data' => l(t('edit menu'), 'admin/structure/menu/manage/' . $menu['menu_name'] . '/edit'));
-    $row[] = array('data' => l(t('add link'), 'admin/structure/menu/manage/' . $menu['menu_name'] . '/add'));
+    $row = array(theme('menu_admin_overview', array('title' => $menu->title, 'name' => $menu->menu_name, 'description' => $menu->description)));
+    $row[] = array('data' => l(t('list links'), 'admin/structure/menu/manage/' . $menu->menu_name));
+    $row[] = array('data' => l(t('edit menu'), 'admin/structure/menu/manage/' . $menu->menu_name . '/edit'));
+    $row[] = array('data' => l(t('add link'), 'admin/structure/menu/manage/' . $menu->menu_name . '/add'));
     $rows[] = $row;
   }
+  
+  $output = theme('table', array('header' => $header, 'rows' => $rows)) . theme('pager');
+  
+  $form['og_menu_menu_list'] = array(
+    '#type' => 'markup',
+    '#title' => t('Results'),
+    '#markup' => $output,
+  );
+    
+  return $form;
+}
 
-  return theme('table', array('header' => $header, 'rows' => $rows));
+/**
+ * Process result from OG Menu administration filter form.
+ */
+function og_admin_menu_overview_form_submit($form, &$form_state) {
+  switch ($form_state['values']['op']) {
+    case t('Filter'):
+      if (isset($form_state['values']['og_menu_filter']) && $form_state['values']['og_menu_filter'] != '') {
+        $_SESSION['og_menu_filter'][] = array('og_menu_filter', $form_state['values']['og_menu_filter']);
+        
+      }
+      break;
+    case t('Reset'):
+      $_SESSION['og_menu_filter'] = array();
+      break;
+  }
 }
