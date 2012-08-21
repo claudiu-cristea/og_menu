@@ -449,14 +449,14 @@ function og_menu_form_menu_edit_menu_alter(&$form, &$form_state) {
             ->fetchAssoc();
     $gid = $ogm['gid'];
 
-    $og = $gid ? og_load($gid) : NULL;
+    $og = $gid ? entity_load_single('node', $gid) : NULL;
     // Add menu og assignment to the form
     switch (variable_get('og_menu_assignment', 'autocomplete')) {
       case 'autocomplete':
         $form['og_menu_gid'] = array(
           '#title' => t('Enable this menu for the following group'),
           '#type' => 'textfield',
-          '#default_value' => !is_null($gid) ? $og->label . ' [gid:' . $gid . ']' : '',
+          '#default_value' => !is_null($gid) ? $og->title . ' [gid:' . $gid . ']' : '',
           '#autocomplete_path' => 'og_menu/autocomplete',
         );
         break;
