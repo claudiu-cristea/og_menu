@@ -114,14 +114,14 @@ function og_menu_overview_form($form, &$form_state, $menu, $node) {
       $operations = array();
       $operations['edit'] = array(
         '#type' => 'link',
-        '#title' => 'edit',
+        '#title' => t('edit'),
         '#href' => 'node/' . $node->nid . '/og_menu/' . $menu['menu_name'] . '/item/' . $item['mlid'] . '/edit',
       );
 
       if ($item['module'] == 'menu' || $item['updated'] == 1) {
         $operations['delete'] = array(
           '#type' => 'link',
-          '#title' => 'delete',
+          '#title' => t('delete'),
           '#href' => 'node/' . $node->nid . '/og_menu/' . $menu['menu_name'] . '/item/' . $item['mlid'] . '/delete',
         );
       }
