@@ -196,12 +196,55 @@ function og_menu_delete_item_form($form, &$form_state, $item) {
  * Form callback for OG Menu configuration.
  */
 function og_menu_config_form($form, &$form_state) {
+  $bundles = og_get_all_group_bundle();  
+  
   $form['og_menu_block_links'] = array(
     '#type' => 'checkbox',
     '#title' => t('Convert OG Menu block titles into links'),
     '#default_value' => variable_get('og_menu_block_links', FALSE),
     '#description' => t('If enabled, OG Menu block titles will link to the group node.'),
   );
+  $form['og_menu_create_by_default'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Automatically create a OG Menu for new Organic Group'),
+    '#default_value' => variable_get('og_menu_create_by_default', FALSE),
+    '#description' => t('If enabled, an OG Menu will be created by default when a new Organic Group node is created.'),
+  );
+  
+  $form['og_menu_default_link_bundles'] = array(
+    '#title' => t('Default OG Menu Links'),
+    '#type' => 'fieldset',
+    '#collapsible' => TRUE,
+    '#collapsed' => FALSE,
+    '#description' => t('Specify default links to be added to get each new OG Menu for each node bundle.  Enter each <b>URL</b> followed by a <b>title</b>
+        Delimited by a pipe. Examples: <br><br><ul><li>www.example.com|Example Link</li></ul>
+        <ul><li>faculty/[node:nid]|Link to Faculty Page for Group <em>(If tokens are enabled)</em></li></ul>'),
+  );
+
+  // Add a field for each bundle.
+  foreach ($bundles['node'] as $bundle => $bundle_label) {
+    $form['og_menu_default_link_bundles']['og_menu_default_links_' . strtolower($bundle)] = array(
+      '#type' => 'textarea',
+      '#title' => t("<em>{$bundle_label}</em> Bundle"),
+      '#default_value' => variable_get('og_menu_default_links_' . strtolower($bundle), FALSE),
+      '#description' => t("These links will be added to any new OG Menus added to <b>{$bundle_label}</b> groups."),
+    );
+  }
+  
+  if (module_exists('token')) {
+    $form['token_help'] = array(
+      '#title' => t('Replacement patterns'),
+      '#type' => 'fieldset',
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+      '#description' => t('Prefer raw-text replacements for text to avoid problems with HTML entities!'),
+    );
+  
+    $form['token_help']['help'] = array(
+      '#theme' => 'token_tree',
+      '#token_types' => array('node'),
+    );
+  }
   $form['og_menu_max_menus_per_group'] = array(
     '#type' => 'textfield',
     '#title' => t('Maximum number of menus per group'),
@@ -266,6 +309,18 @@ function og_menu_config_form_validate($form, &$form_state) {
   elseif ($max_num < 0) {
     form_set_error('og_menu_max_menus_per_group', t('Maximum number of menus per group must be positive.'));
   }
+  
+  foreach($form_state['values'] as $form_index => $form_val) {
+    if (preg_match('/^og_menu_default_links_(\w+)$/', $form_index)) {
+      $links = explode("\n",$form_val ); 
+      foreach ($links as $link) {
+        $link_parts = explode('|', $link);
+        if (substr($link_parts[0], 0, 1) == '/') {
+          form_set_error('$form_index', t("{$link} is not a valid link. Make sure link does not start with an '/'."));
+        }
+      }
+    }
+  }  
 }
 
 /**

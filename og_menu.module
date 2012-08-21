@@ -356,17 +356,52 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
       }
     }
   }
+  
+  if (isset($form['nid']['#value'])) {
+    $og_menu_default_value = empty($form['#node']->og_menu) ? 0 : 1;
+  } else {
+    $og_menu_default_value = variable_get('og_menu_create_by_default', FALSE);
+  }
+  
   // Group type.
   if ($is_group_type) {
     $form['og_menu'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable menu for this group'),
-      '#default_value' => empty($form['#node']->og_menu) ? 0 : 1,
+      '#default_value' => $og_menu_default_value,
       '#description' => t('Check to create a menu for this group. Uncheck to delete all menus associated with this group.'),
     );
     // @todo If we're going to delete all of the groups menus,
     //       we should ask the user for confirmation
     //$form['#submit'][] = 'og_menu_group_form_validate';
+  }
+}
+
+
+/**
+ * Implements hook_menu_insert().  This is used to automatically add links a series of
+ * predefined links to a new OG Menu.
+*/
+function og_menu_menu_insert($menu) {
+  // Check to see if this is the many og_menu
+  if (preg_match('/^menu-og-(\d+)$/', $menu['menu_name'], $matches)) {
+
+    // Get Default Menu Items from variable
+    $node = node_load($matches[1]);    
+    $default_links = explode("\n", variable_get('og_menu_default_links_' . strtolower($node->type), ''));
+        
+    foreach ($default_links as $default_link) {
+      $link_parts = explode("|", $default_link);
+      $link_parts[0] = token_replace($link_parts[0], array('node' => node_load($matches[1])));
+      // Create link
+      $link = array(
+        'link_path' => $link_parts[0],
+        'link_title' => (isset($link_parts[1])) ? $link_parts[1]: $link_parts[0],
+        'menu_name' => $menu['menu_name'],
+        'router_path' => 'faculty/%',
+      );
+      $mlid = menu_link_save($link); 
+    }
   }
 }
 
