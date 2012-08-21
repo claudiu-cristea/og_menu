@@ -686,17 +686,22 @@ function og_menu_node_form_validate($form, &$form_state) {
   $gids = array();
   $has_menu_access = FALSE;
 
-  if (isset($form_state['values']['group_audience'][LANGUAGE_NONE])) {
-    foreach ($form_state['values']['group_audience'][LANGUAGE_NONE] as $item => $gid) {
-      $gids[] = $gid['gid'];
+  $group_is_set = FALSE;
+  
+  foreach (og_get_group_audience_fields('node', $form_state['values']['type']) as $field_name => $label) {
+    if (isset($form_state['values'][$field_name][LANGUAGE_NONE])) {
+      $group_is_set = TRUE;
+      foreach ($form_state['values'][$field_name][LANGUAGE_NONE] as $item => $gid) {
+        $gids[] = $gid['target_id'];
+      }
     }
   }
-  else {
+   
+  if (!$group_is_set) {
     // It's possible that the user doesn't have permission to change
     // the group audience once a piece of content has been created.
     // In this case, we need to look it up.
-    $gids = og_menu_get_node_groups('node', $form_state['node']);
-  }
+    $gids = og_get_entity_groups('node', $form_state['node']);
 
   foreach ($menus as $menu) {
     if ($menu->mname == $parent) {
