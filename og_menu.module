@@ -155,7 +155,7 @@ function og_menu_menu() {
   $items['og_menu/autocomplete'] = array(
     'page callback' => '_og_menu_autocomplete',
     'access arguments' => array('og_menu_access'),
-    'type' => MENU_CALLBACK
+    'type' => MENU_CALLBACK,
   );
   return $items;
 }
@@ -215,7 +215,7 @@ function og_menu_block_view($delta = '') {
 
     if ($menu) {
       if (variable_get('og_menu_block_links', FALSE)) {
-        $block['subject'] = l($menu->mtitle, 'node/' . $context['gid']);
+        $block['subject'] = l($menu->mtitle, 'node/' . $group);
       }
       else {
         $block['subject'] = check_plain($menu->mtitle);
@@ -224,33 +224,33 @@ function og_menu_block_view($delta = '') {
     }
   }
   if ($delta == 'og_multi_menu_block') { // @todo Test this!!
-    // Get all groups associated with the current node
-    $node = menu_get_object();
-    $gids = array();
-    if ($node) {
-      if (og_is_group_content_type('node', $node->type)) {
-        $gids = og_menu_get_node_groups('node', $node);
-      }
-      elseif (og_is_group_type('node', $node->type)) {
-        $gids = array($node->nid);
-      }
-    }
-    // If no group was found, fallback to the regular og_get_group_context
-    // function. Unfortunately, this function only returns one group.
-    if (empty($gids)) {
-      $group = og_menu_get_context();
-      $gids = array($group);
-    }
-    $menus = og_menu_get_group_menus($gids);
-    if($node) {
-      $block['subject'] = check_plain($node->title);
-    }
-    $block['content'] = '';
+    drupal_add_css(drupal_get_path('module', 'og_menu') . '/og_menu.css');
+    drupal_add_css(drupal_get_path('module', 'og_menu') . '/og_menu.css');
+    $context = og_context();
+    $group = isset($context['gid']) ? $context['gid'] : 0;
+    $menus = og_menu_get_group_menus(array($group));
+    $plural = count($menus) > 1 ? TRUE : FALSE;
     foreach ($menus as $menu) {
-      $block['content'] .= render(menu_tree($menu->mname));
+      $title = ''; $content = '';
+      if (variable_get('og_menu_block_links', FALSE)) {
+        $title = l($menu->mtitle, 'node/' . $group);
+      }
+      else {
+        $title = check_plain($menu->mtitle);
+      }
+      if ($plural) {
+        $content = "<div class='block-og-menu-inset'><h2>{$title}</h2>" . render(menu_tree($menu->mname)) . "</div>";
+      }
+      else {
+        $block['subject'] = $title;
+        $content =  render(menu_tree($menu->mname));
+      }
+      $block['content'] = isset($block['content']) ? $block['content'] . $content  :  $content;
+      if ($plural) {
+        $block['subject'] = '';
+      }
     }
   }
-
   return $block;
 }
 
@@ -358,13 +358,13 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
       }
     }
   }
-  
+
   if (isset($form['nid']['#value'])) {
     $og_menu_default_value = empty($form['#node']->og_menu) ? 0 : 1;
   } else {
     $og_menu_default_value = variable_get('og_menu_create_by_default', FALSE);
   }
-  
+
   // Group type.
   if ($is_group_type) {
     $form['og_menu'] = array(
@@ -389,9 +389,9 @@ function og_menu_menu_insert($menu) {
   if (preg_match('/^menu-og-(\d+)$/', $menu['menu_name'], $matches)) {
 
     // Get Default Menu Items from variable
-    $node = node_load($matches[1]);    
+    $node = node_load($matches[1]);
     $default_links = explode("\n", variable_get('og_menu_default_links_' . strtolower($node->type), ''));
-        
+
     foreach ($default_links as $default_link) {
       $link_parts = explode("|", $default_link);
       $link_parts[0] = token_replace($link_parts[0], array('node' => node_load($matches[1])));
@@ -402,7 +402,7 @@ function og_menu_menu_insert($menu) {
         'menu_name' => $menu['menu_name'],
         'router_path' => 'faculty/%',
       );
-      $mlid = menu_link_save($link); 
+      $mlid = menu_link_save($link);
     }
   }
 }
@@ -691,7 +691,7 @@ function og_menu_node_form_validate($form, &$form_state) {
   $has_menu_access = FALSE;
 
   $group_is_set = FALSE;
-  
+
   foreach (og_get_group_audience_fields('node', $form_state['values']['type']) as $field_name => $label) {
     if (isset($form_state['values'][$field_name][LANGUAGE_NONE])) {
       $group_is_set = TRUE;
@@ -700,13 +700,13 @@ function og_menu_node_form_validate($form, &$form_state) {
       }
     }
   }
-   
+
   if (!$group_is_set) {
     // It's possible that the user doesn't have permission to change
     // the group audience once a piece of content has been created.
     // In this case, we need to look it up.
     $gids = og_get_entity_groups('node', $form_state['node']);
-
+  }
   foreach ($menus as $menu) {
     if ($menu->mname == $parent) {
       // Check if user has access to the chosen menu parent
