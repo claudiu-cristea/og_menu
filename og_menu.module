@@ -952,8 +952,8 @@ function _og_menu_autocomplete($string) {
 function og_menu_get_node_groups($group_type, $object) {
   $groups = og_get_entity_groups($group_type, $object);
 
-  if (!empty($nodegroups['node'])) {
-    $gids = $nodegroups['node'];
+  if (!empty($groups['node'])) {
+    $gids = $groups['node'];
   }
   else {
     $gids = array();

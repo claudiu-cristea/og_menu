@@ -11,7 +11,7 @@
       var enabled = $('#edit-menu-enabled').is(':checked');
 
       var holder = document.createElement('select');
-      var selectors = 'select[name^="og_group_ref"], input[name^="og_group_ref"';
+      var selectors = 'select[name^="og_group_ref"], input[name^="og_group_ref"]';
 
       // Toggle menu alteration
       function toggle(values) {
