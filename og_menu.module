@@ -26,6 +26,23 @@ function og_menu_og_permission() {
 }
 
 /**
+ * Implements hook_og_ui_get_group_admin().
+ * */
+function og_menu_og_ui_get_group_admin($group_type, $gid) {
+  $items = array();
+
+  if (og_user_access($group_type, $gid, 'administer og menu')) {
+    $items['menus'] = array(
+      'title' => t('Menus'),
+      'description' => t('Manage group menus'),
+      'href' => 'admin/menus',
+    );
+  }
+
+  return $items;
+}
+
+/**
  * Implements hook_help().
  */
 function og_menu_help($path, $arg) {
@@ -43,98 +60,97 @@ function og_menu_help($path, $arg) {
  */
 function og_menu_menu() {
   $items = array();
-  $items['node/%node/og_menu'] = array(
+  $items['group/%/%/admin/menus'] = array(
     'title' => 'Menus',
     'page callback' => 'og_menu_overview_page',
-    'page arguments' => array(1),
+    'page arguments' => array(1, 2),
     'access callback' => 'og_menu_access',
-    'access arguments' => array(1),
-    'type' => MENU_LOCAL_TASK,
+    'access arguments' => array(1, 2),
     'weight' => 10,
     'file' => 'og_menu.pages.inc',
   );
-  $items['node/%node/og_menu/list'] = array(
+  $items['group/%/%/admin/menus/list'] = array(
     'title' => 'List menus',
     'weight' => -10,
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
-  $items['node/%node/og_menu/add'] = array(
+  $items['group/%/%/admin/menus/add'] = array(
     'title' => 'Add menu',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('og_menu_edit_menu_form', 'add'),
+    'page arguments' => array('og_menu_edit_menu_form', 'add', 1, 2),
     'access callback' => 'og_menu_access',
-    'access arguments' => array(1, NULL, 'new-menu'),
+    'access arguments' => array(1, 2, 'new-menu'),
     'type' => MENU_LOCAL_TASK,
     'weight' => 1,
     'file' => 'og_menu.pages.inc',
   );
-  $items['node/%node/og_menu/%menu'] = array(
+  $items['group/%/%/admin/menus/%menu'] = array(
     'title' => 'Customize menu',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('og_menu_overview_form', 3, 1),
+    'page arguments' => array('og_menu_overview_form', 1, 2, 5),
     'access callback' => 'og_menu_access',
-    'access arguments' => array(1, 3),
+    'access arguments' => array(1, 2),
     'type' => MENU_CALLBACK,
     'weight' => 1,
     'file' => 'og_menu.pages.inc',
   );
-  $items['node/%node/og_menu/%menu/list'] = array(
+  $items['group/%/%/admin/menus/%menu/list'] = array(
     'title' => 'List items',
     'weight' => -10,
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
-  $items['node/%node/og_menu/%menu/add'] = array(
+  $items['group/%/%/admin/menus/%menu/add'] = array(
     'title' => 'Add item',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('og_menu_edit_item_form', 'add', NULL, 3, 1),
+    'page arguments' => array('og_menu_edit_item_form', 'add', 1, 2, 5),
     'access callback' => 'og_menu_access',
-    'access arguments' => array(1, 3),
+    'access arguments' => array(1, 2),
     'type' => MENU_LOCAL_TASK,
     'weight' => 1,
     'file' => 'og_menu.pages.inc',
   );
-  $items['node/%node/og_menu/%menu/edit'] = array(
+  $items['group/%/%/admin/menus/%menu/edit'] = array(
     'title' => 'Edit menu',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('og_menu_edit_menu_form', 'edit', 3),
+    'page arguments' => array('og_menu_edit_menu_form', 'edit', 1, 2, 5),
     'access callback' => 'og_menu_access',
-    'access arguments' => array(1, 3),
+    'access arguments' => array(1, 2),
     'type' => MENU_LOCAL_TASK,
     'weight' => 1,
     'file' => 'og_menu.pages.inc',
   );
-  $items['node/%node/og_menu/%menu/delete'] = array(
+  $items['group/%/%/admin/menus/%menu/delete'] = array(
     'title' => 'Delete menu',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('og_menu_delete_menu_confirm', 3),
+    'page arguments' => array('og_menu_delete_menu_confirm', 5, 1, 2),
     'access callback' => 'og_menu_access',
-    'access arguments' => array(1, 3),
+    'access arguments' => array(1, 2),
     'type' => MENU_CALLBACK,
     'weight' => 1,
     'file' => 'og_menu.pages.inc',
   );
-  $items['node/%node/og_menu/%menu/item/%menu_link/edit'] = array(
+  $items['group/%/%/admin/menus/%menu/item/%menu_link/edit'] = array(
     'title' => 'Edit menu item',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('og_menu_edit_item_form', 'edit', 5, 3, 1),
+    'page arguments' => array('og_menu_edit_item_form', 'edit', 1, 2, 5, 7),
     'access callback' => 'og_menu_access',
-    'access arguments' => array(1, 3),
+    'access arguments' => array(1, 2),
     'type' => MENU_LOCAL_TASK,
     'weight' => 1,
     'file' => 'og_menu.pages.inc',
   );
-  $items['node/%node/og_menu/%menu/item/%menu_link/delete'] = array(
+  $items['group/%/%/admin/menus/%menu/item/%menu_link/delete'] = array(
     'title' => 'Delete menu item',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('og_menu_delete_item_form', 5),
+    'page arguments' => array('og_menu_delete_item_form', 7, 1, 2, 5),
     'access callback' => 'og_menu_access',
-    'access arguments' => array(1, 3),
+    'access arguments' => array(1, 2),
     'type' => MENU_CALLBACK,
     'weight' => 1,
     'file' => 'og_menu.pages.inc',
   );
   $items['admin/config/group/og_menu'] = array(
-    'title' => 'Organic groups menu settings',
+    'title' => 'OG menu settings',
     'description' => 'Configuration for Organic groups menu',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('og_menu_config_form'),
@@ -294,7 +310,7 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
   $link = $form['#node']->menu;
   $is_group_type = og_is_group_type('node', $type);
   $is_group_content = og_is_group_content_type('node', $type);
-
+  dpm($is_group_content);
   // Group content.
   if ($is_group_content) {
     // Check if we get any group context from the url
@@ -311,7 +327,7 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
       $group_based_access = og_user_access('node', $group['gid'], 'administer og menu');
     }
 
-    if (user_access('administer og menu') || $context_based_access || $group_based_access) {
+    if (user_access('administer og menu') || $context_based_access || $group_based_access || TRUE) {
       global $user;
       $groups = array();
       $gids = og_menu_get_node_groups('user', $user);
@@ -348,7 +364,7 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
           $form['menu']['link']['parent']['#default_value'] = $link['menu_name'] . ':' . $link['plid'];
         }
 
-        $form['menu']['#access'] = user_access('administer og menu') + $group_based_access + $context_based_access;
+        $form['menu']['#access'] = TRUE + user_access('administer og menu') + $group_based_access + $context_based_access;
         $form['menu']['#theme'] = 'og_menu_node_form';
         $form['menu']['#settings'] = $merged_list;
         $form['menu']['link']['parent']['#options'] = $options;
@@ -777,20 +793,17 @@ function og_menu_get_group_menus($gids = NULL, $user = NULL) {
  * @param menu
  *    The edited menu.
  */
-function og_menu_access($node, $menu = NULL, $op = NULL) {
-  if (!$node) {
-    return FALSE;
-  }
-  elseif (!og_is_group_type('node', $node->type)) {
+function og_menu_access($group_type, $gid, $op = NULL) {
+  if (!og_is_group($group_type, $gid)) {
     return FALSE;
   }
   elseif (user_access('administer menu')) {
     return TRUE;
   }
-  elseif (user_access('administer og menu') || og_user_access_entity('administer og menu', 'node', $node->nid)) {
+  elseif (user_access('administer og menu') || og_user_access_entity('administer og menu', $group_type, $gid)) {
     if ($op == 'new-menu') {
       $query = db_select('og_menu', 'ogm');
-      $query->condition('ogm.gid', $node->nid, '=');
+      $query->condition('ogm.gid', $gid, '=');
       $count = $query->countQuery()->execute()->fetchField();
       $max = variable_get('og_menu_max_menus_per_group', 1);
       if ($max > 0 && $count >= $max) {
@@ -817,9 +830,10 @@ function og_menu_access($node, $menu = NULL, $op = NULL) {
  *    The form_state array.
  */
 function og_menu_redirect($form, &$form_state) {
-  $node = menu_get_object('node', 1);
-  $menu = menu_get_object('menu', 3);
-  $form_state['redirect'] = 'node/' . $node->nid . '/og_menu/' . $menu['menu_name'];
+  $group_type = $form['og_menu_group_type']['#value'];
+  $gid = $form['og_menu_gid']['#value'];
+  $menu_name = $form['og_menu_name']['#value'];
+  $form_state['redirect'] = 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu_name;
 }
 
 /**
@@ -863,8 +877,9 @@ function og_menu_delete_menu_confirm_submit($form, &$form_state) {
  * Submit handler used on various forms.
  */
 function og_menu_delete_menu_confirm_submit_redirect($form, &$form_state) {
-  $node = menu_get_object('node', 1);
-  $form_state['redirect'] = 'node/' . $node->nid . '/og_menu';
+  $group_type = $form['og_menu_group_type']['#value'];
+  $gid = $form['og_menu_gid']['#value'];
+  $form_state['redirect'] = 'group/' . $group_type . '/' . $gid . '/admin/menus';
 }
 
 /**

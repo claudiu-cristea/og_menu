@@ -9,9 +9,13 @@
  * Menu callback which shows an overview page of all the custom menus in a
  * user's group and along with their description.
  */
-function og_menu_overview_page($node) {
+function og_menu_overview_page($group_type, $gid) {
   // Set the title of the page.
-  drupal_set_title(t('List menus for @title', array('@title' => $node->title)), PASS_THROUGH);
+  $entity_wrapper = entity_metadata_wrapper($group_type, $gid);
+  $entity_label = $entity_wrapper->label() ? $entity_wrapper->label() : $group_type . ' ' . $gid;
+  drupal_set_title(t('List menus for @title', array('@title' => $entity_label)), PASS_THROUGH);
+  // Set the breadcrumb.
+  og_set_breadcrumb($group_type, $gid, array(l(t('Group'), "$group_type/$gid/group")));
 
   // @todo Replace by D7 database independant functions
   $result = db_query("
@@ -19,19 +23,19 @@ function og_menu_overview_page($node) {
     LEFT JOIN {menu_custom} m
     ON om.menu_name = m.menu_name
     WHERE om.gid = :gid
-    ORDER BY title", array(':gid' => $node->nid));
+    ORDER BY title", array(':gid' => $gid));
   $header = array(t('Title'), array('data' => t('Operations'), 'colspan' => '3'));
   $rows = array();
   foreach ($result as $menu) {
     $row = array(theme('menu_admin_overview', array('title' => $menu->title, 'name' => $menu->name, 'description' => $menu->description)));
-    $row[] = array('data' => l(t('list links'), 'node/' . $node->nid . '/og_menu/' . $menu->name));
-    $row[] = array('data' => l(t('edit menu'), 'node/' . $node->nid . '/og_menu/' . $menu->name . '/edit'));
-    $row[] = array('data' => l(t('add link'), 'node/' . $node->nid . '/og_menu/' . $menu->name . '/add'));
+    $row[] = array('data' => l(t('list links'), 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu->name));
+    $row[] = array('data' => l(t('edit menu'), 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu->name . '/edit'));
+    $row[] = array('data' => l(t('add link'), 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu->name . '/add'));
     $rows[] = $row;
   }
 
   if ($result->rowCount() == 0) {
-    return t('There are currently no menus. Click') . ' ' . l(t('Add menu'), 'node/' . $node->nid . '/og_menu/add') . t(' to create one.');
+    return t('There are currently no menus. Click') . ' ' . l(t('Add menu'), 'group/' . $group_type . '/' . $gid . '/admin/menus/add') . t(' to create one.');
   }
   else {
     return theme('table', array('header' => $header, 'rows' => $rows));
@@ -41,31 +45,44 @@ function og_menu_overview_page($node) {
 /**
  * Menu callback; Build the form that handles the adding/editing of a custom menu.
  */
-function og_menu_edit_menu_form($form, &$form_state, $type, $menu = array()) {
+function og_menu_edit_menu_form($form, &$form_state, $type, $group_type, $gid, $menu = array()) {
   module_load_include('inc', 'menu', 'menu.admin');
-  $node = menu_get_object('node', 1);
+  $entity_wrapper = entity_metadata_wrapper($group_type, $gid);
+  $label = $entity_wrapper->label();
+  // Set the breadcrumb.
+  og_set_breadcrumb($group_type, $gid, array(l(t('Group'), "$group_type/$gid/group")));
 
   // Set the title of the page.
   switch ($type) {
-    case 'add': drupal_set_title(t('Add menu for @title', array('@title' => $node->title)), PASS_THROUGH);
+    case 'add': drupal_set_title(t('Add menu for @title', array('@title' => $label)), PASS_THROUGH);
       break;
 
-    case 'edit': drupal_set_title(t('Edit menu for @title', array('@title' => $node->title)), PASS_THROUGH);
+    case 'edit': drupal_set_title(t('Edit menu for @title', array('@title' => $label)), PASS_THROUGH);
       break;
   }
 
   // Build the form.
-  $form = drupal_retrieve_form('menu_edit_menu', $form_state, $type, $menu);
+  $form = array();
+  $form = menu_edit_menu($form, $form_state, $type, $menu);
+  $form['og_menu_group_type'] = array(
+    '#type' => 'value',
+    '#value' => $group_type,
+  );
   $form['og_menu_gid'] = array(
     '#type' => 'value',
-    '#value' => $node->nid,
+    '#value' => $gid,
   );
+  if ($type == 'edit') {
+    $form['og_menu_name'] = array(
+      '#type' => 'value',
+      '#value' => $menu['menu_name'],
+    );
+  }
   // Add submit handlers.
   $form['#submit'][] = 'menu_edit_menu_submit';
   $form['#submit'][] = 'og_menu_edit_menu_form_submit';
   $form['#submit'][] = 'og_menu_edit_menu_form_submit_redirect';
-  $form['actions']['delete']['#submit'][] = 'og_menu_delete_menu_form_submit';
-
+  $form['actions']['delete']['#submit'][0] = 'og_menu_delete_menu_form_submit';
   return $form;
 }
 
@@ -73,40 +90,42 @@ function og_menu_edit_menu_form($form, &$form_state, $type, $menu = array()) {
  * Submit handler for og_menu_edit_menu_form
  */
 function og_menu_delete_menu_form_submit($form, &$form_state) {
-  $node = menu_get_object('node', 1);
-  $menu = menu_get_object('menu', 3);
-  $form_state['redirect'] = 'node/' . $node->nid . '/og_menu/' . $menu['menu_name'] . '/delete';
+  $group_type = $form['og_menu_group_type']['#value'];
+  $gid = $form['og_menu_gid']['#value'];
+  $menu_name = $form['og_menu_name']['#value'];
+  $form_state['redirect'] = 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu_name . '/delete';
 }
 
 /**
  * Submit handler which handles redirection for og_menu_edit_menu_form form.
  */
 function og_menu_edit_menu_form_submit_redirect($form, &$form_state) {
-  $node = menu_get_object('node', 1);
+  $group_type = $form['og_menu_group_type']['#value'];
+  $gid = $form['og_menu_gid']['#value'];
   if ($form['#insert']) {
-    $menu = array();
-    $menu['menu_name'] = 'menu-' . $form_state['values']['menu_name'];
+    $menu_name = 'menu-' . $form['menu_name']['#value'];
   }
   else {
-    $menu = menu_get_object('menu', 3);
+    $menu_name = $form['og_menu_name']['#value'];
   }
-  $form_state['redirect'] = 'node/' . $node->nid . '/og_menu/' . $menu['menu_name'];
+  $form_state['redirect'] = 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu_name;
 }
 
 /**
  * Form callback which shows an entire menu tree at once.
  */
-function og_menu_overview_form($form, &$form_state, $menu, $node) {
+function og_menu_overview_form($form, &$form_state, $group_type, $gid, $menu) {
   module_load_include('inc', 'menu', 'menu.admin');
   drupal_set_title(t('List items for menu !mtitle', array('!mtitle' => $menu['title'])), PASS_THROUGH);
+  // Set the breadcrumb.
+  og_set_breadcrumb($group_type, $gid, array(l(t('Group'), "$group_type/$gid/group")));
   $b = drupal_get_breadcrumb();
-  $b[] = l($node->title, 'node/' . $node->nid);
-  $b[] = l(t('Menus'), 'node/' . $node->nid . '/og_menu');
+  $b[] = l(t('Menus'), 'group/' . $group_type . '/' . $gid . '/admin/menus');
   drupal_set_breadcrumb($b);
-  $form = drupal_retrieve_form('menu_overview_form', $form_state, $menu);
+  $form = menu_overview_form($form, $form_state, $menu);
 
   $form['#theme'] = 'menu_overview_form';
-  $form['#empty_text'] = t('There are no menu links yet.') . ' ' . l(t('Add link'), 'node/' . $node->nid . '/og_menu/' . $menu['menu_name'] . '/add');
+  $form['#empty_text'] = t('There are no menu links yet.') . ' ' . l(t('Add link'), 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu['menu_name'] . '/add');
 
   foreach (element_children($form) as $mlid) {
     if (strstr($mlid, 'mlid:')) {
@@ -115,14 +134,14 @@ function og_menu_overview_form($form, &$form_state, $menu, $node) {
       $operations['edit'] = array(
         '#type' => 'link',
         '#title' => t('edit'),
-        '#href' => 'node/' . $node->nid . '/og_menu/' . $menu['menu_name'] . '/item/' . $item['mlid'] . '/edit',
+        '#href' => 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu['menu_name'] . '/item/' . $item['mlid'] . '/edit',
       );
 
       if ($item['module'] == 'menu' || $item['updated'] == 1) {
         $operations['delete'] = array(
           '#type' => 'link',
           '#title' => t('delete'),
-          '#href' => 'node/' . $node->nid . '/og_menu/' . $menu['menu_name'] . '/item/' . $item['mlid'] . '/delete',
+          '#href' => 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu['menu_name'] . '/item/' . $item['mlid'] . '/delete',
         );
       }
       $form[$mlid]['operations'] = $operations;
@@ -141,9 +160,18 @@ function og_menu_overview_form_submit($form, &$form_state) {
 /**
  * Form callback for node/%node/og_menu/%menu/delete.
  */
-function og_menu_delete_menu_confirm($form, &$form_state, $menu) {
+function og_menu_delete_menu_confirm($form, &$form_state, $menu, $group_type, $gid) {
   module_load_include('inc', 'menu', 'menu.admin');
-  $form = drupal_retrieve_form('menu_delete_menu_confirm', $form_state);
+  $form = menu_delete_menu_confirm($form, $form_state, $menu);
+  $form['og_menu_group_type'] = array(
+    '#type' => 'value',
+    '#value' => $group_type,
+  );
+  $form['og_menu_gid'] = array(
+    '#type' => 'value',
+    '#value' => $gid,
+  );
+  $form['actions']['cancel']['#href'] = 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu['menu_name'];
   $form['#submit'][] = 'menu_delete_menu_confirm_submit';
   $form['#submit'][] = 'og_menu_delete_menu_confirm_submit';
   $form['#submit'][] = 'og_menu_delete_menu_confirm_submit_redirect';
@@ -153,14 +181,17 @@ function og_menu_delete_menu_confirm($form, &$form_state, $menu) {
 /**
  * Form callback; Build the menu link editing form.
  */
-function og_menu_edit_item_form($form, &$form_state, $type, $item, $menu, $node) {
-  $b = drupal_get_breadcrumb();
-  $b[] = l($menu['title'], 'node/' . $node->nid . '/og_menu/' . $menu['menu_name']);
-  drupal_set_breadcrumb($b);
+function og_menu_edit_item_form($form, &$form_state, $type, $group_type, $gid, $menu, $item = array()) {
   module_load_include('inc', 'menu', 'menu.admin');
-  $form = drupal_retrieve_form('menu_edit_item', $form_state, $form, $type, $item, $menu);
+  $form = menu_edit_item($form, $form_state, $type, $item, $menu);
+  // Set the breadcrumb now to override menu_edit_item() breadcrumb.
+  og_set_breadcrumb($group_type, $gid, array(l(t('Group'), "$group_type/$gid/group")));
+  $b = drupal_get_breadcrumb();
+  $b[] = l(t('Menus'), 'group/' . $group_type . '/' . $gid . '/admin/menus');
+  $b[] = l($menu['title'], 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu['menu_name']);
+  drupal_set_breadcrumb($b);
   $list = array();
-  $menus = og_menu_get_group_menus(array($node->nid));
+  $menus = og_menu_get_group_menus(array($gid));
   foreach ($menus as $option) {
     $list[$option->mname] = $option->mtitle;
   }
@@ -171,24 +202,54 @@ function og_menu_edit_item_form($form, &$form_state, $type, $item, $menu, $node)
 
   // Build the form.
   $form['parent']['#options'] = menu_parent_options($list, array('mlid' => 0));
+  $form['og_menu_group_type'] = array(
+    '#type' => 'value',
+    '#value' => $group_type,
+  );
+  $form['og_menu_gid'] = array(
+    '#type' => 'value',
+    '#value' => $gid,
+  );
+  $form['og_menu_name'] = array(
+    '#type' => 'value',
+    '#value' => $menu['menu_name'],
+  );
   $form['#submit'][] = 'menu_edit_item_submit';
   $form['#submit'][] = 'og_menu_redirect';
   $form['#validate'][] = 'menu_edit_item_validate';
-  $form['delete']['#submit'][] = 'og_menu_delete_item_form';
+  if (!empty($item)) {
+    $form['actions']['delete'] = array(
+      '#type' => 'link',
+      '#title' => 'Delete',
+      '#href' => 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu['menu_name'] . '/item/' . $item['mlid'] . '/delete',
+      '#weight' => 10,
+    );
+  }
   return $form;
 }
 
 /**
  * Form callback for node/%node/og_menu/%menu/item/%menu_link/delete page
  */
-function og_menu_delete_item_form($form, &$form_state, $item) {
+function og_menu_delete_item_form($form, &$form_state, $item, $group_type, $gid, $menu) {
   module_load_include('inc', 'menu', 'menu.admin');
-  $form = drupal_retrieve_form('menu_item_delete_form', $form_state, $item);
-  $node = menu_get_object('node', 1);
-  $menu = menu_get_object('menu', 3);
+  $form = menu_item_delete_form($form, $form_state, $item);
+  $form_state['values']['link_path'] = $form['#item']['link_path'];
+  $form['og_menu_group_type'] = array(
+    '#type' => 'value',
+    '#value' => $group_type,
+  );
+  $form['og_menu_gid'] = array(
+    '#type' => 'value',
+    '#value' => $gid,
+  );
+  $form['og_menu_name'] = array(
+    '#type' => 'value',
+    '#value' => $menu['menu_name'],
+  );
   $form['#submit'][] = 'menu_item_delete_form_submit';
   $form['#submit'][] = 'og_menu_redirect';
-  $form['actions']['cancel']['#value'] = l(t('Cancel'), 'node/' . $node->nid . '/og_menu/' . $menu['menu_name']);
+  $form['actions']['cancel']['#href'] = 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu['menu_name'];
   return $form;
 }
 
