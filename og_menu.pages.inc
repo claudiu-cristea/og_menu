@@ -257,8 +257,8 @@ function og_menu_delete_item_form($form, &$form_state, $item, $group_type, $gid,
  * Form callback for OG Menu configuration.
  */
 function og_menu_config_form($form, &$form_state) {
-  $bundles = og_get_all_group_bundle();  
-  
+  $bundles = og_get_all_group_bundle();
+
   $form['og_menu_block_links'] = array(
     '#type' => 'checkbox',
     '#title' => t('Convert OG Menu block titles into links'),
@@ -271,7 +271,7 @@ function og_menu_config_form($form, &$form_state) {
     '#default_value' => variable_get('og_menu_create_by_default', FALSE),
     '#description' => t('If enabled, an OG Menu will be created by default when a new Organic Group node is created.'),
   );
-  
+
   $form['og_menu_default_link_bundles'] = array(
     '#title' => t('Default OG Menu Links'),
     '#type' => 'fieldset',
@@ -291,7 +291,7 @@ function og_menu_config_form($form, &$form_state) {
       '#description' => t("These links will be added to any new OG Menus added to <b>{$bundle_label}</b> groups."),
     );
   }
-  
+
   if (module_exists('token')) {
     $form['token_help'] = array(
       '#title' => t('Replacement patterns'),
@@ -300,7 +300,7 @@ function og_menu_config_form($form, &$form_state) {
       '#collapsed' => TRUE,
       '#description' => t('Prefer raw-text replacements for text to avoid problems with HTML entities!'),
     );
-  
+
     $form['token_help']['help'] = array(
       '#theme' => 'token_tree',
       '#token_types' => array('node'),
@@ -370,10 +370,10 @@ function og_menu_config_form_validate($form, &$form_state) {
   elseif ($max_num < 0) {
     form_set_error('og_menu_max_menus_per_group', t('Maximum number of menus per group must be positive.'));
   }
-  
+
   foreach($form_state['values'] as $form_index => $form_val) {
     if (preg_match('/^og_menu_default_links_(\w+)$/', $form_index)) {
-      $links = explode("\n",$form_val ); 
+      $links = explode("\n",$form_val );
       foreach ($links as $link) {
         $link_parts = explode('|', $link);
         if (substr($link_parts[0], 0, 1) == '/') {
@@ -381,7 +381,7 @@ function og_menu_config_form_validate($form, &$form_state) {
         }
       }
     }
-  }  
+  }
 }
 
 /**
@@ -389,13 +389,13 @@ function og_menu_config_form_validate($form, &$form_state) {
  * Just duplicates the standard menu list, but only displays those created through og_menu
  */
 function og_admin_menu_overview_form($form, $form_state) {
-  $session = isset($_SESSION['og_menu_filter']) ? $_SESSION['og_menu_filter'] : array();  
+  $session = isset($_SESSION['og_menu_filter']) ? $_SESSION['og_menu_filter'] : array();
 
   // Get filter value from $_SESSION variable.
   foreach ($session as $filter) {
     list($type, $value) = $filter;
   }
-  
+
   $form['filters'] = array(
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
@@ -403,7 +403,7 @@ function og_admin_menu_overview_form($form, $form_state) {
     '#title' => 'Filter',
     '#description' => 'Filter on the title of the OG menu.',
   );
-  
+
   $form['filters']['og_menu_filter'] = array(
     '#type' => 'textfield',
     '#title' => t('Filter this out'),
@@ -411,7 +411,7 @@ function og_admin_menu_overview_form($form, $form_state) {
     '#size' => 20,
     '#default_value' => isset($type) ? $value : '',
   );
-  
+
   $form['filters']['og_menu_actions'] = array(
     '#type' => 'actions',
     '#attributes' => array('class' => array('container-inline')),
@@ -423,7 +423,7 @@ function og_admin_menu_overview_form($form, $form_state) {
   if (count($session)) {
     $form['filters']['og_menu_actions']['reset'] = array('#type' => 'submit', '#value' => t('Reset'));
   }
-  
+
   $header = array(t('Title'), array(
     'data' => t('Operations'),
     'colspan' => '3',
@@ -432,7 +432,7 @@ function og_admin_menu_overview_form($form, $form_state) {
     array('data' => 'Title', 'field' => 'title', 'sort' => 'asc'),
     array('data' => 'Operations', 'colspan' => '3'),
   );
-  
+
   // Build Query (extend for paging and sorting).
   $query = db_select('menu_custom', 'mc')->extend('PagerDefault')->limit(20);
   $query->join('og_menu', 'om', 'mc.menu_name = om.menu_name');    //Pager Extender
@@ -440,15 +440,15 @@ function og_admin_menu_overview_form($form, $form_state) {
     ->fields('om')
     ->orderBy('title')
     ->extend('TableSort')
-    ->orderByHeader($header);  
+    ->orderByHeader($header);
 
   // Add conditional filter if enter by user.
   if (isset($type)) {
     $query->condition('title', '%' . $value . '%', 'LIKE');
   }
-  
+
   $result = $query->execute();
-  
+
   // Build table.
   $rows = array();
   foreach ($result as $menu) {
@@ -458,15 +458,15 @@ function og_admin_menu_overview_form($form, $form_state) {
     $row[] = array('data' => l(t('add link'), 'admin/structure/menu/manage/' . $menu->menu_name . '/add'));
     $rows[] = $row;
   }
-  
+
   $output = theme('table', array('header' => $header, 'rows' => $rows)) . theme('pager');
-  
+
   $form['og_menu_menu_list'] = array(
     '#type' => 'markup',
     '#title' => t('Results'),
     '#markup' => $output,
   );
-    
+
   return $form;
 }
 
@@ -478,7 +478,7 @@ function og_admin_menu_overview_form_submit($form, &$form_state) {
     case t('Filter'):
       if (isset($form_state['values']['og_menu_filter']) && $form_state['values']['og_menu_filter'] != '') {
         $_SESSION['og_menu_filter'][] = array('og_menu_filter', $form_state['values']['og_menu_filter']);
-        
+
       }
       break;
     case t('Reset'):
