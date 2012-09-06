@@ -599,7 +599,7 @@ function og_menu_node_insert($node) {
       menu_save(array(
         'menu_name' => 'menu-og-' . $og->gid,
         'title' => $node->title,
-        'description' => t('OG Menu for') . ' ' . check_plain($node->title),
+        'description' => t('OG Menu for') . ' ' . $node->title,
       ));
       og_menu_update_menu('menu-og-' . $og->gid, $og->gid);
     }
