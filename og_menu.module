@@ -310,7 +310,7 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
   $link = $form['#node']->menu;
   $is_group_type = og_is_group_type('node', $type);
   $is_group_content = og_is_group_content_type('node', $type);
-  dpm($is_group_content);
+
   // Group content.
   if ($is_group_content) {
     // Check if we get any group context from the url
