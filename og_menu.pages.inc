@@ -272,19 +272,21 @@ function og_menu_config_form($form, &$form_state) {
     '#type' => 'fieldset',
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
-    '#description' => t('Specify default links to be added to get each new OG Menu for each node bundle.  Enter each <b>URL</b> followed by a <b>title</b>
+    '#description' => $bundles ? t('Specify default links to be added to get each new OG Menu for each node bundle.  Enter each <b>URL</b> followed by a <b>title</b>
         Delimited by a pipe. Examples: <br><br><ul><li>www.example.com|Example Link</li></ul>
-        <ul><li>faculty/[node:nid]|Link to Faculty Page for Group <em>(If tokens are enabled)</em></li></ul>'),
+        <ul><li>faculty/[node:nid]|Link to Faculty Page for Group <em>(If tokens are enabled)</em></li></ul>') : t('There are no group type bundles yet.'),
   );
 
   // Add a field for each bundle.
-  foreach ($bundles['node'] as $bundle => $bundle_label) {
-    $form['og_menu_default_link_bundles']['og_menu_default_links_' . strtolower($bundle)] = array(
-      '#type' => 'textarea',
-      '#title' => t("<em>{$bundle_label}</em> Bundle"),
-      '#default_value' => variable_get('og_menu_default_links_' . strtolower($bundle), FALSE),
-      '#description' => t("These links will be added to any new OG Menus added to <b>{$bundle_label}</b> groups."),
-    );
+  if ($bundles) {
+    foreach ($bundles['node'] as $bundle => $bundle_label) {
+      $form['og_menu_default_link_bundles']['og_menu_default_links_' . strtolower($bundle)] = array(
+        '#type' => 'textarea',
+        '#title' => t("<em>{$bundle_label}</em> Bundle"),
+        '#default_value' => variable_get('og_menu_default_links_' . strtolower($bundle), FALSE),
+        '#description' => t("These links will be added to any new OG Menus added to <b>{$bundle_label}</b> groups."),
+      );
+    }
   }
 
   if (module_exists('token')) {
