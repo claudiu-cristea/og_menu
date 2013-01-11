@@ -846,10 +846,29 @@ function og_menu_redirect($form, &$form_state) {
  * Submit handler used on various forms.
  */
 function og_menu_edit_menu_form_submit($form, &$form_state) {
-  $group_type = $form['og_menu_group_type']['#value'];
-  $gid = $form['og_menu_gid']['#value'];
-  $menu_name = $form['#insert'] ? $menu_name = 'menu-' . $form['menu_name']['#value'] : $form['og_menu_name']['#value'];
-  og_menu_update_menu($menu_name, $gid, $group_type);
+  $menu_name = $form_state['values']['menu_name'];
+  $gid = $form_state['values']['og_menu_gid'];
+  if (!empty($gid)) {
+    // Add 'menu-og-' if this is a new menu.
+    if ($form['#insert']) {
+      $menu_name = 'menu-og-' . $menu_name;
+    }
+    if (is_numeric($gid)) {
+      og_menu_update_menu($menu_name, $gid, 'node');
+    }
+    else {
+      preg_match('/^(?:\s*|(.*) )?\[\s*gid\s*:\s*(\d+)\s*\]$/', $gid, $matches);
+      if (!empty($matches)) {
+        $gid = $matches[count($matches) - 1];
+        if (is_numeric($gid)) {
+          og_menu_update_menu($menu_name, $gid, 'node');
+        }
+      }
+      else {
+        drupal_set_message(t('Cannot assign menu to invalid group, please retry'), 'error');
+      }
+    }
+  }
 }
 
 /**
