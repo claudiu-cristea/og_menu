@@ -7,7 +7,7 @@
  */
 
 /**
- * Implementation of hook_perm().
+ * Implements hook_permission().
  */
 function og_menu_permission() {
   return array(
@@ -19,7 +19,7 @@ function og_menu_permission() {
 }
 
 /**
- * Implements of hook_og_permission()
+ * Implements hook_og_permission().
  */
 function og_menu_og_permission() {
   return og_menu_permission();
@@ -34,7 +34,7 @@ function og_menu_og_ui_get_group_admin($group_type, $gid) {
   if (og_user_access($group_type, $gid, 'administer og menu')) {
     $items['menus'] = array(
       'title' => t('Menus'),
-      'description' => t('Manage group menus'),
+      'description' => t('Manage group menus.'),
       'href' => 'admin/menus',
     );
   }
@@ -51,10 +51,23 @@ function og_menu_help($path, $arg) {
       return '<p>' . t('Add new menus on the <a href="@menu">Menu administration page</a>.', array('@menu' => url('admin/structure/menu'))) . '</p>';
       break;
   }
+  if ($path == 'group/%/%/admin/menus' && module_exists('block')) {
+    if (!variable_get('og_menu_show_blocks', FALSE)) {
+      return '<p>' . t('With the current setting, OG Menus will not be
+        exposed as blocks on the blocks administration page. Use the OG Menu
+        supplied menu blocks on the <a href="@blocks">Blocks administration
+        page</a>.', array('@blocks' => url('admin/structure/block'))) . '</p>';
+    }
+    else {
+      return '<p>' . t('Each menu has a corresponding block that is managed on
+  the <a href="@blocks">Blocks administration page</a>.',
+  array('@blocks' => url('admin/structure/block'))) . '</p>';
+    }
+  }
 }
 
 /**
- * Implementation of hook_menu().
+ * Implements hook_menu().
  *
  * @todo Add MENU_LOCAL_ACTION for adding an OG Menu? Meanwhile fix it in hook_help().
  */
@@ -80,7 +93,7 @@ function og_menu_menu() {
     'page arguments' => array('og_menu_edit_menu_form', 'add', 1, 2),
     'access callback' => 'og_menu_access',
     'access arguments' => array(1, 2, 'new-menu'),
-    'type' => MENU_LOCAL_TASK,
+    'type' => MENU_LOCAL_ACTION,
     'weight' => 1,
     'file' => 'og_menu.pages.inc',
   );
@@ -177,14 +190,14 @@ function og_menu_menu() {
 }
 
 /**
- * Implementation of hook_theme_registry_alter().
+ * Implements hook_theme_registry_alter().
  */
 function og_menu_theme_registry_alter(&$theme_registry) {
   $theme_registry['block']['theme paths'][] = drupal_get_path('module', 'og_menu');
 }
 
 /**
- * Implementation of hook_block_info()
+ * Implements hook_block_info().
  */
 function og_menu_block_info() {
   $blocks = array(
@@ -195,7 +208,7 @@ function og_menu_block_info() {
 }
 
 /**
- * Implementation of hook_block_view()
+ * Implements hook_block_view().
  */
 function og_menu_block_view($delta = '') {
   $block = array();
@@ -319,11 +332,11 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
         // Gets menus available to this content type.
         $type_menus = variable_get('menu_options_' . $type, array('main-menu' => 'main-menu'));
         $available_menus = array();
-        // Get all existing menu's with their name.
+        // Get all existing menus with their name.
         $result = db_query("SELECT menu_name, title FROM {menu_custom} ORDER BY title");
-        while ($menuObj = $result->fetchObject()) {
-          if (in_array($menuObj->menu_name, $type_menus)) {
-            $available_menus[$menuObj->menu_name] = $menuObj->title;
+        while ($menu = $result->fetchObject()) {
+          if (in_array($menu->menu_name, $type_menus)) {
+            $available_menus[$menu->menu_name] = $menu->title;
           }
         }
         // We want to merge the menus the user has available anyway and the OG ones
@@ -366,9 +379,11 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
 
 
 /**
- * Implements hook_menu_insert().  This is used to automatically add links a series of
+ * Implements hook_menu_insert().
+ *
+ * This is used to automatically add links a series of
  * predefined links to a new OG Menu.
-*/
+ */
 function og_menu_menu_insert($menu) {
   // Check to see if this is the many og_menu
   if (preg_match('/^menu-og-(\d+)$/', $menu['menu_name'], $matches)) {
@@ -471,22 +486,22 @@ function og_menu_form_menu_edit_menu_alter(&$form, &$form_state) {
  * Implements hook_form_FORMID_alter().
  *
  * Integration with menu module for node type admin page.
- * Hides OG Menu's from available menu settings.
+ * Hides OG Menus from available menu settings.
  */
 function og_menu_form_node_type_form_alter(&$form, &$form_state) {
   if (!variable_get('og_menu_show_nodetype', FALSE)) {
-    // Remove OG Menu's from the list by default.
+    // Remove OG Menus from the list by default.
     $result = db_query("SELECT mc.menu_name FROM {menu_custom} mc, {og_menu} ogm WHERE ogm.menu_name = mc.menu_name")->fetchCol();
     foreach ($result as $ogblock) {
       unset($form['menu']['menu_options']['#options'][$ogblock]);
     }
   }
-  // Provide a setting to enable OG Menu's on this content type.
+  // Provide a setting to enable OG Menus on this content type.
   $form['menu']['og_menu_enable'] = array(
     '#type' => 'checkbox',
-    '#title' => t("Enable for OG Menu's"),
+    '#title' => t("Enable for OG Menus"),
     '#default_value' => variable_get('og_menu_enable_' . $form['#node_type']->type, FALSE),
-    '#description' => t("Allow nodes of this content type to be added to OG Menu's."),
+    '#description' => t("Allow nodes of this content type to be added to OG Menus."),
   );
   if (!og_is_group_content_type('node', $form['#node_type']->type)) {
     $form['menu']['og_menu_enable']['#description'] .= ' <strong>';
@@ -500,7 +515,7 @@ function og_menu_form_node_type_form_alter(&$form, &$form_state) {
  * Implements hook_form_FORMID_alter().
  *
  * Integration with Menu Position module for menu_position config page.
- * Hides OG Menu's from available parent options settings.
+ * Hides OG Menus from available parent options settings.
  */
 function og_menu_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'menu_position_add_rule_form' || $form_id == 'menu_position_edit_rule_form') {
@@ -549,7 +564,7 @@ function og_menu_form_menu_delete_menu_confirm_alter(&$form, &$form_state) {
  * Implements hook_form_FORMID_alter().
  *
  * Integration with homebox module.
- * Hides OG Menu's from Homebox config page.
+ * Hides OG Menus from Homebox config page.
  */
 function og_menu_form_homebox_admin_display_form_alter(&$form, &$form_state) {
   if (!variable_get('og_menu_show_homebox', FALSE)) {
@@ -562,7 +577,7 @@ function og_menu_form_homebox_admin_display_form_alter(&$form, &$form_state) {
 }
 
 /**
- * Implementation of hook_node_prepare().
+ * Implements hook_node_prepare().
  */
 function og_menu_node_prepare($node) {
   $type = $node->type;
@@ -636,7 +651,7 @@ function og_menu_node_prepare($node) {
 }
 
 /**
- * Implementation of hook_node_insert()
+ * Implements hook_node_insert().
  */
 function og_menu_node_insert($node) {
   if (og_is_group_type('node', $node->type)) {
@@ -652,7 +667,7 @@ function og_menu_node_insert($node) {
 }
 
 /**
- * Implementation of hook_node_update()
+ * Implements hook_node_update().
  */
 function og_menu_node_update($node) {
   if (og_is_group_type('node', $node->type)) {
@@ -690,7 +705,7 @@ function og_menu_node_update($node) {
 }
 
 /**
- * Implementation of hook_node_delete()
+ * Implements hook_node_delete().
  */
 function og_menu_node_delete($node) {
   if (og_is_group_type('node', $node->type)) {
@@ -976,7 +991,7 @@ function _og_menu_autocomplete($string) {
   $matches = array();
   $query = db_select('node', 'n');
   $query->distinct();
-  $query->join('og_membership','og', 'n.nid = og.gid');
+  $query->join('og_membership', 'og', 'n.nid = og.gid');
   $query->fields('og', array('gid'));
   $query->fields('n', array('title'));
   $query->condition('n.title', '%' . db_like($string) . '%', 'LIKE');

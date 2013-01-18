@@ -1,7 +1,12 @@
 <?php
 
 /**
- * Implementation of hook_schema()
+ * @file
+ * Install, update and uninstall functions for the og_menu module.
+ */
+
+/**
+ * Implements hook_schema().
  */
 function og_menu_schema() {
   $schema['og_menu'] = array(
@@ -20,7 +25,7 @@ function og_menu_schema() {
         'not null' => TRUE,
       ),
       'group_type' => array(
-        'description' => "The group's entity type (e.g. node, comment, etc').",
+        'description' => "The group's entity type (e.g., node, comment, etc').",
         'type' => 'varchar',
         'length' => '32',
         'not null' => TRUE,
@@ -41,7 +46,7 @@ function og_menu_schema() {
 }
 
 /**
- * Implementation of hook_uninstall.
+ * Implements hook_uninstall().
  */
 function og_menu_uninstall() {
   // List custom vars.
@@ -87,7 +92,7 @@ function og_menu_update_7300(&$sandbox) {
     'not null' => TRUE,
   ));
   db_add_field('og_menu', 'group_type', array(
-    'description' => "The group's entity type (e.g. node, comment, etc').",
+    'description' => "The group's entity type (e.g., node, comment, etc').",
     'type' => 'varchar',
     'length' => '32',
     'not null' => TRUE,
