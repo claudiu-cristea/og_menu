@@ -11,7 +11,7 @@
  */
 function og_menu_overview_page($node) {
   $gid = og_get_group_ids('node', array($node->nid), FALSE, array(OG_STATE_ACTIVE, OG_STATE_PENDING));
-  $gid = $gid[$node->nid];
+  $gid = isset($gid[$node->nid]) ? $gid[$node->nid]: '';
 
   // Set the title of the page.
   drupal_set_title(t('List menus for @title', array('@title' => $node->title)), PASS_THROUGH);
