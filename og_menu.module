@@ -226,14 +226,14 @@ function og_menu_block_view($delta = '') {
     $node = menu_get_object();
     $gids = array();
     if ($node) {
-      if (og_is_group_content_type('node', $node->type)) {
+      if (og_is_group_type('node', $node->type)) {
+        $group = og_get_group('node', $node->nid);
+        $gids = array($group->gid);
+      }
+      elseif (og_is_group_content_type('node', $node->type)) { 
         $nodegroups = og_load_multiple(og_get_entity_groups('node', $node));
         foreach ($nodegroups as $ng)
           $gids[] = $ng->gid;
-      }
-      elseif (og_is_group_type('node', $node->type)) {
-        $group = og_get_group('node', $node->nid);
-        $gids = array($group->gid);
       }
     }
     // If no group was found, fallback to the regular og_get_group_context
