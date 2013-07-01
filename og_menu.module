@@ -258,7 +258,8 @@ function og_menu_block_view($delta = '') {
       }
       else {
         $block['subject'] = $title;
-        $content =  render(menu_tree($menu['menu_name']));
+        $tree = menu_tree($menu['menu_name']);
+        $content =  render($tree);
       }
       $block['content'] = isset($block['content']) ? $block['content'] . $content  :  $content;
       if ($plural) {
@@ -329,14 +330,36 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
     }
     // Available menus were discovered in og_menu_node_prepare().
     $menus = $form['#node']->storage['og_menu'];
+
     $list = array();
-    $settings['admin'] = user_access('administer menu');
     if (!empty($menus)) {
+      $settings['mlid'] = (empty($form['#node']->menu['mlid'])) ? 0 : $form['#node']->menu['mlid'];
+      $settings['administer_group'] = user_access('administer group');
       foreach ($menus as $menu) {
         $list[$menu['menu_name']] = $menu['title'];
         $settings['menus'][$menu['menu_name']] = $menu['gid'];
       }
+      // Get the group audience fields so we can make the javascript aware of them.
+      $settings['group_audience_fields'] = array_keys(og_get_group_audience_fields('node', $type));
+
+      $fields = array();
+      foreach (og_get_group_audience_fields('node', $type) as $field_name => $label) {
+        $field = field_info_field($field_name);
+        $instance = field_info_instance('node', $field_name, $type);
+        if ($instance['widget']['type'] == 'og_complex') { // This is currently the only widget in OG.
+          // Group the data we need in the client side js code.
+          // Notice: 'default' is a reserved word in js, so we use 'normal' instead.
+          $fields[$field_name]['normal'] = $instance['settings']['behaviors']['og_widget']['default']['widget_type'];
+          $fields[$field_name]['admin'] = $instance['settings']['behaviors']['og_widget']['admin']['widget_type'];
+          $fields[$field_name]['cardinality'] = $field['cardinality'];
+        }
+      }
+      $settings['group_audience_fields'] = $fields;
+
+      // Perhaps we want to exclude certain fields.
+      drupal_alter('og_menu_audience_fields', $settings['group_audience_fields'], $type);
       // If user has administer menu permission, also show other menu options.
+      $settings['standard_parent_options'] = array();
       if (user_access('administer menu')) {
         // Gets menus available to this content type.
         $type_menus = variable_get('menu_options_' . $type, array('main-menu' => 'main-menu'));
@@ -348,6 +371,8 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
             $available_menus[$menu->menu_name] = $menu->title;
           }
         }
+
+        $settings['standard_parent_options'] = menu_parent_options($available_menus, $type);
         // We want to merge the menus the user has available anyway and the OG ones
         $merged_list = array_merge($available_menus, $list);
       }
@@ -368,13 +393,15 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
         _og_menu_add_menufieldset($form, $options);
       }
 
+      $settings['parent_options'] = $options;
+
       if ($nid = $form['nid']['#value']) {
         $form['menu']['link']['parent']['#default_value'] = $link['menu_name'] . ':' . $link['plid'];
       }
       $form['menu']['#access'] = !empty($options);
       $form['menu']['#attached']['js'][] = drupal_get_path('module', 'og_menu') . '/og_menu.js';
       $form['menu']['#attached']['js'][] = array(
-        'data' => array('og_menu' => $settings),
+        'data' => array('ogMenu' => $settings),
         'type' => 'setting',
       );
       $form['menu']['#settings'] = $merged_list;
@@ -602,7 +629,9 @@ function og_menu_node_prepare($node) {
     // If there is context and the user doesn't have permission on the group,
     // they shouldn't be allowed to change the menu at all.
     $context = og_context();
-    if ($context && !og_user_access($context['group_type'], $context['gid'], 'administer og menu') && !user_access('administer menu') && !user_access('administer og menu')) {
+    if ($context && !og_user_access($context['group_type'], $context['gid'], 'administer og menu')
+      && !user_access('administer menu')
+      && !user_access('administer og menu')) {
       return;
     }
     $groups = array();
@@ -614,7 +643,6 @@ function og_menu_node_prepare($node) {
       // the ids if we already have that type's results.
       if (empty($groups[$target_type])) {
         $instance = field_info_instance('node', $field_name, $type);
-        $instance['field_mode'] = 'default';
         // Using the handler allows us to get user options from OG without
         // running through all the user's groups.
         $ids = entityreference_get_selection_handler($field, $instance)->getReferencableEntities();
@@ -622,6 +650,15 @@ function og_menu_node_prepare($node) {
           $field_gids = array();
           foreach ($ids as $key => $values) {
             $field_gids += $values;
+          }
+          // Not ready yet, if a user has access to menus in one group, it does
+          // not mean we can give him access to the menus of all groups he has access to.
+          if (!empty($field_gids) && ! (user_access('administer menu') || user_access('administer og menu'))) {
+            foreach ($field_gids as $gid => $name) {
+              if (!og_user_access($target_type, $gid, 'administer og menu')) {
+                unset($field_gids[$gid]);
+              }
+            }
           }
           // Create an array similar to what og_get_entity_groups() returns.
           $groups[$target_type] = array_keys($field_gids);
@@ -654,6 +691,7 @@ function og_menu_node_prepare($node) {
             $node->menu['parent_depth_limit'] = _menu_parent_depth_limit($node->menu);
           }
         }
+
       }
     }
   }
@@ -822,6 +860,7 @@ function og_menu_get_group_menus($groups = NULL, $user = NULL) {
   if (!$groups) {
     $groups = og_get_entity_groups('user', $user);
   }
+
   $menus = array();
   foreach ($groups as $group_type => $gids) {
     foreach ($gids as $gid) {
