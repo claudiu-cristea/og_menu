@@ -240,11 +240,12 @@ function og_menu_block_view($delta = '') {
   }
   if ($delta == 'og_multi_menu_block' && $context) { // @todo Test this!!
     drupal_add_css(drupal_get_path('module', 'og_menu') . '/og_menu.css');
-    drupal_add_css(drupal_get_path('module', 'og_menu') . '/og_menu.css');
     $menus = og_menu_get_group_menus(array(
       $context['group_type'] => array($context['gid'])
     ));
     $plural = count($menus) > 1 ? TRUE : FALSE;
+    $block['content'] = '';
+
     foreach ($menus as $menu) {
       $title = ''; $content = '';
       if (variable_get('og_menu_block_links', FALSE)) {
@@ -253,17 +254,16 @@ function og_menu_block_view($delta = '') {
       else {
         $title = check_plain($menu['title']);
       }
-      if ($plural) {
-        $content = "<div class='block-og-menu-inset'><h2>{$title}</h2>" . render(menu_tree($menu['menu_name'])) . "</div>";
-      }
-      else {
-        $block['subject'] = $title;
-        $tree = menu_tree($menu['menu_name']);
-        $content =  render($tree);
-      }
-      $block['content'] = isset($block['content']) ? $block['content'] . $content  :  $content;
-      if ($plural) {
-        $block['subject'] = '';
+       if ($tree = menu_tree($menu['menu_name'])) {
+        if ($plural) {
+          $block['subject'] = '';
+          $block['content'] .= "<div class='block-og-menu-inset'><h2>{$title}</h2>" . render($tree) . "</div>";
+        }
+        else {
+          $block['subject'] = $title;
+          $tree = menu_tree($menu['menu_name']);
+          $block['content'] = $tree;
+        }
       }
     }
   }
