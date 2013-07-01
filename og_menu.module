@@ -428,7 +428,7 @@ function og_menu_menu_insert($menu) {
     $node = node_load($matches[1]);
     $default_links = explode("\n", variable_get('og_menu_default_links_' . strtolower($node->type), ''));
 
-    foreach ($default_links as $default_link) {
+    foreach ($default_links as $weight => $default_link) {
       $link_parts = explode("|", $default_link);
       $link_parts[0] = token_replace($link_parts[0], array('node' => node_load($matches[1])));
       // Create link
@@ -437,6 +437,7 @@ function og_menu_menu_insert($menu) {
         'link_title' => (isset($link_parts[1])) ? $link_parts[1]: $link_parts[0],
         'menu_name' => $menu['menu_name'],
         'router_path' => 'faculty/%',
+        'weight' => $weight,
       );
       $mlid = menu_link_save($link);
     }
