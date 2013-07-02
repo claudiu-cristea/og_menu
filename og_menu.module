@@ -77,8 +77,6 @@ function og_menu_help($path, $arg) {
 
 /**
  * Implements hook_menu().
- *
- * @todo Add MENU_LOCAL_ACTION for adding an OG Menu? Meanwhile fix it in hook_help().
  */
 function og_menu_menu() {
   $items = array();
@@ -171,15 +169,22 @@ function og_menu_menu() {
     'weight' => 1,
     'file' => 'og_menu.pages.inc',
   );
+
   $items['admin/config/group/og_menu'] = array(
     'title' => 'OG menu settings',
     'description' => 'Configuration for Organic groups menu',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('og_menu_config_form'),
     'access arguments' => array('administer og menu configuration'),
-    'type' => MENU_NORMAL_ITEM,
     'file' => 'og_menu.pages.inc',
   );
+
+  $items['admin/config/group/og_menu/settings'] = array(
+    'title' => 'Settings',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
+  );
+
   $items['admin/structure/og_menu'] = array(
     'title' => 'Organic groups menus',
     'description' => 'Add new organic groups menus to your site, edit existing ones, and rename and reorganize menu links.',
@@ -409,37 +414,6 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
       if (!user_access('administer menu')) {
         $form['#validate'][] = 'og_menu_node_form_validate';
       }
-    }
-  }
-}
-
-
-/**
- * Implements hook_menu_insert().
- *
- * This is used to automatically add links a series of
- * predefined links to a new OG Menu.
- */
-function og_menu_menu_insert($menu) {
-  // Check to see if this is the many og_menu
-  if (preg_match('/^menu-og-(\d+)$/', $menu['menu_name'], $matches)) {
-
-    // Get Default Menu Items from variable
-    $node = node_load($matches[1]);
-    $default_links = explode("\n", variable_get('og_menu_default_links_' . strtolower($node->type), ''));
-
-    foreach ($default_links as $weight => $default_link) {
-      $link_parts = explode("|", $default_link);
-      $link_parts[0] = token_replace($link_parts[0], array('node' => node_load($matches[1])));
-      // Create link
-      $link = array(
-        'link_path' => $link_parts[0],
-        'link_title' => (isset($link_parts[1])) ? $link_parts[1]: $link_parts[0],
-        'menu_name' => $menu['menu_name'],
-        'router_path' => 'faculty/%',
-        'weight' => $weight,
-      );
-      $mlid = menu_link_save($link);
     }
   }
 }

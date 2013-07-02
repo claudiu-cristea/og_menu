@@ -253,8 +253,6 @@ function og_menu_delete_item_form($form, &$form_state, $item, $group_type, $gid,
  * Form callback for OG Menu configuration.
  */
 function og_menu_config_form($form, &$form_state) {
-  $bundles = og_get_all_group_bundle();
-
   $form['og_menu_block_links'] = array(
     '#type' => 'checkbox',
     '#title' => t('Convert OG Menu block titles into links'),
@@ -291,50 +289,6 @@ function og_menu_config_form($form, &$form_state) {
     '#description' =>
       t('Autocomplete is recommended when you have a lot of organic groups.'),
   );
-
-  // OG Menu default links.
-  $form['og_menu_default_link_bundles'] = array(
-    '#title' => t('OG Menu default links'),
-    '#type' => 'fieldset',
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-    '#description' => $bundles ? t('Specify default links to be added to get
-      each new OG Menu for each node bundle.  Enter each <b>URL</b> followed by
-      a <strong>title</strong> delimited by a pipe. Examples:
-      <ul>
-        <li>www.example.com|Example Link</li>
-        <li>faculty/[node:nid]|Link to Faculty Page for Group <em>(If tokens are enabled)</em>
-        </li>
-      </ul>') : t('There are no group type bundles yet.'),
-  );
-
-  // Add a field for each bundle.
-  if ($bundles) {
-    foreach ($bundles['node'] as $bundle => $bundle_label) {
-      $form['og_menu_default_link_bundles']['og_menu_default_links_' . strtolower($bundle)] = array(
-        '#type' => 'textarea',
-        '#title' => t("%bundle Bundle", array('%bundle' => $bundle_label)),
-        '#default_value' => variable_get('og_menu_default_links_' . strtolower($bundle), FALSE),
-        '#description' => t("These links will be added to any new OG Menus added
-          to <b>%bundle</b> groups.", array('%bundle' => $bundle_label)),
-      );
-    }
-  }
-
-  if (module_exists('token')) {
-    $form['token_help'] = array(
-      '#title' => t('Replacement patterns'),
-      '#type' => 'fieldset',
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-      '#description' => t('Prefer raw-text replacements for text to avoid problems with HTML entities!'),
-    );
-
-    $form['token_help']['help'] = array(
-      '#theme' => 'token_tree',
-      '#token_types' => array('node'),
-    );
-  }
 
   // Visibility setting to hide OG Menus on selected pages.
   $form['og_menu_visibility'] = array(
@@ -443,11 +397,15 @@ function og_admin_menu_overview_form($form, $form_state) {
 
   $header = array(t('Title'), array(
     'data' => t('Operations'),
-    'colspan' => '3',
+    'colspan' => '4',
   ));
   $header = array(
-    array('data' => 'Title', 'field' => 'title', 'sort' => 'asc'),
-    array('data' => 'Operations', 'colspan' => '3'),
+    'title' => array('data' => 'Title', 'field' => 'title', 'sort' => 'asc'),
+    'type' => array('data' => 'Group Type', 'field' => 'group_type'),
+    'list' => array('data' => 'Operations'),
+    'edit' => array('data' => '',),
+    'add' => array('data' => ''),
+    'view' => array('data' => ''),
   );
 
   // Build Query (extend for paging and sorting).
@@ -468,21 +426,62 @@ function og_admin_menu_overview_form($form, $form_state) {
 
   // Build table.
   $rows = array();
+  $options = array();
   foreach ($result as $menu) {
-    $row = array(theme('menu_admin_overview', array('title' => $menu->title, 'name' => $menu->menu_name, 'description' => $menu->description)));
-    $row[] = array('data' => l(t('list links'), 'admin/structure/menu/manage/' . $menu->menu_name));
-    $row[] = array('data' => l(t('edit menu'), 'admin/structure/menu/manage/' . $menu->menu_name . '/edit'));
-    $row[] = array('data' => l(t('add link'), 'admin/structure/menu/manage/' . $menu->menu_name . '/add'));
-    $rows[] = $row;
+    $options[$menu->menu_name] = array(
+      'title' => array( 'data' => theme('menu_admin_overview', array('title' => $menu->title, 'name' => $menu->menu_name, 'description' => $menu->description)) ),
+      'type' => array( 'data' => $menu->group_type ),
+      'list' => array(
+        'data' => array(
+          '#type' => 'link',
+          '#title' => t('list links'),
+          '#href' => 'admin/structure/menu/manage/' . $menu->menu_name,
+        ),
+      ),
+      'edit' => array(
+        'data' => array(
+          '#type' => 'link',
+          '#title' => t('edit menu'),
+          '#href' => 'admin/structure/menu/manage/' . $menu->menu_name . '/edit',
+        ),
+      ),
+      'add' => array(
+        'data' => array(
+          '#type' => 'link',
+          '#title' => t('add link'),
+          '#href' => 'admin/structure/menu/manage/' . $menu->menu_name . '/add',
+        ),
+      ),
+      'view' => array(
+        'data' => array(
+          '#type' => 'link',
+          '#title' => t('view group'),
+          '#href' => 'node/' . $menu->gid,
+        ),
+      ),
+    );
   }
 
-  $output = theme('table', array('header' => $header, 'rows' => $rows)) . theme('pager');
+  $tableselect = array_sum(module_invoke_all('og_menu_admin_menu_overview_form_tableselect'));
 
-  $form['og_menu_menu_list'] = array(
-    '#type' => 'markup',
-    '#title' => t('Results'),
-    '#markup' => $output,
-  );
+  if ($tableselect) {
+    $form['og_menu_menu_list'] = array(
+      '#type' => 'tableselect',
+      '#title' => t('Results'),
+      '#header' => $header,
+      '#options' => $options,
+      '#empty' => 'Nothing to see',
+      '#suffix' => theme('pager'),
+    );
+  }
+  else {
+    $output = theme('table', array('header' => $header, 'rows' => $options)) . theme('pager');
+    $form['og_menu_menu_list'] = array(
+      '#type' => 'markup',
+      '#title' => t('Results'),
+      '#markup' => $output,
+    );
+  }
 
   return $form;
 }
@@ -491,14 +490,14 @@ function og_admin_menu_overview_form($form, $form_state) {
  * Process result from OG Menu administration filter form.
  */
 function og_admin_menu_overview_form_submit($form, &$form_state) {
-  switch ($form_state['values']['op']) {
-    case t('Filter'):
+  switch ($form_state['clicked_button']['#id']) {
+    case 'edit-submit':
       if (isset($form_state['values']['og_menu_filter']) && $form_state['values']['og_menu_filter'] != '') {
         $_SESSION['og_menu_filter'][] = array('og_menu_filter', $form_state['values']['og_menu_filter']);
 
       }
       break;
-    case t('Reset'):
+    case 'edit-reset':
       $_SESSION['og_menu_filter'] = array();
       break;
   }

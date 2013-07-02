@@ -124,3 +124,26 @@ function og_menu_update_7301(&$sandbox) {
       ));
   }
 }
+
+/**
+ * Enable OG Menu Default Links module if needed (backwards compatibility).
+ */
+function og_menu_update_7302(&$sandbox) {
+  $bundles = og_get_all_group_bundle();
+  $enable = FALSE;
+
+  // Check if a setting exists
+  if ($bundles) {
+    foreach($bundles as $entity_type => $entity_bundles) {
+      foreach ($entity_bundles as $bundle => $bundle_label) {
+        $group_type = strtolower('_' . $bundle);
+        $temp = variable_get('og_menu_default_links_' . $entity_type . $group_type, FALSE);
+        if (!empty($temp)) $enable = TRUE;
+      }
+    }
+  }
+
+  if ($enable) {
+    module_enable(array('og_menu_default_links'), TRUE);
+  }
+}
