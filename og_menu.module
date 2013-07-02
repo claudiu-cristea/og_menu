@@ -588,6 +588,25 @@ function og_menu_form_homebox_admin_display_form_alter(&$form, &$form_state) {
 }
 
 /**
+ * Implements hook_admin_menu_output_alter().
+ *
+ * Integration with admin_menu module.
+ * Remove OG Menus from Admin Menu as this adds a lot of clutter.
+ */
+function og_menu_admin_menu_output_alter(&$content) {
+  if (isset($content['menu']['admin/structure']['admin/structure/menu'])) {
+    foreach ($content['menu']['admin/structure']['admin/structure/menu'] as $key => $menu) {
+      if (preg_match('/^admin\/structure\/menu\/manage\/(\S+)$/', $key, $matches)) {
+        $result = db_query("SELECT distinct ogm.gid FROM {og_menu} as ogm where ogm.menu_name = :key", array(':key' => $matches[1]))->fetchCol();
+        if(isset($result[0])) {
+          unset($content['menu']['admin/structure']['admin/structure/menu'][$key]);
+        }
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_node_prepare().
  */
 function og_menu_node_prepare($node) {
