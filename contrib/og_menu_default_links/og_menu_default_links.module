@@ -106,7 +106,7 @@ function _og_menu_default_links_set_default_links($menu, $action = 'new') {
     $entity = array_shift($entities);
     $group_type = isset($entity->type) ? strtolower('_' . $entity->type) : '';
     $default_links = explode("\n", variable_get('og_menu_default_links_' . $menu_data->group_type . $group_type, ''));
-    foreach ($default_links as $default_link) {
+    foreach ($default_links as $weight => $default_link) {
       $link_parts = explode("|", $default_link);
       $path = token_replace($link_parts[0], array($menu_data->group_type => $entity));
       $label = (isset($link_parts[1])) ? token_replace($link_parts[1], array($menu_data->group_type => $entity)) : $path;
@@ -117,6 +117,7 @@ function _og_menu_default_links_set_default_links($menu, $action = 'new') {
         'menu_name' => $menu_name,
         'router_path' => 'faculty/%',
         'module' => 'og_menu',
+        'weight' => $weight,
       );
       $mlid = menu_link_save($link);
     }
