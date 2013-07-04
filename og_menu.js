@@ -41,7 +41,7 @@
         // we want to keep the original parent if user just adds a group to the node.
         if (values[0]) {
           // Select the menu for the first available group.
-          for(var i in Drupal.settings.og_menu.menus) {
+          for (var i=0, j=Drupal.settings.og_menu.menus.length; i < j; i++) {
             if ((enabled === true) && $('.menu-parent-select option[value="'+originalParent+'"]')) {
               $('.menu-parent-select').val(originalParent);
             }
