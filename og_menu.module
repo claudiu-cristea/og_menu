@@ -696,7 +696,7 @@ function og_menu_node_prepare($node) {
  */
 function og_menu_node_insert($node) {
   if (og_is_group_type('node', $node->type)) {
-    if ($node->og_menu) {
+    if (isset($node->og_menu) && $node->og_menu) {
       menu_save(array(
         'menu_name' => 'menu-og-' . $node->nid,
         'title' => $node->title,
