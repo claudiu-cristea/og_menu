@@ -164,7 +164,7 @@ function og_menu_default_links_batch_default_links($menus) {
     'init_message' => t('Update of OG Menu default links is starting...'),
     'progress_message' => t('Processed @current out of @total.'),
     'error_message' => t('An error was encountered updating OG Menu Default Links.'),
-    'file' => drupal_get_path('module', 'og_menu') . '/og_menu.batch.inc',
+    'file' => drupal_get_path('module', 'og_menu_default_links') . '/og_menu.batch.inc',
   );
   batch_set($batch);
 }
