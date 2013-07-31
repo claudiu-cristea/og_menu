@@ -80,26 +80,67 @@ function og_menu_uninstall() {
 }
 
 /**
- * Update og_menu schema to store group type in addition to gid.
+ * Update og_menu schema to store group type and use etid instead of deprecated gid.
  */
 function og_menu_update_7300(&$sandbox) {
-  db_drop_primary_key('og_menu');
-  db_query('ALTER TABLE {og_menu} MODIFY COLUMN menu_name varchar(32) NOT NULL DEFAULT \'\' FIRST');
-  db_change_field('og_menu', 'gid', 'gid', array(
-    'description' => "The group's unique ID.",
-    'type' => 'int',
-    'size' => 'normal',
-    'not null' => TRUE,
-  ));
-  db_add_field('og_menu', 'group_type', array(
-    'description' => "The group's entity type (e.g., node, comment, etc').",
-    'type' => 'varchar',
-    'length' => '32',
-    'not null' => TRUE,
-    'default' => 'node',
-  ));
-  db_field_set_default('og_menu', 'group_type', '');
-  db_add_primary_key('og_menu', array('menu_name'));
+  if (!isset($sandbox['progress'])) {
+    db_drop_primary_key('og_menu');
+    db_query('ALTER TABLE {og_menu} MODIFY COLUMN menu_name varchar(32) NOT NULL DEFAULT \'\' FIRST');
+    db_change_field('og_menu', 'gid', 'gid', array(
+      'description' => "The group's unique ID.",
+      'type' => 'int',
+      'size' => 'normal',
+      'not null' => TRUE,
+    ));
+    db_add_field('og_menu', 'group_type', array(
+      'description' => "The group's entity type (e.g., node, comment, etc').",
+      'type' => 'varchar',
+      'length' => '32',
+      'not null' => TRUE,
+      'default' => 'node',
+    ));
+    db_field_set_default('og_menu', 'group_type', '');
+    db_add_primary_key('og_menu', array('menu_name'));
+
+    $sandbox['progress'] = 0;
+    $sandbox['limit'] = 20;
+    $sandbox['max'] = 0;
+    $results = db_query('SELECT COUNT(*) FROM {og_menu}')->fetchField();
+    if ($results) {
+      $sandbox['max'] = $results - 1;
+    }
+
+    // Since this is a batch update based on gid, cannot update column directly.
+    // Create a temporary column.
+    db_add_field('og_menu', 'etid', array(
+      'description' => 'Temporary column for gid transfer to etid',
+      'type' => 'int',
+      'size' => 'normal',
+      'not null' => TRUE,
+      'initial' => 0
+    ));
+  }
+
+  // Cannot use a join in db_update().
+  $groups = db_query('SELECT og.gid, og.etid FROM {og}, {og_menu} WHERE og.gid = og_menu.gid and og_menu.etid = 0 ORDER BY og_menu.gid LIMIT ' . $sandbox['limit'] . '');
+
+  foreach ($groups as $group) {
+    db_update('og_menu')
+      ->fields(array('etid' => $group->etid))
+      ->condition('gid', $group->gid)
+      ->execute();
+
+    $sandbox['progress']++;
+  }
+  $sandbox['#finished'] = empty($sandbox['max']) ? 1 : ($sandbox['progress'] / $sandbox['max']);
+
+  // Replace gid contents when complete and remove temporary column.
+  if ($sandbox['#finished'] >= 1) {
+    db_update('og_menu')
+      ->expression('gid', 'etid')
+      ->execute();
+    db_drop_field('og_menu', 'etid');
+  }
 }
 
 /**
