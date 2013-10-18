@@ -855,24 +855,30 @@ function og_menu_get_group_menus($groups = NULL, $user = NULL) {
   if (!$groups) {
     $groups = og_get_entity_groups('user', $user);
   }
-
   $menus = array();
-  foreach ($groups as $group_type => $gids) {
-    foreach ($gids as $gid) {
-      $query = db_select('og_menu', 'om');
-      $query
-        ->join('menu_custom', 'm', 'om.menu_name = m.menu_name');
-      $query
-        ->fields('om', array('gid', 'group_type', 'menu_name'))
-        ->fields('m', array('title'))
-        ->condition('om.gid', $gid, '=')
-        ->condition('om.group_type', $group_type, '=');
-      $result = $query->execute();
-      while ($record = $result->fetchAssoc()) {
-        $menus[] = $record;
-      }
-    }
+
+  $query = db_select('og_menu', 'om');
+  $query->join('menu_custom', 'm', 'om.menu_name = m.menu_name');
+  $query
+    ->fields('om', array('gid', 'group_type', 'menu_name'))
+    ->fields('m', array('title'));
+
+  $gids_condition = db_or();
+  foreach ($groups as $group_type => $group_gids) {
+    $group_gids_condition = db_and()
+      ->condition('om.gid', $group_gids, 'IN')
+      ->condition('om.group_type', $group_type, '=');
+    $gids_condition->condition($group_gids_condition);
   }
+
+  $result = $query
+    ->condition($gids_condition)
+    ->execute();
+
+  while ($record = $result->fetchAssoc()) {
+    $menus[] = $record;
+   }
+
   return $menus;
 }
 
