@@ -619,7 +619,8 @@ function og_menu_node_prepare($node) {
       ));
     }
   }
-  if (og_is_group_content_type('node', $type)) {
+  if (og_is_group_content_type('node', $type)
+    && variable_get('og_menu_enable_' . $type, FALSE)) {
     // If there is context and the user doesn't have permission on the group,
     // they shouldn't be allowed to change the menu at all.
     $context = og_context();
