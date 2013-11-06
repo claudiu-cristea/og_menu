@@ -314,11 +314,10 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
   $type = $form['#node']->type;
   // Group type.
   if (og_is_group_type('node', $type)) {
-    $og_menu_default_value = isset($form['nid']['#value']) ? !empty($form['#node']->og_menu) : variable_get('og_menu_create_by_default', FALSE);
     $form['og_menu'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable menu for this group'),
-      '#default_value' => $og_menu_default_value,
+      '#default_value' => $form['#node']->og_menu,
       '#description' => t('Check to create a menu for this group. Uncheck to delete all menus associated with this group.'),
     );
     // @todo If we're going to delete all of the groups menus,
@@ -618,10 +617,14 @@ function og_menu_node_prepare($node) {
   $type = $node->type;
   // $node is a group type.
   if (og_is_group_type('node', $type)) {
-    if (!empty($node->nid)) {
-      $node->og_menu = og_menu_get_group_menus(array(
-        'node' => array($node->nid)
-      ));
+    // New node.
+    if (empty($node->nid)) {
+      $node->og_menu = variable_get('og_menu_create_by_default', FALSE);
+    }
+    // Existing node.
+    else {
+      $menus = og_menu_get_group_menus(array('node' => array($node->nid)));
+      $node->og_menu = !empty($menus);
     }
   }
   if (og_is_group_content_type('node', $type)
@@ -701,7 +704,7 @@ function og_menu_node_prepare($node) {
  * Implements hook_node_insert().
  */
 function og_menu_node_insert($node) {
-  if (og_is_group_type('node', $node->type)) {
+  if (og_is_group('node', $node)) {
     if (isset($node->og_menu) && $node->og_menu) {
       menu_save(array(
         'menu_name' => 'menu-og-' . $node->nid,
@@ -717,7 +720,7 @@ function og_menu_node_insert($node) {
  * Implements hook_node_update().
  */
 function og_menu_node_update($node) {
-  if (og_is_group_type('node', $node->type)) {
+  if (og_is_group('node', $node->type)) {
     if (isset($node->og_menu)) {
       if ($node->og_menu) {
         $menu = og_menu_get_group_menus(array('node' => array($node->nid)));
@@ -747,7 +750,6 @@ function og_menu_node_update($node) {
         }
       }
     }
-    // else = programmatic node save, do nothing.
   }
 }
 
