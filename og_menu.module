@@ -720,7 +720,7 @@ function og_menu_node_insert($node) {
  * Implements hook_node_update().
  */
 function og_menu_node_update($node) {
-  if (og_is_group('node', $node->type)) {
+  if (og_is_group('node', $node)) {
     if (isset($node->og_menu)) {
       if ($node->og_menu) {
         $menu = og_menu_get_group_menus(array('node' => array($node->nid)));
