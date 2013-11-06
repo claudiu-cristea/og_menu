@@ -357,6 +357,11 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
           $fields[$field_name]['normal'] = $instance['settings']['behaviors']['og_widget']['default']['widget_type'];
           $fields[$field_name]['admin'] = $instance['settings']['behaviors']['og_widget']['admin']['widget_type'];
           $fields[$field_name]['cardinality'] = $field['cardinality'];
+          $fields[$field_name]['visibility'] = TRUE; // Field is visible by default.
+          // When using entity reference prepopulate, the field may be hidden
+          if (isset($instance['settings']['behaviors']['prepopulate']['action']) && $instance['settings']['behaviors']['prepopulate']['action'] == 'hide' && $context['group_type'] == $field['settings']['target_type']) {
+            $fields[$field_name]['visibility'] = $context['gid'];
+          }
         }
       }
       $settings['group_audience_fields'] = $fields;

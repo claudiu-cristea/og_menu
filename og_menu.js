@@ -8,7 +8,6 @@ Drupal.ogMenu = Drupal.ogMenu || {};
 
 Drupal.behaviors.ogMenuGroupswitch = {
     attach: function(context) {
-
       // Initialize variables and form.
       Drupal.ogMenu.originalParent = $('.menu-parent-select').val(); // Get original parent. We'll use this shortly.
       Drupal.ogMenu.selected = []; // Create Variable to hold selected groups
@@ -27,11 +26,14 @@ Drupal.behaviors.ogMenuGroupswitch = {
 Drupal.ogMenu.bindEvents = function() {
   var selector = '';
   $.each(Drupal.settings.ogMenu.group_audience_fields, function (index, value) {
-    selector = Drupal.ogMenu.buildSelector(index, value.normal, value.cardinality);
-    Drupal.ogMenu.bindEvent(value.normal, selector, value.cardinality);
-    if (Drupal.settings.ogMenu.administer_group === true) {
-      selector = Drupal.ogMenu.buildSelector(index, value.admin, value.cardinality);
-      Drupal.ogMenu.bindEvent(value.admin, selector, value.cardinality);
+    // Only bind events to visible fields.
+    if (value.visible === true) {
+      selector = Drupal.ogMenu.buildSelector(index, value.normal, value.cardinality);
+      Drupal.ogMenu.bindEvent(value.normal, selector, value.cardinality);
+      if (Drupal.settings.ogMenu.administer_group === true) {
+        selector = Drupal.ogMenu.buildSelector(index, value.admin, value.cardinality);
+        Drupal.ogMenu.bindEvent(value.admin, selector, value.cardinality);
+      }     
     }
   });
 };
@@ -41,7 +43,6 @@ Drupal.ogMenu.bindEvents = function() {
  */
 Drupal.ogMenu.bindEvent = function(type, selector, cardinality) {
   // Autocomplete events can be tricky and need specific logic.
-
   if (type == 'entityreference_autocomplete') {
     // Selecting with the mouse will trigger blur.
     $(selector).blur( function() {
@@ -62,7 +63,6 @@ Drupal.ogMenu.bindEvent = function(type, selector, cardinality) {
       Drupal.ogMenu.setSelected();
       Drupal.ogMenu.populateParentSelect();
     });
-
   }
 };
 
@@ -107,8 +107,8 @@ Drupal.ogMenu.buildSelector = function(name, type, cardinality) {
  * Build a selector for a given field.
  */
 Drupal.ogMenu.getGroupRefVal = function(name, type, cardinality) {
-  var selector = '';
   var val = [];
+  var selector = '';
   if (type == 'options_buttons') {
     if (cardinality == 1) { // singular value, radio elements.
       selector = 'input[type="radio"][name^="' + name + '"]:checked';
@@ -145,13 +145,20 @@ Drupal.ogMenu.setSelected = function() {
   Drupal.ogMenu.selected = []; // Clear previous values.
   var fields =  Drupal.settings.ogMenu.group_audience_fields;
   $.each(fields, function (index, value) {
-    Drupal.ogMenu.addSelected(
-        Drupal.ogMenu.getGroupRefVal(index, value.normal, value.cardinality)
-    );
-    if (Drupal.settings.ogMenu.administer_group === true) {
+    // When dealing with visible fields, get the value from DOM.
+    if (value.visibility === true) {
       Drupal.ogMenu.addSelected(
-          Drupal.ogMenu.getGroupRefVal(index, value.admin, value.cardinality)
+          Drupal.ogMenu.getGroupRefVal(index, value.normal, value.cardinality)
       );
+      if (Drupal.settings.ogMenu.administer_group === true) {
+        Drupal.ogMenu.addSelected(
+            Drupal.ogMenu.getGroupRefVal(index, value.admin, value.cardinality)
+        );
+      }
+    }
+    // When fields are invisible, a context has been previously set.
+    else {
+      Drupal.ogMenu.addSelected(value.visibility);
     }
   });
 };
@@ -203,10 +210,12 @@ Drupal.ogMenu.populateParentSelect = function() {
             // Add option to Select and set as selected.
             $('.menu-parent-select').append($("<option>", {value: key, text: val, selected: 'selected'}));
             activeIsSet = 1;
-          } else if (Drupal.settings.ogMenu.mlid == parts[1]) {
+          } 
+          else if (Drupal.settings.ogMenu.mlid == parts[1]) {
             $('.menu-parent-select').append($("<option>", {value: key, text: val + ' [Current Menu Position]', disabled: 'disabled'}));
             // Don't add this item to parent list...
-          } else {
+          }
+          else {
             // Add option to select.
             $('.menu-parent-select').append($("<option>", {value: key, text: val}));
           }
