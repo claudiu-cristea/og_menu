@@ -619,7 +619,7 @@ function og_menu_node_prepare($node) {
   if (og_is_group_type('node', $type)) {
     // New node.
     if (empty($node->nid)) {
-      $node->og_menu = variable_get('og_menu_create_by_default', FALSE);
+      $node->og_menu = (bool) variable_get('og_menu_create_by_default', FALSE);
     }
     // Existing node.
     else {
