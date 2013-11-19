@@ -1,7 +1,11 @@
 <?php
+/**
+ * @file
+ * Implements batch handling for default menu links.
+ */
 
 /**
- * Process Batch request and update all specified menus
+ * Process Batch request and update all specified menus.
  */
 function og_menu_default_links_batch_default_links_process($menus, &$context) {
   if (!isset($context['sandbox']['progress'])) {
@@ -16,7 +20,7 @@ function og_menu_default_links_batch_default_links_process($menus, &$context) {
   $limit = 5;
 
   // With each pass through the callback, retrieve the next group of nids.
-  $slice = array_slice($context['sandbox']['menus'], $context['sandbox']['progress'], $limit, TRUE  );
+  $slice = array_slice($context['sandbox']['menus'], $context['sandbox']['progress'], $limit, TRUE);
 
   foreach ($slice as $key => $menu) {
     _og_menu_default_links_set_default_links($menu, 'update');
@@ -38,12 +42,12 @@ function og_menu_default_links_batch_default_links_process($menus, &$context) {
 }
 
 /**
- * Batch Finished callback
+ * Batch Finished callback.
  */
 function og_menu_default_links_batch_default_links_finished($success, $results, $operations) {
   if ($success) {
     // Here we do something meaningful with the results.
-    $message = count($results) .' processed.';
+    $message = count($results) . ' processed.';
     $message .= theme('item_list', $results);
   }
   else {

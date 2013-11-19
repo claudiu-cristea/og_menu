@@ -1,5 +1,10 @@
 <?php
 /**
+ * @file
+ * Implements the administration interface for default links.
+ */
+
+/**
  * Form callback for OG Menu configuration.
  */
 function og_menu_default_links_config_form($form, &$form_state) {
@@ -7,10 +12,10 @@ function og_menu_default_links_config_form($form, &$form_state) {
 
   // Add a field for each bundle.
   if ($bundles) {
-    foreach($bundles as $entity_type => $entity_bundles) {
+    foreach ($bundles as $entity_type => $entity_bundles) {
       foreach ($entity_bundles as $bundle => $bundle_label) {
         $group_type = strtolower('_' . $bundle);
-        $form['og_menu_default_link_bundles']['og_menu_default_links_' . $entity_type . $group_type ] = array(
+        $form['og_menu_default_link_bundles']['og_menu_default_links_' . $entity_type . $group_type] = array(
           '#type' => 'textarea',
           '#title' => t("%bundle Bundle", array('%bundle' => $bundle_label)),
           '#default_value' => variable_get('og_menu_default_links_' . $entity_type . $group_type, FALSE),
