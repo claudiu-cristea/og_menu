@@ -39,7 +39,7 @@ Drupal.ogMenu.bindEvents = function() {
 };
 
 /**
- * Helper to bind indivudual events
+ * Helper to bind individual events
  */
 Drupal.ogMenu.bindEvent = function(type, selector, cardinality) {
   // Autocomplete events can be tricky and need specific logic.
@@ -166,7 +166,7 @@ Drupal.ogMenu.setSelected = function() {
 /**
  * Helper to add items to Drupal.ogMenu.selected without duplicates
  * Handles arrays as well as single values.
- * Rucursive function.
+ * Recursive function.
  */
 Drupal.ogMenu.addSelected = function(val) {
   if (val instanceof Array) {
