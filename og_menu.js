@@ -7,17 +7,17 @@
 Drupal.ogMenu = Drupal.ogMenu || {};
 
 Drupal.behaviors.ogMenuGroupswitch = {
-    attach: function(context) {
-      // Initialize variables and form.
-      Drupal.ogMenu.originalParent = $('.menu-parent-select').val(); // Get original parent. We'll use this shortly.
-      Drupal.ogMenu.selected = []; // Create Variable to hold selected groups
-      Drupal.ogMenu.bindEvents(); // Bind events to group audience fields.
-      Drupal.ogMenu.setSelected(); // Get all currently selected.
-      Drupal.ogMenu.populateParentSelect(); // Populate
+  attach: function(context) {
+    // Initialize variables and form.
+    Drupal.ogMenu.originalParent = $('.menu-parent-select').val(); // Get original parent. We'll use this shortly.
+    Drupal.ogMenu.selected = []; // Create Variable to hold selected groups
+    Drupal.ogMenu.bindEvents(); // Bind events to group audience fields.
+    Drupal.ogMenu.setSelected(); // Get all currently selected.
+    Drupal.ogMenu.populateParentSelect(); // Populate
 
-      // Make sure the originalParent is set on page load.
-      $('.menu-parent-select').val(Drupal.ogMenu.originalParent);
-    }
+    // Make sure the originalParent is set on page load.
+    $('.menu-parent-select').val(Drupal.ogMenu.originalParent);
+  }
 };
 
 /**
@@ -27,7 +27,7 @@ Drupal.ogMenu.bindEvents = function() {
   var selector = '';
   $.each(Drupal.settings.ogMenu.group_audience_fields, function (index, value) {
     // Only bind events to visible fields.
-    if (value.visible === true) {
+    if (value.visibility === true) {
       selector = Drupal.ogMenu.buildSelector(index, value.normal, value.cardinality);
       Drupal.ogMenu.bindEvent(value.normal, selector, value.cardinality);
       if (Drupal.settings.ogMenu.administer_group === true) {
@@ -198,13 +198,13 @@ Drupal.ogMenu.populateParentSelect = function() {
   });
 
   var parentToSetActive = Drupal.ogMenu.selected[0];
-  activeIsSet = 0;
+  var activeIsSet = 0;
 
   // Add any og_menus to the menu-parent-select menu
   $.each(Drupal.settings.ogMenu.menus, function(menu_name, gid) {
     if ($.inArray(gid,Drupal.ogMenu.selected) >= 0)  {
       $.each(Drupal.settings.ogMenu.parent_options, function(key,val) {
-        parts = key.split(':');
+        var parts = key.split(':');
         if (parts[0] === menu_name) {
           if (gid == parentToSetActive && activeIsSet === 0) {
             // Add option to Select and set as selected.

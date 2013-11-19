@@ -364,20 +364,18 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
       foreach (og_get_group_audience_fields('node', $type) as $field_name => $label) {
         $field = field_info_field($field_name);
         $instance = field_info_instance('node', $field_name, $type);
-        // This is currently the only widget in OG.
-        if ($instance['widget']['type'] == 'og_complex') {
-          // Group the data we need in the client side js code.
-          // Notice: 'default' is a reserved word in js, so we use 'normal'
-          // instead.
-          $fields[$field_name]['normal'] = $instance['settings']['behaviors']['og_widget']['default']['widget_type'];
-          $fields[$field_name]['admin'] = $instance['settings']['behaviors']['og_widget']['admin']['widget_type'];
-          $fields[$field_name]['cardinality'] = $field['cardinality'];
-          // Field is visible by default.
-          $fields[$field_name]['visibility'] = TRUE;
-          // When using entity reference pre-populate, the field may be hidden.
-          if (isset($instance['settings']['behaviors']['prepopulate']['action']) && $instance['settings']['behaviors']['prepopulate']['action'] == 'hide' && $context['group_type'] == $field['settings']['target_type']) {
-            $fields[$field_name]['visibility'] = $context['gid'];
-          }
+
+        // Group the data we need in the client side js code.
+        // Notice: 'default' is a reserved word in js, so we use 'normal'
+        // instead.
+        $fields[$field_name]['normal'] = $instance['settings']['behaviors']['og_widget']['default']['widget_type'];
+        $fields[$field_name]['admin'] = $instance['settings']['behaviors']['og_widget']['admin']['widget_type'];
+        $fields[$field_name]['cardinality'] = $field['cardinality'];
+        // Field is visible by default.
+        $fields[$field_name]['visibility'] = TRUE;
+        // When using entity reference pre-populate, the field may be hidden.
+        if (isset($instance['settings']['behaviors']['prepopulate']['action']) && $instance['settings']['behaviors']['prepopulate']['action'] == 'hide' && $context['group_type'] == $field['settings']['target_type']) {
+          $fields[$field_name]['visibility'] = $context['gid'];
         }
       }
       $settings['group_audience_fields'] = $fields;
