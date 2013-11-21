@@ -90,7 +90,11 @@ function og_menu_default_links_form_og_admin_menu_overview_form_alter(&$form, &$
  */
 function _og_menu_default_links_set_default_links($menu, $action = 'new') {
   $menu_name = is_string($menu) ? $menu : $menu['menu_name'];
-  watchdog('info', ($action == 'new') ? "Default Links Added to OG Menu {$menu_name}" : "Default Links recreated to OG Menu {$menu_name}");
+  $msg = 'Default Links recreated in OG Menu %menu_name';
+  if ($action == 'new') {
+    $msg = 'Default Links added to OG Menu %menu_name';
+  }
+  watchdog('og_menu', $msg, array('%menu_name' => $menu_name), WATCHDOG_INFO);
 
   // Check to see if this is the an og_menu
   if (preg_match('/^menu-og-(\d+)$/', $menu_name, $matches)) {
@@ -105,8 +109,8 @@ function _og_menu_default_links_set_default_links($menu, $action = 'new') {
         return FALSE;
       }
 
-      // If this is an update then delete the old menu links (module = 'og_menu')
-      // before recreating the links.
+      // If this is an update then delete the old menu links
+      // (module = 'og_menu') before recreating the links.
       $result = db_query("SELECT mlid as mlid FROM {menu_links} WHERE module = 'og_menu' and menu_name = :menu", array(':menu' => $menu_name));
       foreach ($result as $current_menu) {
         menu_link_delete($current_menu->mlid);
@@ -120,27 +124,79 @@ function _og_menu_default_links_set_default_links($menu, $action = 'new') {
       );
     }
 
-    // Get Default Menu Items from variable.
+    // Get default menu items from variable.
     $entities = entity_load($menu_data->group_type, array($menu_data->gid));
     $entity = array_shift($entities);
     $group_type = isset($entity->type) ? strtolower('_' . $entity->type) : '';
-    $default_links = explode("\n", variable_get('og_menu_default_links_' . $menu_data->group_type . $group_type, ''));
-    foreach ($default_links as $weight => $default_link) {
-      $link_parts = explode("|", $default_link);
-      $path = token_replace($link_parts[0], array($menu_data->group_type => $entity));
-      $label = (isset($link_parts[1])) ? token_replace($link_parts[1], array($menu_data->group_type => $entity)) : $path;
-      // Create link.
+
+    // Get default links.
+    $default_links = variable_get('og_menu_default_links_' . $menu_data->group_type . $group_type, '');
+    $default_links = og_menu_default_links_extract_links($default_links);
+
+    // Loop over the links found and create menu items.
+    foreach ($default_links as $default_link) {
+      // Try to normalize the path by using drupal_get_normal_path() and token
+      // replacement.
+      $path = $default_link['path'];
+      $path = token_replace($path, array('node' => $entity));
+      $path = drupal_get_normal_path($path);
+
       $link = array(
         'link_path' => $path,
-        'link_title' => $label,
+        'link_title' => $default_link['label'],
         'menu_name' => $menu_name,
-        'router_path' => 'faculty/%',
         'module' => 'og_menu',
-        'weight' => $weight,
+        'weight' => $default_link['weight'],
       );
       menu_link_save($link);
     }
   }
+}
+
+/**
+ * Finds default links based on the configuration information entered in the UI.
+ *
+ * @param string $string
+ *   The configuration string with a label|path pattern on each line.
+ * @param bool $error
+ *   If TRUE return if link do not match pattern. Defaults to FALSE.
+ *
+ * @return mixed
+ *   With the links extracted. The array is index by 'label', 'path' and
+ *   'weight'. If error is TRUE and a pattern do not match the link is returned
+ *   as a string.
+ */
+function og_menu_default_links_extract_links($string, $error = FALSE) {
+  $links = array();
+
+  // Same trick used on the list field module to ensure that values are
+  // separated on both "\n" and is "\r" removed (mac/linux lined end) and that
+  // the values have a length.
+  $list = explode("\n", $string);
+  $list = array_map('trim', $list);
+  $list = array_filter($list, 'strlen');
+
+  // Extract label and path.
+  foreach ($list as $weight => $link) {
+    if (preg_match('/(.*)\|(.*)/', $link, $matches)) {
+      $links[] = array(
+        'label' => $matches[1],
+        'path' => $matches[2],
+        'weight' => $weight,
+      );
+    }
+    else {
+      // Label or path not found in the current link.
+      watchdog('og_menu', 'Default link item did not match pattern (%link)', array('%link' => $link), WATCHDOG_CRITICAL);
+
+      // Used in form validation functions.
+      if ($error) {
+        return $link;
+      }
+    }
+  }
+
+  return $links;
 }
 
 /**

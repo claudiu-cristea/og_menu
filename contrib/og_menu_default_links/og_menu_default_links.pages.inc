@@ -19,8 +19,7 @@ function og_menu_default_links_config_form($form, &$form_state) {
           '#type' => 'textarea',
           '#title' => t("%bundle Bundle", array('%bundle' => $bundle_label)),
           '#default_value' => variable_get('og_menu_default_links_' . $entity_type . $group_type, FALSE),
-          '#description' => t("These links will be added to any new OG Menus added
-            to <b>%bundle</b> groups.", array('%bundle' => $bundle_label)),
+          '#description' => t("These links will be added to any new OG Menus added to <b>%bundle</b> groups. Enter one value per line, in the format 'label|path/to/page'.", array('%bundle' => $bundle_label)),
         );
       }
     }
@@ -42,4 +41,20 @@ function og_menu_default_links_config_form($form, &$form_state) {
   }
 
   return system_settings_form($form);
+}
+
+/**
+ * Implements hook_form_validate().
+ *
+ * Validation of the patterns entered in the administration form above.
+ */
+function og_menu_default_links_config_form_validate(&$form, &$form_state) {
+  foreach ($form_state['values'] as $field => $value) {
+    if (preg_match('/^og_menu_default_links_(.*?)_(.*)/', $field, $matches)) {
+      $links = og_menu_default_links_extract_links($value, TRUE);
+      if (!is_array($links)) {
+        form_set_error($field, t('The link (%link) did not match the pattern.', array('%link' => $links)));
+      }
+    }
+  }
 }
