@@ -659,39 +659,51 @@ function og_menu_node_prepare($node) {
       && !user_access('administer og menu')) {
       return;
     }
+
     $groups = array();
-    $og_fields = og_get_group_audience_fields('node', $type);
-    foreach ($og_fields as $field_name => $label) {
-      $field = field_info_field($field_name);
-      $target_type = $field['settings']['target_type'];
-      // The handler delivers all available targets for each content type, skip
-      // the ids if we already have that type's results.
-      if (empty($groups[$target_type])) {
-        $instance = field_info_instance('node', $field_name, $type);
-        // Using the handler allows us to get user options from OG without
-        // running through all the user's groups.
-        $ids = entityreference_get_selection_handler($field, $instance)->getReferencableEntities();
-        if (!empty($ids)) {
-          $field_gids = array();
-          foreach ($ids as $key => $values) {
-            $field_gids += $values;
-          }
-          // Not ready yet, if a user has access to menus in one group, it does
-          // not mean we can give him access to the menus of all groups he has
-          // access to.
-          if (!empty($field_gids) && !(user_access('administer menu') || user_access('administer og menu'))) {
-            foreach ($field_gids as $gid => $name) {
-              if (!og_user_access($target_type, $gid, 'administer og menu')) {
-                unset($field_gids[$gid]);
+
+    // Get all groups that have menus we can add links to.
+    if (!variable_get('og_menu_context_limit', FALSE)) {
+      $og_fields = og_get_group_audience_fields('node', $type);
+      foreach ($og_fields as $field_name => $label) {
+        $field = field_info_field($field_name);
+        $target_type = $field['settings']['target_type'];
+        // The handler delivers all available targets for each content type, skip
+        // the ids if we already have that type's results.
+        if (empty($groups[$target_type])) {
+          $instance = field_info_instance('node', $field_name, $type);
+          // Using the handler allows us to get user options from OG without
+          // running through all the user's groups.
+          $ids = entityreference_get_selection_handler($field, $instance)->getReferencableEntities();
+          if (!empty($ids)) {
+            $field_gids = array();
+            foreach ($ids as $key => $values) {
+              $field_gids += $values;
+            }
+            // Not ready yet, if a user has access to menus in one group, it does
+            // not mean we can give him access to the menus of all groups he has
+            // access to.
+            if (!empty($field_gids) && !(user_access('administer menu') || user_access('administer og menu'))) {
+              foreach ($field_gids as $gid => $name) {
+                if (!og_user_access($target_type, $gid, 'administer og menu')) {
+                  unset($field_gids[$gid]);
+                }
               }
             }
+            // Create an array similar to what og_get_entity_groups() returns.
+            $groups[$target_type] = array_keys($field_gids);
           }
-          // Create an array similar to what og_get_entity_groups() returns.
-          $groups[$target_type] = array_keys($field_gids);
         }
       }
     }
+    // Limit groups to given context (this is a major performance gain).
+    else {
+      $groups[$context['group_type']] = array($context['gid']);
+    }
+
+    // Get all menus for available groups.
     $menus = og_menu_get_group_menus($groups);
+
     // Store the menus for later use in form_alter and form_validate
     $node->storage['og_menu'] = $menus;
     // $node is not a new node and menu link is not set.

@@ -261,18 +261,30 @@ function og_menu_delete_item_form($form, &$form_state, $item, $group_type, $gid,
  * Form callback for OG Menu configuration.
  */
 function og_menu_config_form($form, &$form_state) {
+
   $form['og_menu_block_links'] = array(
     '#type' => 'checkbox',
     '#title' => t('Convert OG Menu block titles into links'),
     '#default_value' => variable_get('og_menu_block_links', FALSE),
     '#description' => t('If enabled, OG Menu block titles will link to the groupnode.'),
   );
+
   $form['og_menu_create_by_default'] = array(
     '#type' => 'checkbox',
     '#title' => t('Automatically create a OG Menu for new Organic Group'),
     '#default_value' => variable_get('og_menu_create_by_default', FALSE),
     '#description' => t('If enabled, an OG Menu will be created by default when
       a new Organic Group node is created.'),
+  );
+  
+  $form['og_menu_context_limit'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Limit available menus to provided context'),
+    '#default_value' => variable_get('og_menu_context_limit', FALSE),
+    '#description' => t('If enabled, instead of loading all available menus on
+      node creation or editing, og menu will only load menus associated with the
+      current context. On sites with a lot of menus this can greatly improve
+      page performance.'),
   );
 
   $form['og_menu_max_menus_per_group'] = array(
