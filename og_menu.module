@@ -637,6 +637,7 @@ function og_menu_admin_menu_output_alter(&$content) {
  */
 function og_menu_node_prepare($node) {
   $type = $node->type;
+
   // $node is a group type.
   if (og_is_group_type('node', $type)) {
     // New node.
@@ -649,6 +650,8 @@ function og_menu_node_prepare($node) {
       $node->og_menu = !empty($menus);
     }
   }
+
+  // $node is a group content type.
   if (og_is_group_content_type('node', $type)
     && variable_get('og_menu_enable_' . $type, FALSE)) {
     // If there is context and the user doesn't have permission on the group,
@@ -661,7 +664,6 @@ function og_menu_node_prepare($node) {
     }
 
     $groups = array();
-
     // Get all groups that have menus we can add links to.
     if (!variable_get('og_menu_context_limit', FALSE)) {
       $og_fields = og_get_group_audience_fields('node', $type);
@@ -698,7 +700,9 @@ function og_menu_node_prepare($node) {
     }
     // Limit groups to given context (this is a major performance gain).
     else {
-      $groups[$context['group_type']] = array($context['gid']);
+      if (!empty($context)) {
+        $groups[$context['group_type']] = array($context['gid']);
+      }
     }
 
     // Get all menus for available groups.
