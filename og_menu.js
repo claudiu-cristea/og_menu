@@ -202,7 +202,7 @@ Drupal.ogMenu.populateParentSelect = function() {
 
   // Add any og_menus to the menu-parent-select menu
   $.each(Drupal.settings.ogMenu.menus, function(menu_name, gid) {
-    if ($.inArray(gid,Drupal.ogMenu.selected) >= 0)  {
+    if ($.inArray(parseInt(gid), Drupal.ogMenu.selected) >= 0)  {
       $.each(Drupal.settings.ogMenu.parent_options, function(key,val) {
         var parts = key.split(':');
         if (parts[0] === menu_name) {
