@@ -914,17 +914,17 @@ function og_menu_get_group_menus($groups = NULL, $user = NULL) {
 
   $gids_condition = db_or();
   foreach ($groups as $group_type => $group_gids) {
-    if (!empty($group_gids)) {
-      $group_gids_condition = db_and()
-        ->condition('om.gid', $group_gids, 'IN')
-        ->condition('om.group_type', $group_type, '=');
-      $gids_condition->condition($group_gids_condition);
-    }
+    $group_gids_condition = db_and()
+      ->condition('om.gid', $group_gids, 'IN')
+      ->condition('om.group_type', $group_type, '=');
+    $gids_condition->condition($group_gids_condition);
   }
 
-  $result = $query
-    ->condition($gids_condition)
-    ->execute();
+  if ($gids_condition->count() > 0) {
+    $query->condition($gids_condition);
+  }
+
+  $result = $query->execute();
 
   while ($record = $result->fetchAssoc()) {
     $menus[] = $record;
