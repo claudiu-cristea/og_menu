@@ -33,7 +33,7 @@ Drupal.ogMenu.bindEvents = function() {
       if (Drupal.settings.ogMenu.administer_group === true) {
         selector = Drupal.ogMenu.buildSelector(index, value.admin, value.cardinality);
         Drupal.ogMenu.bindEvent(value.admin, selector, value.cardinality);
-      }     
+      }
     }
   });
 };
@@ -79,7 +79,7 @@ Drupal.ogMenu.getSelectors = function() {
     }
   });
   return selectors;
-}
+};
 
 /**
  * Build a selector for a given field.
@@ -101,7 +101,7 @@ Drupal.ogMenu.buildSelector = function(name, type, cardinality) {
     selector += 'input[type="text"][name^="' + name + '"].form-autocomplete';
   }
   return selector;
-}
+};
 
 /**
  * Build a selector for a given field.
@@ -135,8 +135,8 @@ Drupal.ogMenu.getGroupRefVal = function(name, type, cardinality) {
     });
 
   }
-  return val;
-}
+  return parseInt(val, 10);
+};
 
 /**
  * Adds all group reference values to selected array.
@@ -158,7 +158,7 @@ Drupal.ogMenu.setSelected = function() {
     }
     // When fields are invisible, a context has been previously set.
     else {
-      Drupal.ogMenu.addSelected(value.visibility);
+      Drupal.ogMenu.addSelected(parseInt(value.visibility, 10));
     }
   });
 };
@@ -181,7 +181,7 @@ Drupal.ogMenu.addSelected = function(val) {
       }
     }
   }
-}
+};
 
 
 /**
@@ -202,7 +202,7 @@ Drupal.ogMenu.populateParentSelect = function() {
 
   // Add any og_menus to the menu-parent-select menu
   $.each(Drupal.settings.ogMenu.menus, function(menu_name, gid) {
-    if ($.inArray(parseInt(gid), Drupal.ogMenu.selected) >= 0)  {
+    if ($.inArray(parseInt(gid, 10), Drupal.ogMenu.selected) >= 0)  {
       $.each(Drupal.settings.ogMenu.parent_options, function(key,val) {
         var parts = key.split(':');
         if (parts[0] === menu_name) {
@@ -210,7 +210,7 @@ Drupal.ogMenu.populateParentSelect = function() {
             // Add option to Select and set as selected.
             $('.menu-parent-select').append($("<option>", {value: key, text: val, selected: 'selected'}));
             activeIsSet = 1;
-          } 
+          }
           else if (Drupal.settings.ogMenu.mlid == parts[1]) {
             $('.menu-parent-select').append($("<option>", {value: key, text: val + ' [Current Menu Position]', disabled: 'disabled'}));
             // Don't add this item to parent list...
@@ -224,6 +224,6 @@ Drupal.ogMenu.populateParentSelect = function() {
       });
     }
   });
-}
+};
 
 }(jQuery));
