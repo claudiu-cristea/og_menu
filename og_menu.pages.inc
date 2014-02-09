@@ -229,6 +229,13 @@ function og_menu_edit_item_form($form, &$form_state, $type, $group_type, $gid, $
       '#weight' => 10,
     );
   }
+
+  // Integrate with menu attributes if installed
+  if (module_exists('menu_attributes')) {
+    $item = $form['original_item']['#value'];
+    _menu_attributes_form_alter($form, $item, $form);
+  }
+
   return $form;
 }
 
