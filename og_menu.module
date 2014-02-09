@@ -327,15 +327,20 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
   $type = $form['#node']->type;
   // Group type.
   if (og_is_group_type('node', $type)) {
-    $form['og_menu'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Enable menu for this group'),
-      '#default_value' => $form['#node']->og_menu,
-      '#description' => t('Check to create a menu for this group. Uncheck to delete all menus associated with this group.'),
-    );
-    // @todo If we're going to delete all of the groups menus,
-    //       we should ask the user for confirmation
-    //$form['#submit'][] = 'og_menu_group_form_validate';
+    if (!variable_get('og_menu_hide_create_option', FALSE)) {
+      $form['og_menu'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Enable menu for this group'),
+        '#default_value' => $form['#node']->og_menu,
+        '#description' => t('Check to create a menu for this group. Uncheck to delete all menus associated with this group.'),
+      );
+      // @todo If we're going to delete all of the groups menus,
+      //       we should ask the user for confirmation
+      //$form['#submit'][] = 'og_menu_group_form_validate';
+    }
+    else {
+      $form['#node']->og_menu = TRUE;
+    }
   }
   if (og_is_group_content_type('node', $type)
     && variable_get('og_menu_enable_' . $type, FALSE)) {

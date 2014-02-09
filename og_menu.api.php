@@ -17,3 +17,12 @@
 function og_menu_og_menu_admin_menu_overview_form_tableselect() {
   return TRUE;
 }
+
+/**
+ * Implements hook_og_menu_audience_fields_alter().
+ */
+function og_menu_og_menu_audience_fields(&$group_audience_fields, $type) {
+  if ($type == 'group_page') {
+    unset($group_audience_fields['some_field']);
+  }
+}
