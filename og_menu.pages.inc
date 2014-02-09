@@ -230,12 +230,17 @@ function og_menu_edit_item_form($form, &$form_state, $type, $group_type, $gid, $
     );
   }
 
-  // Integrate with menu attributes if installed
-  if (module_exists('menu_attributes')) {
+  // Integrate with Menu Attributes if installed.
+  if (module_exists('menu_attributes') && function_exists('_menu_attributes_form_alter')) {
     $item = $form['original_item']['#value'];
     _menu_attributes_form_alter($form, $item, $form);
   }
 
+  // Integrate with Multi Path Autocomplete (mpac) if installed.
+  if (module_exists('mpac')) {
+     mpac_form_menu_edit_item_alter($form, $form_state);
+  }
+  
   return $form;
 }
 
