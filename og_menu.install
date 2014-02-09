@@ -198,3 +198,10 @@ function og_menu_update_7302(&$sandbox) {
     module_enable(array('og_menu_default_links'), TRUE);
   }
 }
+
+/**
+ * Clear menu cache to enable admin page changes.
+ */
+function og_menu_update_7303(&$sandbox) {
+  menu_cache_clear_all();
+}
