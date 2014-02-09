@@ -60,6 +60,9 @@ function og_menu_uninstall() {
     'og_menu_show_homebox',
     'og_menu_show_menuposition',
     'og_menu_show_nodetype',
+    'og_menu_context_limit',
+    'og_menu_hide_create_option',
+    'og_menu_create_by_default',
   );
 
   // List all og_menu related node type settings vars.
