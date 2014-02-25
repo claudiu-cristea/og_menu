@@ -135,7 +135,7 @@ function og_menu_update_7300(&$sandbox) {
   }
 
   // Cannot use a join in db_update().
-  $groups = db_query('SELECT og.gid, og.etid FROM {og}, {og_menu} WHERE og.gid = og_menu.gid and og_menu.etid = 0 ORDER BY og_menu.gid LIMIT ' . $sandbox['limit'] . '');
+  $groups = db_query('SELECT og.gid, og.etid FROM {og} as og, {og_menu} as og_menu WHERE og.gid = og_menu.gid and og_menu.etid = 0 ORDER BY og_menu.gid LIMIT ' . $sandbox['limit'] . '');
 
   foreach ($groups as $group) {
     db_update('og_menu')
