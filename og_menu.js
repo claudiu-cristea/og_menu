@@ -28,11 +28,11 @@ Drupal.ogMenu.bindEvents = function() {
   $.each(Drupal.settings.ogMenu.group_audience_fields, function (index, value) {
     // Only bind events to visible fields.
     if (value.visibility === true) {
-      selector = Drupal.ogMenu.buildSelector(index, value.normal, value.cardinality);
-      Drupal.ogMenu.bindEvent(value.normal, selector, value.cardinality);
+      selector = Drupal.ogMenu.buildSelector(index, value.normal, value.cardinality, value.normal_selector);
+      Drupal.ogMenu.bindEvent(value.normal, selector);
       if (Drupal.settings.ogMenu.administer_group === true) {
-        selector = Drupal.ogMenu.buildSelector(index, value.admin, value.cardinality);
-        Drupal.ogMenu.bindEvent(value.admin, selector, value.cardinality);
+        selector = Drupal.ogMenu.buildSelector(index, value.admin, value.cardinality, value.admin_selector);
+        Drupal.ogMenu.bindEvent(value.admin, selector);
       }
     }
   });
@@ -41,7 +41,7 @@ Drupal.ogMenu.bindEvents = function() {
 /**
  * Helper to bind individual events
  */
-Drupal.ogMenu.bindEvent = function(type, selector, cardinality) {
+Drupal.ogMenu.bindEvent = function(type, selector) {
   // Autocomplete events can be tricky and need specific logic.
   if (type == 'entityreference_autocomplete') {
     // Selecting with the mouse will trigger blur.
@@ -73,9 +73,9 @@ Drupal.ogMenu.getSelectors = function() {
   var fields =  Drupal.settings.ogMenu.group_audience_fields;
   var selectors = [];
   $.each(fields, function (index, value) {
-    selectors.push(Drupal.ogMenu.buildSelector(index, value.normal, value.cardinality));
+    selectors.push(Drupal.ogMenu.buildSelector(index, value.normal, value.cardinality, value.normal_selector));
     if (Drupal.settings.ogMenu.administer_group === true) {
-      selectors.push(Drupal.ogMenu.buildSelector(index, value.admin, value.cardinality));
+      selectors.push(Drupal.ogMenu.buildSelector(index, value.admin, value.cardinality, value.admin_selector));
     }
   });
   return selectors;
@@ -84,21 +84,21 @@ Drupal.ogMenu.getSelectors = function() {
 /**
  * Build a selector for a given field.
  */
-Drupal.ogMenu.buildSelector = function(name, type, cardinality) {
+Drupal.ogMenu.buildSelector = function(name, type, cardinality, base_selector) {
   var selector = '';
   if (type == 'options_buttons') {
     if (cardinality == 1) { // singular value, radio elements.
-      selector += 'input[type="radio"][name^="' + name + '"]';
+      selector += 'input[type="radio"][name^="' + base_selector + '"]';
     }
     else { // plural values, checkbox elements.
-      selector += 'input[type="checkbox"][name^="' + name + '"]';
+      selector += 'input[type="checkbox"][name^="' + base_selector + '"]';
     }
   }
   else if (type == 'options_select') {
-    selector += 'select[name^="' + name + '"]';
+    selector += 'select[name^="' + base_selector + '"]';
   }
   else if (type == 'entityreference_autocomplete') {
-    selector += 'input[type="text"][name^="' + name + '"].form-autocomplete';
+    selector += 'input[type="text"][name^="' + base_selector + '"].form-autocomplete';
   }
   return selector;
 };
@@ -106,36 +106,33 @@ Drupal.ogMenu.buildSelector = function(name, type, cardinality) {
 /**
  * Build a selector for a given field.
  */
-Drupal.ogMenu.getGroupRefVal = function(name, type, cardinality) {
+Drupal.ogMenu.getGroupRefVal = function(name, type, cardinality, base_selector) {
   var val = [];
   var selector = '';
   if (type == 'options_buttons') {
     if (cardinality == 1) { // singular value, radio elements.
-      selector = 'input[type="radio"][name^="' + name + '"]:checked';
+      selector = 'input[type="radio"][name^="' + base_selector + '"]:checked';
       val.push($(selector).val());
     }
     else { // plural values, checkbox elements.
-      selector = 'input[type="checkbox"][name^="' + name + '"]:checked';
+      selector = 'input[type="checkbox"][name^="' + base_selector + '"]:checked';
       $(selector).each(function(i) {
-        val.push($(this).val());
+        $.merge(val, $(this).val());
       });
     }
   }
   else if (type == 'options_select') {  // Handle Selects
-    selector = 'select[name^="' + name + '"]';
-    $(selector).each(function(i) {
-      val.push($(this).val());
-    });
+    selector = 'select[name^="' + base_selector + '"]';
+    val.push($(selector).val());
   }
   else if (type == 'entityreference_autocomplete') { // Handle Autocompletes
-    selector = 'input[type="text"][name^="' + name + '"].form-autocomplete';
+    selector = 'input[type="text"][name^="' + base_selector + '"].form-autocomplete';
     $(selector).each(function(i) {
       var str = $(this).val();
       val.push(str.substring(str.lastIndexOf('(') + 1, str.lastIndexOf(')')));
     });
-
   }
-  return parseInt(val, 10);
+  return val;
 };
 
 /**
@@ -148,17 +145,17 @@ Drupal.ogMenu.setSelected = function() {
     // When dealing with visible fields, get the value from DOM.
     if (value.visibility === true) {
       Drupal.ogMenu.addSelected(
-          Drupal.ogMenu.getGroupRefVal(index, value.normal, value.cardinality)
+          Drupal.ogMenu.getGroupRefVal(index, value.normal, value.cardinality, value.normal_selector)
       );
       if (Drupal.settings.ogMenu.administer_group === true) {
         Drupal.ogMenu.addSelected(
-            Drupal.ogMenu.getGroupRefVal(index, value.admin, value.cardinality)
+            Drupal.ogMenu.getGroupRefVal(index, value.admin, value.cardinality, value.admin_selector)
         );
       }
     }
     // When fields are invisible, a context has been previously set.
     else {
-      Drupal.ogMenu.addSelected(parseInt(value.visibility, 10));
+      Drupal.ogMenu.addSelected(value.visibility);
     }
   });
 };
@@ -176,6 +173,7 @@ Drupal.ogMenu.addSelected = function(val) {
   }
   else {
     if (val != '_none' && val !== '' && val !== null && val !== undefined) {
+      val = parseInt(val, 10);
       if ($.inArray(val, Drupal.ogMenu.selected) == -1) {
         Drupal.ogMenu.selected.push(val);
       }
@@ -198,22 +196,25 @@ Drupal.ogMenu.populateParentSelect = function() {
   });
 
   var parentToSetActive = Drupal.ogMenu.selected[0];
-  var activeIsSet = 0;
+  var activeIsSet = Drupal.ogMenu.originalParent;
 
   // Add any og_menus to the menu-parent-select menu
   $.each(Drupal.settings.ogMenu.menus, function(menu_name, gid) {
     if ($.inArray(parseInt(gid, 10), Drupal.ogMenu.selected) >= 0)  {
       $.each(Drupal.settings.ogMenu.parent_options, function(key,val) {
         var parts = key.split(':');
+
         if (parts[0] === menu_name) {
           if (gid == parentToSetActive && activeIsSet === 0) {
             // Add option to Select and set as selected.
             $('.menu-parent-select').append($("<option>", {value: key, text: val, selected: 'selected'}));
             activeIsSet = 1;
           }
-          else if (Drupal.settings.ogMenu.mlid == parts[1]) {
+          else if (Drupal.settings.ogMenu.mlid !== 0 && Drupal.settings.ogMenu.mlid == parts[1]) {
             $('.menu-parent-select').append($("<option>", {value: key, text: val + ' [Current Menu Position]', disabled: 'disabled'}));
             // Don't add this item to parent list...
+            // Set the parent so we don't lose our place.
+            $('.menu-parent-select').val(activeIsSet);
           }
           else {
             // Add option to select.
