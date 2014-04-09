@@ -947,6 +947,32 @@ function og_menu_get_group_menus($groups = NULL, $user = NULL) {
 }
 
 /**
+ * Returns menus for a given gid and group_type in a structured array.
+ *
+ * @param $gid
+ *   The group id.
+ * @param $group_type
+ *   The group type.
+ *
+ * @return array
+ *   A structured array with menus list.
+ */
+function og_menu_get_menus($group_type, $gid) {
+  // If function arguments are empty, return.
+  if (empty($gid) || empty($group_type)) return;
+
+  $q = db_select('og_menu', 'om');
+  $q->join('menu_custom', 'm', 'om.menu_name = m.menu_name');
+  return $q->fields('om', array('gid', 'menu_name'))
+    ->fields('m', array('title', 'description'))
+    ->condition('om.group_type', $group_type)
+    ->condition('om.gid', $gid)
+    ->orderBy('m.title')
+    ->execute()
+    ->fetchAllAssoc('menu_name');
+}
+
+/**
  * Access function.
  */
 function og_menu_access($group_type, $gid, $op = NULL) {
