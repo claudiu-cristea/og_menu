@@ -24,13 +24,13 @@ function og_menu_overview_page($group_type, $gid) {
     $row = array(
       theme('menu_admin_overview', array(
         'title' => $menu->title,
-        'name' => $menu->name,
+        'name' => $menu->menu_name,
         'description' => $menu->description,
       )),
     );
-    $row[] = array('data' => l(t('list links'), 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu->name));
-    $row[] = array('data' => l(t('edit menu'), 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu->name . '/edit'));
-    $row[] = array('data' => l(t('add link'), 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu->name . '/add'));
+    $row[] = array('data' => l(t('list links'), 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu->menu_name));
+    $row[] = array('data' => l(t('edit menu'), 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu->menu_name . '/edit'));
+    $row[] = array('data' => l(t('add link'), 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu->menu_name . '/add'));
     $rows[] = $row;
   }
 
