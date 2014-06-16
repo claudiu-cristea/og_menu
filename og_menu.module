@@ -1040,6 +1040,9 @@ function og_menu_edit_menu_form_submit($form, &$form_state) {
       }
     }
   }
+  else {
+    db_delete('og_menu')->condition('menu_name', $menu_name)->execute();
+  }
 }
 
 /**
