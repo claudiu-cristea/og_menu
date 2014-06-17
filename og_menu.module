@@ -369,16 +369,23 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
       foreach (og_get_group_audience_fields('node', $type) as $field_name => $label) {
         $field = field_info_field($field_name);
         $instance = field_info_instance('node', $field_name, $type);
-
         // Group the data we need in the client side js code.
-        // Notice: 'default' is a reserved word in js, so we use 'normal'
-        // instead.
-        $default_selector =  $field_name . '[' . $form[$field_name]['#language'] . '][0][default]';
-        $admin_selector = $field_name . '[' . $form[$field_name]['#language'] . '][0][admin]';
-        $fields[$field_name]['normal'] = $instance['settings']['behaviors']['og_widget']['default']['widget_type'];
-        $fields[$field_name]['normal_selector'] = $default_selector;
-        $fields[$field_name]['admin'] = $instance['settings']['behaviors']['og_widget']['admin']['widget_type'];
-        $fields[$field_name]['admin_selector'] = $admin_selector;
+        // Notice: 'default' is a reserved word in js, so we use 'normal' instead.
+        // This is currently the only widget in OG.
+        if ($instance['widget']['type'] == 'og_complex') {
+          $default_selector =  $field_name . '[' . $form[$field_name]['#language'] . '][0][default]';
+          $admin_selector = $field_name . '[' . $form[$field_name]['#language'] . '][0][admin]';
+          $fields[$field_name]['normal'] = $instance['settings']['behaviors']['og_widget']['default']['widget_type'];
+          $fields[$field_name]['normal_selector'] = $default_selector;
+          $fields[$field_name]['admin'] = $instance['settings']['behaviors']['og_widget']['admin']['widget_type'];
+          $fields[$field_name]['admin_selector'] = $admin_selector;
+        }
+        // Also support standard form widgets.
+        else {
+          $default_selector = $field_name . '[' . $form[$field_name]['#language'] . ']';
+          $fields[$field_name]['normal'] = $instance['widget']['type'];
+          $fields[$field_name]['normal_selector'] = $default_selector;
+        }
         $fields[$field_name]['cardinality'] = $field['cardinality'];
         // Field is visible by default.
         $fields[$field_name]['visibility'] = TRUE;
