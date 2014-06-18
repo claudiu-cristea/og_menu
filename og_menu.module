@@ -253,10 +253,13 @@ function og_menu_block_view($delta = '') {
         $block['subject'] = check_plain($menu['title']);
       }
       $block['content'] = menu_tree($menu['menu_name']);
+      // Add contextual links.
+      if (in_array($menu['menu_name'], array_keys(menu_get_menus()))) {
+        $block['content']['#contextual_links']['og_menu'] = array('admin/structure/menu/manage', array($menu['menu_name']));
+      }
     }
   }
-  if ($delta == 'og_multi_menu_block' && $context) {
-    // @TODO Test this!!
+  elseif ($delta == 'og_multi_menu_block' && $context) {
     drupal_add_css(drupal_get_path('module', 'og_menu') . '/og_menu.css');
     $menus = og_menu_get_group_menus(array(
       $context['group_type'] => array($context['gid']),
@@ -265,15 +268,23 @@ function og_menu_block_view($delta = '') {
     $block['content'] = '';
 
     foreach ($menus as $menu) {
+      if (!isset($block['content']['#contextual_links'])) {
+        // Add contextual links for first menu.
+        // @TODO Find a proper solution for displaying contextual links for all menus.
+        if (in_array($menu['menu_name'], array_keys(menu_get_menus()))) {
+          $block['content']['#contextual_links']['og_menu'] = array('admin/structure/menu/manage', array($menu['menu_name']));
+        }
+      }
       $title = check_plain($menu['title']);
       if (variable_get('og_menu_block_links', FALSE)) {
         $title = l($menu['title'], $menu['group_type'] . '/' . $menu['gid']);
       }
-
       if ($tree = menu_tree($menu['menu_name'])) {
         if ($plural) {
           $block['subject'] = '';
-          $block['content'] .= "<div class='block-og-menu-inset'><h2>{$title}</h2>" . render($tree) . "</div>";
+          $block['content']["#markup"] .= '<div class="block-og-menu-inset">'
+            . '<h2 class="block-title">' . $title . '</h2>'
+            . render($tree) . '</div>';
         }
         else {
           $block['subject'] = $title;
