@@ -143,7 +143,9 @@ function _og_menu_default_links_set_default_links($menu, $action = 'new') {
 
       $link = array(
         'link_path' => $path,
-        'link_title' => $default_link['label'],
+        // Using token_replace to allow tokens to be used in the menu titles and
+        // impose length restrictions on link title.
+        'link_title' => mb_substr(token_replace($default_link['label'], array('node' => $entity)), 0, 255),
         'menu_name' => $menu_name,
         'module' => 'og_menu',
         'weight' => $default_link['weight'],
