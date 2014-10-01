@@ -128,7 +128,9 @@ Drupal.ogMenu.getGroupRefVal = function(name, type, cardinality, base_selector) 
     }
     else {
       $(selector).each(function(i) {
-        $.merge(val, $(this).val());
+        if ($(this).val() !== null) {
+          $.merge(val, $(this).val());
+        }
       });
     }
   }
@@ -160,7 +162,7 @@ Drupal.ogMenu.setSelected = function() {
       );
       if (Drupal.settings.ogMenu.administer_group === true && value.admin !== undefined) {
         Drupal.ogMenu.addSelected(
-            Drupal.ogMenu.getGroupRefVal(index, value.admin, value.cardinality, value.admin_selector)
+          Drupal.ogMenu.getGroupRefVal(index, value.admin, value.cardinality, value.admin_selector)
         );
       }
     }
