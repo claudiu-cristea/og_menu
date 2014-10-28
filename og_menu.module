@@ -138,7 +138,7 @@ function og_menu_menu() {
     'description' => 'Configuration for Organic groups menu',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('og_menu_config_form'),
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('administer og menu'),
     'type' => MENU_NORMAL_ITEM,
     'file' => 'og_menu.pages.inc',
   );
@@ -230,7 +230,7 @@ function og_menu_block_view($delta = '') {
         $group = og_get_group('node', $node->nid);
         $gids = array($group->gid);
       }
-      elseif (og_is_group_content_type('node', $node->type)) { 
+      elseif (og_is_group_content_type('node', $node->type)) {
         $nodegroups = og_load_multiple(og_get_entity_groups('node', $node));
         foreach ($nodegroups as $ng)
           $gids[] = $ng->gid;
