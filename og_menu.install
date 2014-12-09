@@ -220,3 +220,11 @@ function og_menu_update_7302(&$sandbox) {
 function og_menu_update_7303(&$sandbox) {
   menu_cache_clear_all();
 }
+
+/**
+ * Clear menu cache to ensure changes in hook_menu().
+ */
+function og_menu_update_7304(&$sandbox) {
+  // No need to clear menu cache her, because all caches will be cleared anyway
+  // while finishing update process in update_finished().
+}
