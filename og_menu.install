@@ -43,3 +43,11 @@ function og_menu_uninstall() {
   // @todo Delete Table og_menu
   // @todo Decide whether we want to delete all menu's created by og_menu.
 }
+
+/**
+ * Clear menu cache to ensure changes in hook_menu().
+ */
+function og_menu_update_7201(&$sandbox) {
+  // No need to clear menu cache her, because all caches will be cleared anyway
+  // while finishing update process in update_finished().
+}

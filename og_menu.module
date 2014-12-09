@@ -118,7 +118,7 @@ function og_menu_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('og_menu_edit_item_form', 'edit', 5, 3, 1),
     'access callback' => 'og_menu_access',
-    'access arguments' => array(1, 3),
+    'access arguments' => array(1, 3, 'edit-menu-item', 5),
     'type' => MENU_LOCAL_TASK,
     'weight' => 1,
     'file' => 'og_menu.pages.inc',
@@ -128,7 +128,7 @@ function og_menu_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('og_menu_delete_item_form', 5),
     'access callback' => 'og_menu_access',
-    'access arguments' => array(1, 3),
+    'access arguments' => array(1, 3, 'delete-menu-item', 5),
     'type' => MENU_CALLBACK,
     'weight' => 1,
     'file' => 'og_menu.pages.inc',
@@ -766,14 +766,33 @@ function og_menu_get_group_menus($gids = NULL, $user = NULL) {
  * @param menu
  *    The edited menu.
  */
-function og_menu_access($node, $menu = NULL, $op = NULL) {
+function og_menu_access($node, $menu = NULL, $op = NULL, $menu_item = NULL) {
+  // Make sure that node is an organic group.
   if (!$node) {
     return FALSE;
   }
   elseif (!og_is_group_type('node', $node->type)) {
     return FALSE;
   }
-  elseif (user_access('administer menu')) {
+
+  // Make sure that menu, is an og_menu-menu and belongs to the given group
+  // of given group type.
+  if ($menu) {
+    $query = db_select('og_menu', 'ogm');
+    $query->condition('ogm.gid', $node->nid, '=');
+    $query->condition('ogm.menu_name', $menu['menu_name'], '=');
+    $count = $query->countQuery()->execute()->fetchField();
+    if (!$count) {
+      return FALSE;
+    }
+
+    // Make sure, that menu-item is an item of the og_menu-menu.
+    if ($menu_item && $menu['menu_name'] != $menu_item['menu_name']) {
+      return FALSE;
+    }
+  }
+
+  if (user_access('administer menu')) {
     return TRUE;
   }
   elseif (user_access('administer og menu') || og_user_access_by_entity('administer og menu', 'node', $node->nid)) {
