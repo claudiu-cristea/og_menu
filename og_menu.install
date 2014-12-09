@@ -46,3 +46,11 @@ function og_menu_update_6200() {
   }
   db_query('DROP TABLE {og_menu_groups}');
 }
+
+/**
+ * Clear menu cache to ensure changes in hook_menu().
+ */
+function og_menu_update_6201() {
+  // No need to clear menu cache her, because all caches will be cleared anyway
+  // while finishing update process in update_finished().
+}
