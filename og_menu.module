@@ -77,8 +77,8 @@ function og_menu_menu() {
 
   $items['group/%/%/admin/menus'] = array(
     'title' => 'Menus',
-    'page callback' => 'og_menu_overview_page',
-    'page arguments' => array(1, 2),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('og_menu_menu_overview_form', 1, 2),
     'access callback' => 'og_menu_access',
     'access arguments' => array(1, 2),
     'weight' => 10,
@@ -214,6 +214,18 @@ function og_menu_menu() {
  */
 function og_menu_theme_registry_alter(&$theme_registry) {
   $theme_registry['block']['theme paths'][] = drupal_get_path('module', 'og_menu');
+}
+
+/**
+ * Implements hook_theme().
+ */
+function og_menu_theme() {
+  return array(
+    'og_menu_menu_overview_form' => array(
+      'file' => 'og_menu.pages.inc',
+      'render element' => 'form',
+    ),
+  );
 }
 
 /**
@@ -977,9 +989,10 @@ function og_menu_get_menus($group_type, $gid) {
   $q->join('menu_custom', 'm', 'om.menu_name = m.menu_name');
   return $q->fields('om', array('gid', 'menu_name'))
     ->fields('m', array('title', 'description'))
+    ->fields('om', array('weight'))
     ->condition('om.group_type', $group_type)
     ->condition('om.gid', $gid)
-    ->orderBy('m.title')
+    ->orderBy('om.weight')
     ->execute()
     ->fetchAllAssoc('menu_name');
 }
