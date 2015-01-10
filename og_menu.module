@@ -779,7 +779,8 @@ function og_menu_access($node, $menu = NULL, $op = NULL, $menu_item = NULL) {
   // of given group type.
   if ($menu) {
     $query = db_select('og_menu', 'ogm');
-    $query->condition('ogm.gid', $node->nid, '=');
+    $query->join('og', 'og', 'ogm.gid = og.gid');
+    $query->condition('og.etid', $node->nid, '=');
     $query->condition('ogm.menu_name', $menu['menu_name'], '=');
     $count = $query->countQuery()->execute()->fetchField();
     if (!$count) {
