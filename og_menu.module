@@ -117,6 +117,7 @@ function og_menu_menu() {
     'title' => 'List items',
     'weight' => -10,
     'type' => MENU_DEFAULT_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE,
   );
 
   $items['group/%/%/admin/menus/%menu/add'] = array(
@@ -126,6 +127,7 @@ function og_menu_menu() {
     'access callback' => 'og_menu_access',
     'access arguments' => array(1, 2, 'add-menu-item', 5),
     'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE,
     'weight' => 1,
     'file' => 'og_menu.pages.inc',
   );
@@ -137,6 +139,7 @@ function og_menu_menu() {
     'access callback' => 'og_menu_access',
     'access arguments' => array(1, 2, 'edit-menu', 5),
     'type' => MENU_LOCAL_TASK,
+    'context' => MENU_CONTEXT_INLINE,
     'weight' => 1,
     'file' => 'og_menu.pages.inc',
   );
@@ -260,8 +263,10 @@ function og_menu_block_view($delta = '') {
       }
       $block['content'] = menu_tree($menu['menu_name']);
       // Add contextual links.
-      if (in_array($menu['menu_name'], array_keys(menu_get_menus()))) {
-        $block['content']['#contextual_links']['og_menu'] = array('admin/structure/menu/manage', array($menu['menu_name']));
+      if ($block['content']) {
+        if (in_array($menu['menu_name'], array_keys(menu_get_menus()))) {
+          $block['content']['#contextual_links']['og_menu'] = array('group/' . $context['group_type'] . '/' . $context['gid'] . '/admin/menus', array($menu['menu_name']));
+        }
       }
     }
   }
@@ -274,13 +279,6 @@ function og_menu_block_view($delta = '') {
     $block['content'] = '';
 
     foreach ($menus as $menu) {
-      if (!isset($block['content']['#contextual_links'])) {
-        // Add contextual links for first menu.
-        // @TODO Find a proper solution for displaying contextual links for all menus.
-        if (in_array($menu['menu_name'], array_keys(menu_get_menus()))) {
-          $block['content']['#contextual_links']['og_menu'] = array('admin/structure/menu/manage', array($menu['menu_name']));
-        }
-      }
       $title = check_plain($menu['title']);
       if (variable_get('og_menu_block_links', FALSE)) {
         $title = l($menu['title'], $menu['group_type'] . '/' . $menu['gid']);
@@ -296,6 +294,15 @@ function og_menu_block_view($delta = '') {
           $block['subject'] = $title;
           $tree = menu_tree($menu['menu_name']);
           $block['content'] = $tree;
+        }
+      }
+    }
+    // Add contextual links for first menu.
+    // @TODO Find a proper solution for displaying contextual links for all menus.
+    if ($block['content']) {
+      if (!isset($block['content']['#contextual_links'])) {
+        if (in_array($menu['menu_name'], array_keys(menu_get_menus()))) {
+          $block['content']['#contextual_links']['og_menu'] = array('group/' . $context['group_type'] . '/' . $context['gid'] . '/admin/menus', array($menu['menu_name']));
         }
       }
     }
