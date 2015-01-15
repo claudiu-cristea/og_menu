@@ -32,7 +32,7 @@ function og_menu_config_form($form, &$form_state) {
     '#type' => 'checkbox',
     '#title' => t('Limit available menus to provided context'),
     '#default_value' => variable_get('og_menu_context_limit', FALSE),
-    '#description' => t('If enabled, instead of loading all available menus on node creation or editing, og menu will only load menus associated with the current context. On sites with a lot of (group) menus this can greatly improve page performance.'),
+    '#description' => t('If enabled, instead of loading all available menus on node creation or editing, og menu will only load menus associated with the current context. On sites with a lot of (group) menus this can greatly improve page performance. Note that this requires the group context to be set when creating content, usually done with url parameters.'),
   );
 
   $form['performance']['og_menu_assignment'] = array(
