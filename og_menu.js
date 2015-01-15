@@ -9,14 +9,16 @@ Drupal.ogMenu = Drupal.ogMenu || {};
 Drupal.behaviors.ogMenuGroupswitch = {
   attach: function(context) {
     // Initialize variables and form.
-    Drupal.ogMenu.originalParent = $('.menu-parent-select').val(); // Get original parent. We'll use this shortly.
+    if (Drupal.settings.ogMenu.mlid !== 0) {
+      Drupal.ogMenu.originalParent = $('.menu-parent-select').val(); // Get original parent.
+    }
+    else {
+      Drupal.ogMenu.originalParent = null;
+    }
     Drupal.ogMenu.selected = []; // Create Variable to hold selected groups
     Drupal.ogMenu.bindEvents(); // Bind events to group audience fields.
     Drupal.ogMenu.setSelected(); // Get all currently selected.
     Drupal.ogMenu.populateParentSelect(); // Populate
-
-    // Make sure the originalParent is set on page load.
-    $('.menu-parent-select').val(Drupal.ogMenu.originalParent);
   }
 };
 
@@ -218,11 +220,13 @@ Drupal.ogMenu.populateParentSelect = function() {
         var parts = key.split(':');
 
         if (parts[0] === menu_name) {
-          if (gid == parentToSetActive && activeIsSet === 0) {
+          // Current gid matches with menu parent to activate, no link was set previously.
+          if (gid == parentToSetActive && activeIsSet === null) {
             // Add option to Select and set as selected.
             $('.menu-parent-select').append($("<option>", {value: key, text: val, selected: 'selected'}));
             activeIsSet = 1;
           }
+          //
           else if (Drupal.settings.ogMenu.mlid !== 0 && Drupal.settings.ogMenu.mlid == parts[1]) {
             $('.menu-parent-select').append($("<option>", {value: key, text: val + ' [Current Menu Position]', disabled: 'disabled'}));
             // Don't add this item to parent list...

@@ -125,65 +125,6 @@ function theme_og_menu_menu_overview_form($variables) {
 /**
  * Menu callback.
  *
- * Shows an overview page of all the custom menus in a user's group and along
- * with their description.
- */
-/*
-function og_menu_overview_page($group_type, $gid) {
-
-  // Set the title of the page.
-  $entity_wrapper = entity_metadata_wrapper($group_type, $gid);
-  $entity_label = $entity_wrapper->label() ? $entity_wrapper->label() : $group_type . ' ' . $gid;
-  drupal_set_title(t('List menus for %title', array('%title' => $entity_label)), PASS_THROUGH);
-  // Set the breadcrumb.
-  og_set_breadcrumb($group_type, $gid, array(l(t('Group'), "$group_type/$gid/group")));
-
-  $header = array(t('Title'), array('data' => t('Weight')), array('data' => t('Operations'), 'colspan' => '3'));
-  $rows = array();
-  foreach (og_menu_get_menus($group_type, $gid) as $menu) {
-    $row = array(
-      theme('menu_admin_overview', array(
-        'title' => $menu->title,
-        'name' => $menu->menu_name,
-        'description' => $menu->description,
-      )),
-    );
-
-    $row['weight'] = array(
-      '#type' => 'weight',
-      '#title' => t('Weight'),
-      '#default_value' => $menu->weight,
-      '#delta' => 10,
-      '#title_display' => 'invisible',
-    );
-
-    $row[] = array('data' => l(t('list links'), 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu->menu_name));
-    $row[] = array('data' => l(t('edit menu'), 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu->menu_name . '/edit'));
-    $row[] = array('data' => l(t('add link'), 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu->menu_name . '/add'));
-    $rows[] = $row;
-  }
-
-  $form['actions'] = array('#type' => 'actions');
-  $form['actions'] = array('#attributes' => array('class' => 'og-menu-overview'));
-  $form['actions']['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Save configuration'),
-  );
-
-  $output = '';
-  if (empty($rows)) {
-    return t('There are currently no menus.');
-  }
-  else {
-    $output .= theme('table', array('header' => $header, 'rows' => $rows));
-    $output .= drupal_render($form);
-    return $output;
-  }
-}*/
-
-/**
- * Menu callback.
- *
  * Build the form that handles the adding/editing of a custom menu.
  */
 function og_menu_edit_menu_form($form, &$form_state, $type, $group_type, $gid, $menu = array()) {
