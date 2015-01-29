@@ -50,7 +50,7 @@ function og_menu_config_form($form, &$form_state) {
   // Automatic menu creation.
   $form['auto'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Automatic menu creation'),
+    '#title' => t('Menu creation'),
   );
 
   $form['auto']['og_menu_create_by_default'] = array(
@@ -65,11 +65,6 @@ function og_menu_config_form($form, &$form_state) {
     '#title' => t('Hide "Enable menu for this group"'),
     '#default_value' => variable_get('og_menu_hide_create_option', FALSE),
     '#description' => t('If enabled, "Enable menu for this group" will be hidden in the node edit form.'),
-    '#states' => array(
-      'visible' => array(
-        ':input[name=og_menu_create_by_default]' => array('checked' => TRUE),
-      ),
-    ),
   );
 
   // Visibility setting to hide OG Menus on selected pages.
