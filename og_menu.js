@@ -19,6 +19,9 @@ Drupal.behaviors.ogMenuGroupswitch = {
     Drupal.ogMenu.bindEvents(); // Bind events to group audience fields.
     Drupal.ogMenu.setSelected(); // Get all currently selected.
     Drupal.ogMenu.populateParentSelect(); // Populate
+ 
+    // Make sure the originalParent is set on page load.
+    $('.menu-parent-select').val(Drupal.ogMenu.originalParent);
   }
 };
 
