@@ -410,6 +410,7 @@ function og_menu_form_node_form_alter(&$form, &$form_state) {
         // Field is visible by default.
         $fields[$field_name]['visibility'] = TRUE;
         // When using entity reference pre-populate, the field may be hidden.
+        $context = og_context();
         if (isset($context['group_type']) && isset($instance['settings']['behaviors']['prepopulate']['action'])
           && $instance['settings']['behaviors']['prepopulate']['action'] == 'hide'
           && $context['group_type'] == $field['settings']['target_type']) {
