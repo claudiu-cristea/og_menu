@@ -973,6 +973,8 @@ function og_menu_get_group_menus($groups = NULL, $user = NULL) {
     $query->condition($gids_condition);
   }
 
+  $query->orderBy('weight', 'asc');
+
   $result = $query->execute();
 
   while ($record = $result->fetchAssoc()) {
