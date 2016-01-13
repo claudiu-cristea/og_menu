@@ -41,6 +41,9 @@ function og_menu_schema() {
       ),
     ),
     'primary key' => array('menu_name'),
+    'indexes' => array(
+      'gid_group_type_weight' => array('gid', 'group_type', 'weight'),
+    ),
     'foreign keys' => array(
       'menu_custom' => array(
         'table' => 'menu_custom',
@@ -249,4 +252,11 @@ function og_menu_update_7305(&$sandbox) {
       'default' => 0,
     ));
   }
+}
+
+/**
+ * Add og_menu.(gid, group_type, weight) index.
+ */
+function og_menu_update_7306() {
+  db_add_index('og_menu', 'gid_group_type_weight', array('gid', 'group_type', 'weight'));
 }
