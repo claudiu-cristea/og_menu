@@ -1,0 +1,101 @@
+
+# OgMenuInstance routing definition
+entity.ogmenu_instance.canonical:
+  path: '/admin/structure/ogmenu_instance/{ogmenu_instance}'
+  defaults:
+    _entity_view: 'ogmenu_instance'
+    _title: 'OG Menu instance'
+  requirements:
+    _entity_access: 'ogmenu_instance.view'
+  options:
+    _admin_route: TRUE
+
+entity.ogmenu_instance.collection:
+  path: '/admin/structure/ogmenu_instance'
+  defaults:
+    _entity_list: 'ogmenu_instance'
+    _title: 'OG Menu instance list'
+  requirements:
+    _permission: 'view og menu instance entities'
+  options:
+    _admin_route: TRUE
+
+entity.ogmenu_instance.edit_form:
+  path: '/admin/structure/ogmenu_instance/{ogmenu_instance}/edit'
+  defaults:
+    _entity_form: ogmenu_instance.edit
+    _title: 'Edit OG Menu instance'
+  requirements:
+    _permission: 'edit og menu instance entities'
+  options:
+    _admin_route: TRUE
+
+entity.ogmenu_instance.delete_form:
+  path: '/admin/structure/ogmenu_instance/{ogmenu_instance}/delete'
+  defaults:
+    _entity_form: ogmenu_instance.delete
+    _title: 'Delete OG Menu instance'
+  requirements:
+    _permission: 'delete og menu instance entities'
+  options:
+    _admin_route: TRUE
+
+ogmenu_instance.add_page:
+  path: '/admin/structure/ogmenu_instance/add'
+  defaults:
+    _controller: '\Drupal\og_menu\Controller\OgMenuInstanceAddController::add'
+    _title: 'Add OG Menu instance'
+  requirements:
+    _permission: 'add ogmenu_instance entities'
+
+entity.ogmenu_instance.add_form:
+  path: '/admin/structure/ogmenu_instance/add/{ogmenu}'
+  defaults:
+    _controller: '\Drupal\og_menu\Controller\OgMenuInstanceAddController::addForm'
+    _title_callback: '\Drupal\og_menu\Controller\OgMenuInstanceAddController::getAddFormTitle'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'add ogmenu_instance entities'
+
+# OgMenu routing definition
+entity.ogmenu.collection:
+  path: '/admin/structure/ogmenu'
+  defaults:
+    _entity_list: 'ogmenu'
+    _title: 'OG Menu'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+
+entity.ogmenu.add_form:
+  path: '/admin/structure/ogmenu/add'
+  defaults:
+    _entity_form: 'ogmenu.add'
+    _title: 'Add OG Menu'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+
+entity.ogmenu.edit_form:
+  path: '/admin/structure/ogmenu/{ogmenu}'
+  defaults:
+    _entity_form: 'ogmenu.edit'
+    _title: 'Edit OG Menu'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+
+entity.ogmenu.delete_form:
+  path: '/admin/structure/ogmenu/{ogmenu}/delete'
+  defaults:
+    _entity_form: 'ogmenu.delete'
+    _title: 'Delete OG Menu'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+

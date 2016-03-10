@@ -1,0 +1,23 @@
+<?php
+/**
+ * @file
+ * og_menu.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function og_menu_theme() {
+  $theme = [];
+  $theme['ogmenu_instance'] = [
+    'render element' => 'elements',
+    'file' => 'ogmenu_instance.page.inc',
+    'template' => 'ogmenu_instance',
+  ];
+  $theme['ogmenu_instance_content_add_list'] = [
+    'render element' => 'content',
+    'variables' => ['content' => NULL],
+    'file' => 'ogmenu_instance.page.inc',
+  ];
+  return $theme;
+}
