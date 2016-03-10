@@ -60,7 +60,7 @@ entity.ogmenu_instance.add_form:
 
 # OgMenu routing definition
 entity.ogmenu.collection:
-  path: '/admin/structure/ogmenu'
+  path: '/admin/structure/menu/ogmenu'
   defaults:
     _entity_list: 'ogmenu'
     _title: 'OG Menu'
@@ -70,7 +70,7 @@ entity.ogmenu.collection:
     _admin_route: TRUE
 
 entity.ogmenu.add_form:
-  path: '/admin/structure/ogmenu/add'
+  path: '/admin/structure/menu/ogmenu/add'
   defaults:
     _entity_form: 'ogmenu.add'
     _title: 'Add OG Menu'
@@ -80,7 +80,7 @@ entity.ogmenu.add_form:
     _admin_route: TRUE
 
 entity.ogmenu.edit_form:
-  path: '/admin/structure/ogmenu/{ogmenu}'
+  path: '/admin/structure/menu/ogmenu/{ogmenu}'
   defaults:
     _entity_form: 'ogmenu.edit'
     _title: 'Edit OG Menu'
@@ -90,7 +90,7 @@ entity.ogmenu.edit_form:
     _admin_route: TRUE
 
 entity.ogmenu.delete_form:
-  path: '/admin/structure/ogmenu/{ogmenu}/delete'
+  path: '/admin/structure/menu/ogmenu/{ogmenu}/delete'
   defaults:
     _entity_form: 'ogmenu.delete'
     _title: 'Delete OG Menu'

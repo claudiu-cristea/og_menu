@@ -15,3 +15,7 @@ entity.ogmenu_instance.delete_form:
   title: Delete
   weight: 10
 
+entity.ogmenu.collection:
+  title: OG Menu
+  route_name: entity.ogmenu.collection
+  base_route: entity.menu.collection

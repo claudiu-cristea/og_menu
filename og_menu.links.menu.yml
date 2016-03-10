@@ -11,6 +11,6 @@ entity.ogmenu.collection:
   title: 'OG Menu'
   route_name: entity.ogmenu.collection
   description: 'List OG Menu'
-  parent: system.admin_structure
+  parent: system.admin_structure.menu
   weight: 99
 
