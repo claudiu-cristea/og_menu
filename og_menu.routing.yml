@@ -3,12 +3,10 @@
 entity.ogmenu_instance.canonical:
   path: '/admin/structure/ogmenu_instance/{ogmenu_instance}'
   defaults:
-    _entity_view: 'ogmenu_instance'
+    _entity_form: ogmenu_instance.edit
     _title: 'OG Menu instance'
   requirements:
-    _entity_access: 'ogmenu_instance.view'
-  options:
-    _admin_route: TRUE
+    _permission: 'view og menu instance entities'
 
 entity.ogmenu_instance.collection:
   path: '/admin/structure/ogmenu_instance'
@@ -79,8 +77,18 @@ entity.ogmenu.add_form:
   options:
     _admin_route: TRUE
 
+entity.ogmenu.overview_form:
+  path: '/admin/structure/menu/ogmenu/{ogmenu}/overview'
+  defaults:
+    _form: '\Drupal\og_menu\Form\OverviewMenuInstances'
+    _title: 'OG Menu'
+  requirements:
+    _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE
+
 entity.ogmenu.edit_form:
-  path: '/admin/structure/menu/ogmenu/{ogmenu}'
+  path: '/admin/structure/menu/ogmenu/{ogmenu}/edit'
   defaults:
     _entity_form: 'ogmenu.edit'
     _title: 'Edit OG Menu'
@@ -99,3 +107,10 @@ entity.ogmenu.delete_form:
   options:
     _admin_route: TRUE
 
+entity.ogmenu.add_link_form:
+  path: '/admin/structure/menu/ogmenu/manage/{ogmenu_instance}/add'
+  defaults:
+    _controller: '\Drupal\og_menu\Controller\OgMenuController::addLink'
+    _title: 'Add menu link'
+  requirements:
+    _entity_create_access: 'menu_link_content'

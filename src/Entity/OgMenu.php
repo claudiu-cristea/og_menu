@@ -34,6 +34,7 @@ use Drupal\og_menu\OgMenuInterface;
  *   },
  *   links = {
  *     "canonical" = "/admin/structure/ogmenu/{ogmenu}",
+ *     "overview-form" = "/admin/structure/ogmenu/{ogmenu}/overview",
  *     "edit-form" = "/admin/structure/ogmenu/{ogmenu}/edit",
  *     "delete-form" = "/admin/structure/ogmenu/{ogmenu}/delete",
  *     "collection" = "/admin/structure/visibility_group"

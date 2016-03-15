@@ -78,7 +78,7 @@ class OgMenuInstanceAddController extends ControllerBase {
      */
     public function addForm(EntityInterface $ogmenu, Request $request) {
       $entity = $this->storage->create(array(
-        'type' => $ogmenu->id()
+        'type' => $ogmenu->id(),
       ));
       return $this->entityFormBuilder()->getForm($entity);
     }

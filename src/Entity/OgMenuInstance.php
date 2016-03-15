@@ -13,6 +13,7 @@ use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\og_menu\OgMenuInstanceInterface;
+use Drupal\system\MenuInterface;
 use Drupal\user\UserInterface;
 
 /**
@@ -25,10 +26,8 @@ use Drupal\user\UserInterface;
  *   label = @Translation("OG Menu instance"),
  *   bundle_label = @Translation("OG Menu"),
  *   handlers = {
- *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "list_builder" = "Drupal\og_menu\OgMenuInstanceListBuilder",
  *     "views_data" = "Drupal\og_menu\Entity\OgMenuInstanceViewsData",
- *
  *     "form" = {
  *       "default" = "Drupal\og_menu\Form\OgMenuInstanceForm",
  *       "add" = "Drupal\og_menu\Form\OgMenuInstanceForm",
@@ -239,4 +238,15 @@ class OgMenuInstance extends ContentEntityBase implements OgMenuInstanceInterfac
     return $fields;
   }
 
+
+
+  public function getDescription() {}
+
+  /**
+   * Determines if this menu is locked.
+   *
+   * @return bool
+   *   TRUE if the menu is locked, FALSE otherwise.
+   */
+  public function isLocked() {}
 }

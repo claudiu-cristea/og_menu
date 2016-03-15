@@ -33,4 +33,19 @@ class OgMenuListBuilder extends ConfigEntityListBuilder {
     return $row + parent::buildRow($entity);
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultOperations(EntityInterface $entity) {
+    $operations =  parent::getDefaultOperations($entity);
+    if ($entity->access('view') && $entity->hasLinkTemplate('overview-form')) {
+      $operations['view'] = array(
+        'title' => $this->t('View'),
+        'weight' => 0,
+        'url' => $entity->urlInfo('overview-form'),
+      );
+    }
+    return $operations;
+  }
+
 }
