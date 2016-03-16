@@ -7,9 +7,10 @@
 
 namespace Drupal\og_menu\Controller;
 
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\og_menu\OgMenuInstanceInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\og_menu\OgMenuInterface;
 
 /**
  * Defines a route controller for a form for menu link content entity creation.
@@ -33,6 +34,16 @@ class OgMenuController extends ControllerBase {
       'bundle' => 'menu_link_content',
     ));
     return $this->entityFormBuilder()->getForm($menu_link);
+  }
+
+  /**
+   * @param \Drupal\og_menu\OgMenuInterface $ogmenu
+   *   The og menu object.
+   * @return array
+   *   The page title render array.
+   */
+  public static function title(OgMenuInterface $ogmenu) {
+    return ['#markup' => $ogmenu->label(), '#allowed_tags' => Xss::getHtmlTagList()];
   }
 
 }

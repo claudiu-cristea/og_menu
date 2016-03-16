@@ -81,7 +81,7 @@ entity.ogmenu.overview_form:
   path: '/admin/structure/menu/ogmenu/{ogmenu}/overview'
   defaults:
     _form: '\Drupal\og_menu\Form\OverviewMenuInstances'
-    _title: 'OG Menu'
+    _title_callback: '\Drupal\og_menu\Controller\OgMenuController::title'
   requirements:
     _permission: 'administer site configuration'
   options:
