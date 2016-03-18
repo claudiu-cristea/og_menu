@@ -1,0 +1,6 @@
+services:
+  og_menu.og_route_context:
+    class: Drupal\og_menu\ContextProvider\OgRouteContext
+    arguments: ['@current_route_match']
+    tags:
+      - { name: 'context_provider' }

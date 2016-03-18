@@ -7,12 +7,16 @@
 
 namespace Drupal\og_menu\Plugin\Block;
 
+use Drupal\Component\Plugin\ContextAwarePluginInterface;
+use Drupal\Core\Access\AccessManagerInterface;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Menu\MenuActiveTrailInterface;
 use Drupal\Core\Menu\MenuLinkTreeInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -22,10 +26,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   id = "ogmenu_block",
  *   admin_label = @Translation("OG Menu"),
  *   category = @Translation("OG Menus"),
- *   deriver = "Drupal\og_menu\Plugin\Derivative\OgMenuBlock"
+ *   deriver = "Drupal\og_menu\Plugin\Derivative\OgMenuBlock",
+ *   context = {
+ *     "og" = @ContextDefinition("og", label = @Translation("Organic group"))
+ *   }
  * )
  */
-class OgMenuBlock extends BlockBase implements ContainerFactoryPluginInterface {
+class OgMenuBlock extends BlockBase implements ContainerFactoryPluginInterface, ContextAwarePluginInterface {
+  protected $menu_name;
 
   /**
    * The menu link tree service.
@@ -55,10 +63,12 @@ class OgMenuBlock extends BlockBase implements ContainerFactoryPluginInterface {
    * @param \Drupal\Core\Menu\MenuActiveTrailInterface $menu_active_trail
    *   The active menu trail service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, MenuLinkTreeInterface $menu_tree, MenuActiveTrailInterface $menu_active_trail) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, MenuLinkTreeInterface $menu_tree, MenuActiveTrailInterface $menu_active_trail, AccessManagerInterface $access_manager, AccountInterface $account) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->menuTree = $menu_tree;
     $this->menuActiveTrail = $menu_active_trail;
+    $this->accessManager = $access_manager;
+    $this->account = $account;
   }
 
   /**
@@ -70,7 +80,9 @@ class OgMenuBlock extends BlockBase implements ContainerFactoryPluginInterface {
       $plugin_id,
       $plugin_definition,
       $container->get('menu.link_tree'),
-      $container->get('menu.active_trail')
+      $container->get('menu.active_trail'),
+      $container->get('access_manager'),
+      $container->get('current_user')
     );
   }
 
@@ -137,16 +149,9 @@ class OgMenuBlock extends BlockBase implements ContainerFactoryPluginInterface {
    * {@inheritdoc}
    */
   public function build() {
-    $menu_type = $this->getDerivativeId();
-    $instances = \Drupal::entityManager()->getStorage('ogmenu_instance')->loadByProperties([
-      'type' => $menu_type,
-      // @todo Add active collection condition here...
-    ]);
-    if (empty($instances)) {
-      return [];
-    }
-    $menu_instance = current($instances);
-    $menu_name = 'ogmenu-' . $menu_instance->id();
+
+
+    $menu_name = $this->getMenuName();
     $parameters = $this->menuTree->getCurrentRouteMenuTreeParameters($menu_name);
 
     // Adjust the menu tree parameters based on the block's configuration.
@@ -167,7 +172,29 @@ class OgMenuBlock extends BlockBase implements ContainerFactoryPluginInterface {
       array('callable' => 'menu.default_tree_manipulators:generateIndexAndSort'),
     );
     $tree = $this->menuTree->transform($tree, $manipulators);
-    return $this->menuTree->build($tree);
+    $build = $this->menuTree->build($tree);
+    if (!$tree) {
+      $route_name = 'ogmenu_instance.add_page';
+      $route_parameters = [];
+      $access = $this->accessManager->checkNamedRoute($route_name, $route_parameters, $this->account, TRUE);
+      $build['create'] = array(
+        '#theme' => 'menu_local_action',
+        '#link' => array(
+          'title' => $this->t('Add menu'),
+          'url' => Url::fromRoute($route_name),
+        ),
+        '#access' => $access,
+      );
+    }
+    if ($menu_instance = $this->getOgMenuInstance()) {
+      $build['#contextual_links']['menu'] = array(
+        'route_parameters' => array(
+          'menu' => $menu_name,
+          'ogmenu_instance' => $menu_instance->id(),
+        ),
+      );
+    }
+    return $build;
   }
 
   /**
@@ -205,6 +232,32 @@ class OgMenuBlock extends BlockBase implements ContainerFactoryPluginInterface {
     // accessibility of a menu, will be bubbled automatically.
     $menu_name = $this->getDerivativeId();
     return Cache::mergeContexts(parent::getCacheContexts(), ['route.menu_active_trails:' . $menu_name]);
+  }
+
+  public function getOgMenuInstance() {
+    /** @var \Drupal\Core\Plugin\Context\Context $context */
+    $entity = $this->getContext('og')->getContextData()->getValue();
+    $entity_id = $entity->id();
+    // @todo Inject from container.
+    $instances = \Drupal::entityManager()->getStorage('ogmenu_instance')->loadByProperties([
+      'type' => $this->getDerivativeId(),
+      'og_group_ref' => $entity_id,
+    ]);
+    if ($instances) {
+      return array_pop($instances);
+    }
+    return FALSE;
+  }
+
+  public function getMenuName() {
+    if (isset($this->menu_name)) {
+      return $this->menu_name;
+    }
+    $instance = $this->getOgMenuInstance();
+    if ($instance) {
+      $this->menu_name = 'ogmenu-' . $instance->id();
+    }
+    return $this->menu_name;
   }
 
 }
