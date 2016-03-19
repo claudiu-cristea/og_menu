@@ -1,11 +1,3 @@
-# OG Menu instance menu items definition
-entity.ogmenu_instance.collection:
-  title: 'OG Menu instance list'
-  route_name: entity.ogmenu_instance.collection
-  description: 'List OG Menu instance entities'
-  parent: system.admin_structure
-  weight: 100
-
 # OG Menu menu items definition
 entity.ogmenu.collection:
   title: 'OG Menu'

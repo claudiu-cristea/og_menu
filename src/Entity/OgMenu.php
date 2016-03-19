@@ -62,11 +62,28 @@ class OgMenu extends ConfigEntityBundleBase implements OgMenuInterface {
   /**
    * {@inheritdoc}
    */
-   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
+  public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
      // When the menu bundle is saved, link it to og.
     if (!$update) {
       Og::CreateField(OgGroupAudienceHelper::DEFAULT_FIELD, 'ogmenu_instance', $this->id());
+    }
+    // Invalidate the block cache to update menu-based derivatives.
+    if (\Drupal::moduleHandler()->moduleExists('block')) {
+      \Drupal::service('plugin.manager.block')->clearCachedDefinitions();
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function delete() {
+    parent::delete();
+    menu_cache_clear_all();
+
+    // Invalidate the block cache to update menu-based derivatives.
+    if (\Drupal::moduleHandler()->moduleExists('block')) {
+      \Drupal::service('plugin.manager.block')->clearCachedDefinitions();
     }
   }
 

@@ -4,7 +4,6 @@
  * og_menu.
  */
 
-use \Drupal\Core\Block\BlockPluginInterface;
 /**
  * Implements hook_theme().
  */

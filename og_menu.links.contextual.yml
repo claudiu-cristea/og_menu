@@ -1,4 +1,4 @@
 entity.ogmenu_instance.edit_form:
   title: 'Edit OG Menu'
   route_name: 'entity.ogmenu_instance.edit_form'
-  group: menu
+  group: ogmenu

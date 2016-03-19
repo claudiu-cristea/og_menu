@@ -9,8 +9,8 @@ namespace Drupal\og_menu\Form;
 
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormBase;
-use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\og\OgGroupAudienceHelper;
 use Drupal\og_menu\OgMenuInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -74,9 +74,12 @@ class OverviewMenuInstances extends FormBase {
     $rids = $query->execute();
     $entities = $og_instance_storage->loadMultiple($rids);
     $list = array('#theme' => 'item_list');
+    $groups = [];
     /** @var \Drupal\Core\Entity\EntityInterface $entity */
     foreach ($entities as $entity) {
-      $list['#items'][] = array('#markup' => $entity->link());
+      $value = $entity->get(OgGroupAudienceHelper::DEFAULT_FIELD)->getValue();
+      $groups[] = $value[0]['target_id'];
+      $list['#items'][] = array('#markup' => $entity->link($value[0]['target_id']));
     }
 
     $build = array(
