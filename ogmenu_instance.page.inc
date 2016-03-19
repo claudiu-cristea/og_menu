@@ -32,30 +32,30 @@ function template_preprocess_ogmenu_instance(array &$variables) {
 }
 
 /**
-* Prepares variables for a custom entity type creation list templates.
-*
-* Default template: ogmenu_instance-content-add-list.html.twig.
-*
-* @param array $variables
-*   An associative array containing:
-*   - content: An array of ogmenu_instance-types.
-*
-* @see block_content_add_page()
-*/
+ * Prepares variables for a custom entity type creation list templates.
+ *
+ * Default template: ogmenu_instance-content-add-list.html.twig.
+ *
+ * @param array $variables
+ *   An associative array containing:
+ *   - content: An array of ogmenu_instance-types.
+ *
+ * @see block_content_add_page()
+ */
 function template_preprocess_ogmenu_instance_content_add_list(&$variables) {
   $variables['types'] = array();
   $query = \Drupal::request()->query->all();
   foreach ($variables['content'] as $type) {
     $variables['types'][$type->id()] = array(
       'link' => Link::fromTextAndUrl($type->label(), new Url('entity.ogmenu_instance.add_form', array(
-        'ogmenu' => $type->id()
+        'ogmenu' => $type->id(),
       ), array('query' => $query))),
       'description' => array(
-      '#markup' => $type->label(),
+        '#markup' => $type->label(),
       ),
       'title' => $type->label(),
       'localized_options' => array(
-      'query' => $query,
+        'query' => $query,
       ),
     );
   }

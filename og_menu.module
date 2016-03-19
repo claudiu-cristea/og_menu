@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * og_menu.
+ * Main functions and hook implementations of the og_menu module.
  */
 
 /**
