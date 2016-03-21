@@ -44,7 +44,7 @@ ogmenu_instance.add_page:
     _controller: '\Drupal\og_menu\Controller\OgMenuInstanceAddController::add'
     _title: 'Add OG Menu instance'
   requirements:
-    _permission: 'add ogmenu_instance entities'
+    _permission: 'add og menu instance entities'
 
 ogmenu_instance.create:
   path: '/admin/structure/ogmenu_instance/{ogmenu}/{og_group_entity_type}/{og_group}'
@@ -53,7 +53,7 @@ ogmenu_instance.create:
     _title: 'Create a new menu instance'
   requirements:
     # @todo Needs access controller to validate user access to group, also check if the entity is a group.
-    _permission: 'add ogmenu_instance entities'
+    _permission: 'add og menu instance entities'
   options:
     parameters:
       og_group:
@@ -67,7 +67,7 @@ entity.ogmenu_instance.add_form:
   options:
     _admin_route: TRUE
   requirements:
-    _permission: 'add ogmenu_instance entities'
+    _permission: 'add og menu instance entities'
 
 # OgMenu routing definition
 entity.ogmenu.collection:
