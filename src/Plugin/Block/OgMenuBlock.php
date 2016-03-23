@@ -198,21 +198,23 @@ class OgMenuBlock extends BlockBase implements ContainerFactoryPluginInterface, 
     $tree = $this->menuTree->transform($tree, $manipulators);
     $build = $this->menuTree->build($tree);
     if (!$tree) {
-      $route_name = 'entity.ogmenu_instance.add_page';
-      $route_parameters = [];
-      $access = $this->accessManager->checkNamedRoute($route_name, $route_parameters, $this->account, TRUE);
+      $route_name = 'entity.ogmenu_instance.create';
       /** @var \Drupal\Core\Entity\EntityInterface $og_entity */
       $og_entity = $this->getContext('og')->getContextData()->getValue();
+      $route_parameters = [
+        'ogmenu' => $this->getDerivativeId(),
+        'og_group_entity_type' => $og_entity->getEntityTypeId(),
+        'og_group' => $og_entity->id(),
+      ];
+      $access = $this->accessManager->checkNamedRoute($route_name, $route_parameters, $this->account, TRUE);
+      // $access = AccessResultAllowed::allowed();
+      // @todo Think about how to get rid of this hack for rdf entities:
+      $route_parameters['og_group'] = str_replace('/', '\\', $route_parameters['og_group']);
       $build['create'] = array(
         '#theme' => 'menu_local_action',
         '#link' => array(
           'title' => $this->t('Add menu'),
-          'url' => Url::fromRoute('entity.ogmenu_instance.create', [
-            'ogmenu' => $this->getDerivativeId(),
-            'og_group_entity_type' => $og_entity->getEntityTypeId(),
-            // @todo Think about how to get rid of this hack for rdf entities:
-            'og_group' => str_replace('/', '\\', $og_entity->id())
-          ]),
+          'url' => Url::fromRoute('entity.ogmenu_instance.create', $route_parameters),
         ),
         '#access' => $access,
       );
