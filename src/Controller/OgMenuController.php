@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\menu_link_content\Controller\MenuController.
+ * Contains \Drupal\og_menu\Controller\OgMenuController.
  */
 
 namespace Drupal\og_menu\Controller;
@@ -20,7 +20,7 @@ class OgMenuController extends ControllerBase {
   /**
    * Provides the menu link creation form.
    *
-   * @param \Drupal\system\MenuInterface $menu
+   * @param \Drupal\og_menu\OgMenuInstanceInterface $ogmenu_instance
    *   An entity representing a custom menu.
    *
    * @return array

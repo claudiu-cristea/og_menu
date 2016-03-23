@@ -27,7 +27,6 @@ use Drupal\user\UserInterface;
  *   label = @Translation("OG Menu instance"),
  *   bundle_label = @Translation("OG Menu"),
  *   handlers = {
- *     "list_builder" = "Drupal\og_menu\OgMenuInstanceListBuilder",
  *     "views_data" = "Drupal\og_menu\Entity\OgMenuInstanceViewsData",
  *     "form" = {
  *       "default" = "Drupal\og_menu\Form\OgMenuInstanceForm",
@@ -126,5 +125,12 @@ class OgMenuInstance extends ContentEntityBase implements OgMenuInstanceInterfac
     Cache::invalidateTags(array('block_view'));
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function label() {
+    // Use the label of the menu as the instance name.
+    return OgMenu::load($this->getType())->label();
+  }
 
 }

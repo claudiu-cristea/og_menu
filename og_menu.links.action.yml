@@ -1,11 +1,3 @@
-entity.ogmenu_instance.add_form:
-  route_name: 'ogmenu_instance.add_page'
-  title: 'Add OG Menu instance'
-  appears_on:
-    - entity.ogmenu_instance.collection
-    - entity.ogmenu.overview_form
-  class: \Drupal\og_menu\Plugin\Menu\LocalAction\OgMenuInstanceAddLocalAction
-
 entity.ogmenu.add_form:
   route_name: 'entity.ogmenu.add_form'
   title: 'Add OG Menu'

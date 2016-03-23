@@ -28,7 +28,7 @@ use Drupal\og_menu\OgMenuInterface;
  *     }
  *   },
  *   config_prefix = "ogmenu",
- *   admin_permission = "administer site configuration",
+ *   admin_permission = "administer og menu",
  *   bundle_of = "ogmenu_instance",
  *   entity_keys = {
  *     "id" = "id",

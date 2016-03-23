@@ -24,10 +24,7 @@ class OgMenuInstanceAccessControlHandler extends EntityAccessControlHandler {
   protected function checkAccess(EntityInterface $entity, $operation, AccountInterface $account) {
     switch ($operation) {
       case 'view':
-        if (!$entity->isPublished()) {
-          return AccessResult::allowedIfHasPermission($account, 'view unpublished og menu instance entities');
-        }
-        return AccessResult::allowedIfHasPermission($account, 'view published og menu instance entities');
+        return AccessResult::allowedIfHasPermission($account, 'view og menu instance entities');
 
       case 'update':
         return AccessResult::allowedIfHasPermission($account, 'edit og menu instance entities');

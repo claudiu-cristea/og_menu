@@ -53,6 +53,27 @@ class OgMenuBlock extends BlockBase implements ContainerFactoryPluginInterface, 
   protected $menuActiveTrail;
 
   /**
+   * The access manager service.
+   *
+   * @var \Drupal\Core\Access\AccessManagerInterface
+   */
+  protected $accessManager;
+
+  /**
+   * The current user service.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected $account;
+
+  /**
+   * The entity manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityManagerInterface
+   */
+  protected $entityManager;
+
+  /**
    * Constructs a new SystemMenuBlock.
    *
    * @param array $configuration
@@ -177,7 +198,7 @@ class OgMenuBlock extends BlockBase implements ContainerFactoryPluginInterface, 
     $tree = $this->menuTree->transform($tree, $manipulators);
     $build = $this->menuTree->build($tree);
     if (!$tree) {
-      $route_name = 'ogmenu_instance.add_page';
+      $route_name = 'entity.ogmenu_instance.add_page';
       $route_parameters = [];
       $access = $this->accessManager->checkNamedRoute($route_name, $route_parameters, $this->account, TRUE);
       /** @var \Drupal\Core\Entity\EntityInterface $og_entity */
@@ -186,7 +207,7 @@ class OgMenuBlock extends BlockBase implements ContainerFactoryPluginInterface, 
         '#theme' => 'menu_local_action',
         '#link' => array(
           'title' => $this->t('Add menu'),
-          'url' => Url::fromRoute('ogmenu_instance.create', [
+          'url' => Url::fromRoute('entity.ogmenu_instance.create', [
             'ogmenu' => $this->getDerivativeId(),
             'og_group_entity_type' => $og_entity->getEntityTypeId(),
             // @todo Think about how to get rid of this hack for rdf entities:
@@ -248,6 +269,9 @@ class OgMenuBlock extends BlockBase implements ContainerFactoryPluginInterface, 
     return Cache::mergeContexts(parent::getCacheContexts(), ['route.menu_active_trails:' . $menu_name]);
   }
 
+  /**
+   * Gets the ogmenu_instance for the current og group.
+   */
   public function getOgMenuInstance() {
     $entity = $this->getContext('og')->getContextData()->getValue();
     $entity_id = $entity->id();

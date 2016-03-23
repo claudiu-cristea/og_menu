@@ -9,6 +9,7 @@ namespace Drupal\og_menu\Form;
 
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityForm;
+use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
@@ -47,7 +48,8 @@ class OgMenuInstanceForm extends ContentEntityForm {
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The link generator.
    */
-  public function __construct(QueryFactory $entity_query_factory, MenuLinkManagerInterface $menu_link_manager, MenuLinkTreeInterface $menu_tree, LinkGeneratorInterface $link_generator) {
+  public function __construct(EntityManagerInterface $entity_manager, QueryFactory $entity_query_factory, MenuLinkManagerInterface $menu_link_manager, MenuLinkTreeInterface $menu_tree, LinkGeneratorInterface $link_generator) {
+    parent::__construct($entity_manager);
     $this->entityQueryFactory = $entity_query_factory;
     $this->menuLinkManager = $menu_link_manager;
     $this->menuTree = $menu_tree;
@@ -59,6 +61,7 @@ class OgMenuInstanceForm extends ContentEntityForm {
    */
   public static function create(ContainerInterface $container) {
     return new static(
+      $container->get('entity.manager'),
       $container->get('entity.query'),
       $container->get('plugin.manager.menu.link'),
       $container->get('menu.link_tree'),

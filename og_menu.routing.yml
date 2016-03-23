@@ -8,16 +8,6 @@ entity.ogmenu_instance.canonical:
   requirements:
     _permission: 'view og menu instance entities'
 
-entity.ogmenu_instance.collection:
-  path: '/admin/structure/ogmenu_instance'
-  defaults:
-    _entity_list: 'ogmenu_instance'
-    _title: 'OG Menu instance list'
-  requirements:
-    _permission: 'view og menu instance entities'
-  options:
-    _admin_route: TRUE
-
 entity.ogmenu_instance.edit_form:
   path: '/admin/structure/ogmenu_instance/{ogmenu_instance}/edit'
   defaults:
@@ -38,19 +28,11 @@ entity.ogmenu_instance.delete_form:
   options:
     _admin_route: TRUE
 
-ogmenu_instance.add_page:
-  path: '/admin/structure/ogmenu_instance/add'
-  defaults:
-    _controller: '\Drupal\og_menu\Controller\OgMenuInstanceAddController::add'
-    _title: 'Add OG Menu instance'
-  requirements:
-    _permission: 'add ogmenu_instance entities'
-
-ogmenu_instance.create:
+entity.ogmenu_instance.create:
   path: '/admin/structure/ogmenu_instance/{ogmenu}/{og_group_entity_type}/{og_group}'
   defaults:
-    _controller: '\Drupal\og_menu\Controller\OgMenuInstanceAddController::createMenuInstance'
-    _title: 'Create a new menu instance'
+    _controller: '\Drupal\og_menu\Controller\OgMenuInstanceController::createMenuInstance'
+    _title: 'Create a new OG menu instance'
   requirements:
     # @todo Needs access controller to validate user access to group, also check if the entity is a group.
     _permission: 'add ogmenu_instance entities'
@@ -59,16 +41,6 @@ ogmenu_instance.create:
       og_group:
         type: entity:{og_group_entity_type}
 
-entity.ogmenu_instance.add_form:
-  path: '/admin/structure/ogmenu_instance/add/{ogmenu}'
-  defaults:
-    _controller: '\Drupal\og_menu\Controller\OgMenuInstanceAddController::addForm'
-    _title_callback: '\Drupal\og_menu\Controller\OgMenuInstanceAddController::getAddFormTitle'
-  options:
-    _admin_route: TRUE
-  requirements:
-    _permission: 'add ogmenu_instance entities'
-
 # OgMenu routing definition
 entity.ogmenu.collection:
   path: '/admin/structure/menu/ogmenu'
@@ -76,7 +48,7 @@ entity.ogmenu.collection:
     _entity_list: 'ogmenu'
     _title: 'OG Menu'
   requirements:
-    _permission: 'administer site configuration'
+    _permission: 'administer og menu'
   options:
     _admin_route: TRUE
 
@@ -86,7 +58,7 @@ entity.ogmenu.add_form:
     _entity_form: 'ogmenu.add'
     _title: 'Add OG Menu'
   requirements:
-    _permission: 'administer site configuration'
+    _permission: 'administer og menu'
   options:
     _admin_route: TRUE
 
@@ -96,7 +68,7 @@ entity.ogmenu.overview_form:
     _form: '\Drupal\og_menu\Form\OverviewMenuInstances'
     _title_callback: '\Drupal\og_menu\Controller\OgMenuController::title'
   requirements:
-    _permission: 'administer site configuration'
+    _permission: 'administer og menu'
   options:
     _admin_route: TRUE
 
@@ -104,9 +76,9 @@ entity.ogmenu.edit_form:
   path: '/admin/structure/menu/ogmenu/{ogmenu}/edit'
   defaults:
     _entity_form: 'ogmenu.edit'
-    _title: 'Edit OG Menu'
+    _title_callback: '\Drupal\Core\Entity\Controller\EntityController::editTitle'
   requirements:
-    _permission: 'administer site configuration'
+    _permission: 'administer og menu'
   options:
     _admin_route: TRUE
 
@@ -114,9 +86,9 @@ entity.ogmenu.delete_form:
   path: '/admin/structure/menu/ogmenu/{ogmenu}/delete'
   defaults:
     _entity_form: 'ogmenu.delete'
-    _title: 'Delete OG Menu'
+    _title_callback: '\Drupal\Core\Entity\Controller\EntityController::deleteTitle'
   requirements:
-    _permission: 'administer site configuration'
+    _permission: 'administer og menu'
   options:
     _admin_route: TRUE
 

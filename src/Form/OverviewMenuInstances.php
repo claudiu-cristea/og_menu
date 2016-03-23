@@ -36,8 +36,6 @@ class OverviewMenuInstances extends FormBase {
   /**
    * Constructs an OverviewTerms object.
    *
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler service.
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager service.
    */
@@ -62,7 +60,7 @@ class OverviewMenuInstances extends FormBase {
   }
 
   /**
-   * Form constructor.
+   * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, OgMenuInterface $ogmenu = NULL) {
     $og_instance_storage = $this->entityManger->getStorage('ogmenu_instance');
@@ -74,24 +72,27 @@ class OverviewMenuInstances extends FormBase {
     $rids = $query->execute();
     $entities = $og_instance_storage->loadMultiple($rids);
     $list = array('#theme' => 'item_list');
-    $groups = [];
     /** @var \Drupal\Core\Entity\EntityInterface $entity */
     foreach ($entities as $entity) {
       $value = $entity->get(OgGroupAudienceHelper::DEFAULT_FIELD)->getValue();
-      $groups[] = $value[0]['target_id'];
-      $list['#items'][] = array('#markup' => $entity->link($value[0]['target_id']));
+      if (!$value) {
+        throw new \Exception('OG Menu requires an og group to be referenced.');
+      }
     }
-
-    $build = array(
-      'list' => $list,
-    );
-
+    if (count($entities)) {
+      $build = array(
+        'list' => $list,
+      );
+    }
+    else {
+      $build['#markup'] = $this->t('No menu instances have been created yet.');
+    }
 
     return $build;
   }
 
   /**
-   * Form submission handler.
+   * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
