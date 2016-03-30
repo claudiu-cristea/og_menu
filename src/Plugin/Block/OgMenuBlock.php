@@ -240,23 +240,6 @@ class OgMenuBlock extends BlockBase implements ContainerFactoryPluginInterface, 
   /**
    * {@inheritdoc}
    */
-  public function getCacheTags() {
-    // Even when the menu block renders to the empty string for a user, we want
-    // the cache tag for this menu to be set: whenever the menu is changed, this
-    // menu block must also be re-rendered for that user, because maybe a menu
-    // link that is accessible for that user has been added.
-    $cache_tags = parent::getCacheTags();
-    $menu_instance = $this->getOgMenuInstance();
-    if ($menu_instance instanceof OgMenuInstanceInterface) {
-      $cache_tags[] = 'config:system.menu:ogmenu-' . $menu_instance->id();
-    }
-
-    return $cache_tags;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getCacheContexts() {
     // ::build() uses MenuLinkTreeInterface::getCurrentRouteMenuTreeParameters()
     // to generate menu tree parameters, and those take the active menu trail
@@ -270,6 +253,8 @@ class OgMenuBlock extends BlockBase implements ContainerFactoryPluginInterface, 
 
   /**
    * Gets the ogmenu_instance for the current og group.
+   *
+   * @return mixed The instance of the og menu or null if no instance is found.
    */
   public function getOgMenuInstance() {
     $entity = $this->getContext('og')->getContextData()->getValue();
@@ -281,9 +266,14 @@ class OgMenuBlock extends BlockBase implements ContainerFactoryPluginInterface, 
     if ($instances) {
       return array_pop($instances);
     }
-    return FALSE;
+    return NULL;
   }
 
+  /**
+   * Returns a name for the og menu.
+   *
+   * @return string The name of the menu.
+   */
   public function getMenuName() {
     if (isset($this->menu_name)) {
       return $this->menu_name;

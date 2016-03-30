@@ -122,7 +122,6 @@ class OgMenuInstance extends ContentEntityBase implements OgMenuInstanceInterfac
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
-    Cache::invalidateTags(array('block_view'));
   }
 
   /**

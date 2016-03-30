@@ -28,6 +28,14 @@ entity.ogmenu_instance.delete_form:
   options:
     _admin_route: TRUE
 
+entity.ogmenu.add_link_form:
+  path: '/admin/structure/ogmenu_instance/{ogmenu_instance}/add-link'
+  defaults:
+    _controller: '\Drupal\og_menu\Controller\OgMenuInstanceController::addLink'
+    _title: 'Add menu link'
+  requirements:
+    _permission: 'add og menu instance entities'
+
 entity.ogmenu_instance.create:
   path: '/admin/structure/ogmenu_instance/{ogmenu}/{og_group_entity_type}/{og_group}'
   defaults:
@@ -91,11 +99,3 @@ entity.ogmenu.delete_form:
     _permission: 'administer og menu'
   options:
     _admin_route: TRUE
-
-entity.ogmenu.add_link_form:
-  path: '/admin/structure/menu/ogmenu/manage/{ogmenu_instance}/add'
-  defaults:
-    _controller: '\Drupal\og_menu\Controller\OgMenuController::addLink'
-    _title: 'Add menu link'
-  requirements:
-    _permission: 'add og menu instance entities'

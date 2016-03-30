@@ -10,6 +10,7 @@ namespace Drupal\og_menu\Form;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\og\OgGroupAudienceHelper;
 use Drupal\og_menu\OgMenuInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -40,7 +41,7 @@ class OverviewMenuInstances extends FormBase {
    *   The entity manager service.
    */
   public function __construct(EntityManagerInterface $entity_manager) {
-    $this->entityManger = $entity_manager;
+    $this->entityManager = $entity_manager;
   }
 
   /**
@@ -63,7 +64,7 @@ class OverviewMenuInstances extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, OgMenuInterface $ogmenu = NULL) {
-    $og_instance_storage = $this->entityManger->getStorage('ogmenu_instance');
+    $og_instance_storage = $this->entityManager->getStorage('ogmenu_instance');
     $query = $og_instance_storage->getQuery()
       ->sort('id')
       ->condition('type', $ogmenu->id())
@@ -78,6 +79,12 @@ class OverviewMenuInstances extends FormBase {
       if (!$value) {
         throw new \Exception('OG Menu requires an og group to be referenced.');
       }
+
+      $target_type = $this->getFieldTargetType($entity);
+      if($target_type){
+        $target_entity = $this->entityManager->getStorage($target_type)->load($value[0]['target_id']);
+      }
+      $list['#items'][] = $entity->toLink($target_entity->label());
     }
     if (count($entities)) {
       $build = array(
@@ -89,6 +96,19 @@ class OverviewMenuInstances extends FormBase {
     }
 
     return $build;
+  }
+
+  /**
+   * Returns the target type of the entity the instance refers to.
+   *
+   * @param $ogmenu_instance
+   *
+   * @return mixed|null
+   */
+  public function getFieldTargetType($ogmenu_instance){
+    /** @var \Drupal\Core\Field\FieldTypePluginManager $pluginTypeManager */
+    $field_storage = FieldStorageConfig::loadByName($ogmenu_instance->getEntityTypeId(), OgGroupAudienceHelper::DEFAULT_FIELD);
+    return $field_storage->getSetting('target_type');
   }
 
   /**

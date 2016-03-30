@@ -15,6 +15,7 @@ use \Drupal\og_menu\Entity\OgMenu;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Url;
 use Drupal\og_menu\Entity\OgMenuInstance;
+use Drupal\og_menu\OgMenuInstanceInterface;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -66,6 +67,25 @@ class OgMenuInstanceController extends ControllerBase {
       ]);
     }
     throw new Exception('Unable to save menu instance.');
+  }
+
+  /**
+   * Provides the menu link creation form.
+   *
+   * @param \Drupal\og_menu\OgMenuInstanceInterface $ogmenu_instance
+   *   An entity representing a custom menu.
+   *
+   * @return array
+   *   Returns the menu link creation form.
+   */
+  public function addLink(OgMenuInstanceInterface $ogmenu_instance) {
+    $menu_link = $this->entityManager()->getStorage('menu_link_content')->create(array(
+      'id' => '',
+      'parent' => '',
+      'menu_name' => 'ogmenu-' . $ogmenu_instance->id(),
+      'bundle' => 'menu_link_content',
+    ));
+    return $this->entityFormBuilder()->getForm($menu_link);
   }
 
 }
