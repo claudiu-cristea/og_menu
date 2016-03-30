@@ -207,9 +207,6 @@ class OgMenuBlock extends BlockBase implements ContainerFactoryPluginInterface, 
         'og_group' => $og_entity->id(),
       ];
       $access = $this->accessManager->checkNamedRoute($route_name, $route_parameters, $this->account, TRUE);
-      // $access = AccessResultAllowed::allowed();
-      // @todo Think about how to get rid of this hack for rdf entities:
-      $route_parameters['og_group'] = str_replace('/', '\\', $route_parameters['og_group']);
       $build['create'] = array(
         '#theme' => 'menu_local_action',
         '#link' => array(
