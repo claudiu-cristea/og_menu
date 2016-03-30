@@ -28,7 +28,7 @@ entity.ogmenu_instance.delete_form:
   options:
     _admin_route: TRUE
 
-entity.ogmenu.add_link_form:
+entity.ogmenu_instance.add_link:
   path: '/admin/structure/ogmenu_instance/{ogmenu_instance}/add-link'
   defaults:
     _controller: '\Drupal\og_menu\Controller\OgMenuInstanceController::addLink'

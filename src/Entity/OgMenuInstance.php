@@ -13,6 +13,8 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\og\OgGroupAudienceHelper;
 use Drupal\og_menu\OgMenuInstanceInterface;
 use Drupal\system\MenuInterface;
 use Drupal\user\UserInterface;
@@ -89,13 +91,12 @@ class OgMenuInstance extends ContentEntityBase implements OgMenuInstanceInterfac
       ->setDisplayConfigurable('form', TRUE);
 
 
-
     return $fields;
   }
 
 
-
-  public function getDescription() {}
+  public function getDescription() {
+  }
 
   /**
    * Determines if this menu is locked.
@@ -103,7 +104,8 @@ class OgMenuInstance extends ContentEntityBase implements OgMenuInstanceInterfac
    * @return bool
    *   TRUE if the menu is locked, FALSE otherwise.
    */
-  public function isLocked() {}
+  public function isLocked() {
+  }
 
   /**
    * {@inheritdoc}
@@ -122,14 +124,37 @@ class OgMenuInstance extends ContentEntityBase implements OgMenuInstanceInterfac
    */
   public function postSave(EntityStorageInterface $storage, $update = TRUE) {
     parent::postSave($storage, $update);
+    Cache::invalidateTags(['ogmenu_instance']);
   }
 
   /**
    * {@inheritdoc}
    */
   public function label() {
+    $target_label = $this->getFieldTargetTypeLabel();
     // Use the label of the menu as the instance name.
-    return OgMenu::load($this->getType())->label();
+    return $target_label ? $target_label : OgMenu::load($this->getType())
+      ->label();
   }
 
+  /**
+   * Returns the label of the target group entity type of the instance.
+   *
+   * @return mixed The label of the entity type or null.
+   */
+  public function getFieldTargetTypeLabel() {
+    $field_storage = FieldStorageConfig::loadByName($this->getEntityTypeId(), OgGroupAudienceHelper::DEFAULT_FIELD);
+    $target_type = $field_storage->getSetting('target_type');
+
+    $value = $this->get(OgGroupAudienceHelper::DEFAULT_FIELD)->getValue();
+    if ($value && $target_type) {
+      /** @var \Drupal\Core\Entity\EntityInterface $target_entity */
+      $target_entity = $this->entityTypeManager()
+        ->getStorage($target_type)
+        ->load($value[0]['target_id']);
+      return $target_entity->label();
+    }
+
+    return NULL;
+  }
 }

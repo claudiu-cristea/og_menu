@@ -4,8 +4,8 @@ entity.ogmenu.add_form:
   appears_on:
     - entity.ogmenu.collection
 
-entity.ogmenu.add_link_form:
-  route_name: 'entity.ogmenu.add_link_form'
+entity.ogmenu_instance.add_link:
+  route_name: 'entity.ogmenu_instance.add_link'
   title: 'Add link'
   class: \Drupal\menu_ui\Plugin\Menu\LocalAction\MenuLinkAdd
   appears_on:

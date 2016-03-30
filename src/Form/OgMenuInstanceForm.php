@@ -143,7 +143,7 @@ class OgMenuInstanceForm extends ContentEntityForm {
       ),
     );
     $form['links']['#empty'] = $this->t('There are no menu links yet. <a href=":url">Add link</a>.', [
-      ':url' => $this->url('entity.ogmenu.add_link_form', ['ogmenu_instance' => $this->entity->id()], [
+      ':url' => $this->url('entity.ogmenu_instance.add_link', ['ogmenu_instance' => $this->entity->id()], [
         'query' => ['destination' => $this->entity->url('edit-form')],
       ]),
     ]);

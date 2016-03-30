@@ -80,11 +80,7 @@ class OverviewMenuInstances extends FormBase {
         throw new \Exception('OG Menu requires an og group to be referenced.');
       }
 
-      $target_type = $this->getFieldTargetType($entity);
-      if($target_type){
-        $target_entity = $this->entityManager->getStorage($target_type)->load($value[0]['target_id']);
-      }
-      $list['#items'][] = $entity->toLink($target_entity->label());
+      $list['#items'][] = $entity->toLink();
     }
     if (count($entities)) {
       $build = array(
@@ -96,19 +92,6 @@ class OverviewMenuInstances extends FormBase {
     }
 
     return $build;
-  }
-
-  /**
-   * Returns the target type of the entity the instance refers to.
-   *
-   * @param $ogmenu_instance
-   *
-   * @return mixed|null
-   */
-  public function getFieldTargetType($ogmenu_instance){
-    /** @var \Drupal\Core\Field\FieldTypePluginManager $pluginTypeManager */
-    $field_storage = FieldStorageConfig::loadByName($ogmenu_instance->getEntityTypeId(), OgGroupAudienceHelper::DEFAULT_FIELD);
-    return $field_storage->getSetting('target_type');
   }
 
   /**
