@@ -193,7 +193,7 @@ function og_menu_edit_menu_form_submit_redirect($form, &$form_state) {
  */
 function og_menu_overview_form($form, &$form_state, $group_type, $gid, $menu) {
   module_load_include('inc', 'menu', 'menu.admin');
-  drupal_set_title(t('List items for menu !mtitle', array('!mtitle' => $menu['title'])), PASS_THROUGH);
+  drupal_set_title(t('List links for menu !mtitle', array('!mtitle' => $menu['title'])), PASS_THROUGH);
   // Set the breadcrumb.
   og_set_breadcrumb($group_type, $gid, array(l(t('Group'), "$group_type/$gid/group")));
   $b = drupal_get_breadcrumb();
@@ -202,7 +202,7 @@ function og_menu_overview_form($form, &$form_state, $group_type, $gid, $menu) {
   $form = menu_overview_form($form, $form_state, $menu);
 
   $form['#theme'] = 'menu_overview_form';
-  $form['#empty_text'] = t('There are no menu links yet.') . ' ' . l(t('Add link'), 'group/' . $group_type . '/' . $gid . '/admin/menus/' . $menu['menu_name'] . '/add');
+  $form['#empty_text'] = t('There are no menu links yet.');
 
   foreach (element_children($form) as $mlid) {
     if (strstr($mlid, 'mlid:')) {
@@ -274,7 +274,7 @@ function og_menu_edit_item_form($form, &$form_state, $type, $group_type, $gid, $
   }
 
   // Set the title of the page.
-  drupal_set_title(t('Add item into menu !mtitle', array('!mtitle' => $menu['title'])), PASS_THROUGH);
+  drupal_set_title(t('Add link into menu !mtitle', array('!mtitle' => $menu['title'])), PASS_THROUGH);
 
 
   // Build the form.

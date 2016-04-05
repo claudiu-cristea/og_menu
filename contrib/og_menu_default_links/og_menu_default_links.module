@@ -183,7 +183,7 @@ function og_menu_default_links_extract_links($string, $error = FALSE) {
     }
     else {
       // Label or path not found in the current link.
-      watchdog('og_menu', 'Default link item did not match pattern (%link)', array('%link' => $link), WATCHDOG_CRITICAL);
+      watchdog('og_menu', 'Default link did not match pattern (%link)', array('%link' => $link), WATCHDOG_CRITICAL);
 
       // Used in form validation functions.
       if ($error) {
