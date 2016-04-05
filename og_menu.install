@@ -258,5 +258,7 @@ function og_menu_update_7305(&$sandbox) {
  * Add og_menu.(gid, group_type, weight) index.
  */
 function og_menu_update_7306() {
-  db_add_index('og_menu', 'gid_group_type_weight', array('gid', 'group_type', 'weight'));
+  if (!db_index_exists('og_menu', 'gid_group_type_weight')) {
+    db_add_index('og_menu', 'gid_group_type_weight', array('gid', 'group_type', 'weight'));
+  }
 }
