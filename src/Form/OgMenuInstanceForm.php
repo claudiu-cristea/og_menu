@@ -336,13 +336,13 @@ class OgMenuInstanceForm extends ContentEntityForm {
 
     switch ($status) {
       case SAVED_NEW:
-        drupal_set_message($this->t('Created the %label OG Menu instance.', [
+        drupal_set_message($this->t('Created the %label menu.', [
           '%label' => $menu->label(),
         ]));
         break;
 
       default:
-        drupal_set_message($this->t('Saved the %label OG Menu instance.', [
+        drupal_set_message($this->t('Saved the %label menu.', [
           '%label' => $menu->label(),
         ]));
     }

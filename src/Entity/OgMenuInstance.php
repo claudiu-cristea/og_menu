@@ -147,14 +147,16 @@ class OgMenuInstance extends ContentEntityBase implements OgMenuInstanceInterfac
     $target_type = $field_storage->getSetting('target_type');
 
     $value = $this->get(OgGroupAudienceHelper::DEFAULT_FIELD)->getValue();
-    if ($value && $target_type) {
-      /** @var \Drupal\Core\Entity\EntityInterface $target_entity */
-      $target_entity = $this->entityTypeManager()
-        ->getStorage($target_type)
-        ->load($value[0]['target_id']);
-      return $target_entity->label();
+    if (!$value || !$target_type) {
+      return NULL;
     }
-
-    return NULL;
+    /** @var \Drupal\Core\Entity\EntityInterface $target_entity */
+    $target_entity = $this->entityTypeManager()
+      ->getStorage($target_type)
+      ->load($value[0]['target_id']);
+    if (!$target_entity) {
+      return NULL;
+    }
+    return $target_entity->label();
   }
 }

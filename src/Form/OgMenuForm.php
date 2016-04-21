@@ -7,7 +7,7 @@
 
 namespace Drupal\og_menu\Form;
 
-use Drupal\Core\Entity\EntityForm;
+use Drupal\Core\Entity\BundleEntityFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
@@ -15,7 +15,7 @@ use Drupal\Core\Form\FormStateInterface;
  *
  * @package Drupal\og_menu\Form
  */
-class OgMenuForm extends EntityForm {
+class OgMenuForm extends BundleEntityFormBase {
   /**
    * {@inheritdoc}
    */
