@@ -7,18 +7,17 @@
 
 namespace Drupal\og_menu\Controller;
 
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Link;
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\og\OgGroupAudienceHelper;
 use \Drupal\og_menu\Entity\OgMenu;
 use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Url;
 use Drupal\og_menu\Entity\OgMenuInstance;
 use Drupal\og_menu\OgMenuInstanceInterface;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\Request;
 
 
 /**
@@ -86,6 +85,22 @@ class OgMenuInstanceController extends ControllerBase {
       'bundle' => 'menu_link_content',
     ));
     return $this->entityFormBuilder()->getForm($menu_link);
+  }
+
+  /**
+   * Route title callback.
+   *
+   * @param \Drupal\rdf_entity\RdfInterface $rdf_entity
+   *   The rdf entity.
+   *
+   * @return array
+   *   The rdf entity label as a render array.
+   */
+  public function editFormTitle(OgMenuInstanceInterface $ogmenu_instance) {
+    return ['#markup' => t('Edit menu %menu of %group', [
+      '%menu' => $ogmenu_instance->bundle(),
+      '%group' =>$ogmenu_instance->label()
+    ]), '#allowed_tags' => Xss::getHtmlTagList()];
   }
 
 }

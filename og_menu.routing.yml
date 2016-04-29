@@ -12,6 +12,7 @@ entity.ogmenu_instance.edit_form:
   path: '/admin/structure/ogmenu_instance/{ogmenu_instance}/edit'
   defaults:
     _entity_form: ogmenu_instance.edit
+    _title_callback: '\Drupal\og_menu\Controller\OgMenuInstanceController::editFormTitle'
     _title: 'Edit OG Menu instance'
   requirements:
     _permission: 'edit og menu instance entities'

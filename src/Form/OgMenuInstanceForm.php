@@ -7,6 +7,7 @@
 
 namespace Drupal\og_menu\Form;
 
+use Drupal\Component\Utility\NestedArray;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\EntityManagerInterface;
@@ -20,6 +21,8 @@ use Drupal\Core\Menu\MenuTreeParameters;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Url;
 use Drupal\Core\Utility\LinkGeneratorInterface;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\og\OgGroupAudienceHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -29,12 +32,39 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class OgMenuInstanceForm extends ContentEntityForm {
   /**
+   * The factory for entity queries.
+   *
+   * @var \Drupal\Core\Entity\Query\QueryFactory
+   */
+  protected $entityQueryFactory;
+
+  /**
+   * The menu link manager.
+   *
+   * @var \Drupal\Core\Menu\MenuLinkManagerInterface
+   */
+  protected $menuLinkManager;
+
+  /**
+   * The menu tree service.
+   *
+   * @var \Drupal\Core\Menu\MenuLinkTreeInterface
+   */
+  protected $menuTree;
+
+  /**
+   * The link generator.
+   *
+   * @var \Drupal\Core\Utility\LinkGeneratorInterface
+   */
+  protected $linkGenerator;
+
+  /**
    * The overview tree form.
    *
    * @var array
    */
   protected $overviewTreeForm = array('#tree' => TRUE);
-
 
   /**
    * Constructs a MenuForm object.
@@ -296,22 +326,82 @@ class OgMenuInstanceForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    $entity = $this->entity;
-    $status = parent::save($form, $form_state);
+    $menu = $this->entity;
+    if (!$menu->isNew() || $menu->isLocked()) {
+      $this->submitOverviewForm($form, $form_state);
+    }
+
+    $status = $menu->save();
+
 
     switch ($status) {
       case SAVED_NEW:
-        drupal_set_message($this->t('Created the %label OG Menu instance.', [
-          '%label' => $entity->label(),
+        drupal_set_message($this->t('Created the %label menu.', [
+          '%label' => $menu->label(),
         ]));
         break;
 
       default:
-        drupal_set_message($this->t('Saved the %label OG Menu instance.', [
-          '%label' => $entity->label(),
+        drupal_set_message($this->t('Saved the %label menu.', [
+          '%label' => $menu->label(),
         ]));
     }
-    $form_state->setRedirect('entity.ogmenu_instance.edit_form', ['ogmenu_instance' => $entity->id()]);
+    $field_storage = FieldStorageConfig::loadByName($this->entity->getEntityTypeId(), OgGroupAudienceHelper::DEFAULT_FIELD);
+    $target_type = $field_storage->getSetting('target_type');
+    $group_entity = $this->entity->get(OgGroupAudienceHelper::DEFAULT_FIELD)->getValue();
+    // If possible, redirect to the group after save.
+    if ($target_type && $group_entity) {
+      $form_state->setRedirect('entity.' . $target_type . '.canonical', [$target_type => $group_entity[0]['target_id']]);
+    }
+    else {
+      $form_state->setRedirect('entity.ogmenu_instance.edit_form', ['ogmenu_instance' => $menu->id()]);
+    }
+  }
+
+  /**
+   * Submit handler for the menu overview form.
+   *
+   * This function takes great care in saving parent items first, then items
+   * underneath them. Saving items in the incorrect order can break the tree.
+   */
+  protected function submitOverviewForm(array $complete_form, FormStateInterface $form_state) {
+    // Form API supports constructing and validating self-contained sections
+    // within forms, but does not allow to handle the form section's submission
+    // equally separated yet. Therefore, we use a $form_state key to point to
+    // the parents of the form section.
+    $parents = $form_state->get('menu_overview_form_parents');
+    $input = NestedArray::getValue($form_state->getUserInput(), $parents);
+    $form = &NestedArray::getValue($complete_form, $parents);
+
+    // When dealing with saving menu items, the order in which these items are
+    // saved is critical. If a changed child item is saved before its parent,
+    // the child item could be saved with an invalid path past its immediate
+    // parent. To prevent this, save items in the form in the same order they
+    // are sent, ensuring parents are saved first, then their children.
+    // See https://www.drupal.org/node/181126#comment-632270.
+    $order = is_array($input) ? array_flip(array_keys($input)) : array();
+    // Update our original form with the new order.
+    $form = array_intersect_key(array_merge($order, $form), $form);
+
+    $fields = array('weight', 'parent', 'enabled');
+    $form_links = $form['links'];
+    foreach (Element::children($form_links) as $id) {
+      if (isset($form_links[$id]['#item'])) {
+        $element = $form_links[$id];
+        $updated_values = array();
+        // Update any fields that have changed in this menu item.
+        foreach ($fields as $field) {
+          if ($element[$field]['#value'] != $element[$field]['#default_value']) {
+            $updated_values[$field] = $element[$field]['#value'];
+          }
+        }
+        if ($updated_values) {
+          // Use the ID from the actual plugin instance since the hidden value
+          // in the form could be tampered with.
+          $this->menuLinkManager->updateDefinition($element['#item']->link->getPLuginId(), $updated_values);
+        }
+      }
+    }
   }
 
 }
