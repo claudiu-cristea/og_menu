@@ -55,7 +55,7 @@ function og_menu_og_ui_get_group_admin($group_type, $gid) {
  * Implements hook_help().
  */
 function og_menu_help($path, $arg) {
-  if ($path == 'admin/structure/og_menu' && !variable_get('og_menu_hide_help', FALSE)) {
+  if ($path == 'admin/structure/menu/og_menu' && !variable_get('og_menu_hide_help', FALSE)) {
     return '<p>' . t('Add new menus on the <a href="@menu">Menu administration page</a>.', array('@menu' => url('admin/structure/menu'))) . '</p>';
   }
 
@@ -190,14 +190,14 @@ function og_menu_menu() {
     'weight' => -10,
   );
 
-  $items['admin/structure/og_menu'] = array(
-    'title' => 'Organic groups menus',
+  $items['admin/structure/menu/og_menu'] = array(
+    'title' => 'List OG menus',
     'description' => 'Add new organic groups menus to your site, edit existing ones, and rename and reorganize menu links.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('og_admin_menu_overview_form'),
     'access callback' => 'user_access',
     'access arguments' => array('administer menu'),
-    'type' => MENU_NORMAL_ITEM,
+    'type' => MENU_LOCAL_TASK,
     'file' => 'og_menu.pages.inc',
   );
 
