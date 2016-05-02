@@ -284,6 +284,9 @@ function og_menu_block_view($delta = '') {
       if ($tree = menu_tree($menu['menu_name'])) {
         if ($plural) {
           $block['subject'] = '';
+          if (!isset($block['content']['#markup'])) {
+            $block['content']["#markup"] = '';
+          }
           $block['content']["#markup"] .= '<div class="block-og-menu-inset">'
             . '<h2 class="block-title">' . $title . '</h2>'
             . render($tree) . '</div>';
