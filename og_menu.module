@@ -494,14 +494,18 @@ function og_menu_form_menu_edit_menu_alter(&$form, &$form_state) {
     $options = array('' => '--');
     // Populate gids.
     if (user_access('administer group')) {
-      $result = db_query("SELECT distinct ogm.gid, n.title FROM {og_membership} ogm LEFT JOIN {node} n ON n.nid = ogm.gid WHERE entity_type='node'");
+      $query = db_select('node', 'n');
+      $query->distinct();
+      $query->join('og_membership', 'og', 'n.nid = og.gid');
+      $query->fields('og', array('gid'));
+      $query->fields('n', array('title'));
+      $result = $query->execute();
       foreach ($result as $group) {
         $options[$group->gid] = $group->title;
       }
     }
     else {
       global $user;
-
       $gids = og_menu_get_node_groups('user', $user);
       $groups = node_load_multiple($gids);
       if (!empty($groups)) {
