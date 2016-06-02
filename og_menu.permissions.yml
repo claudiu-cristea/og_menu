@@ -14,3 +14,6 @@ delete og menu instance entities:
 
 view og menu instance entities:
   title: 'View OG Menu instance entities'
+
+add new links to og menu instance entities:
+  title: 'Add new links to OG Menu instance entities'
