@@ -35,7 +35,7 @@ entity.ogmenu_instance.add_link:
     _controller: '\Drupal\og_menu\Controller\OgMenuInstanceController::addLink'
     _title: 'Add menu link'
   requirements:
-    _permission: 'add og menu instance entities'
+    _custom_access: '\Drupal\og_menu\Controller\OgMenuInstanceController::addLinkAccess'
 
 entity.ogmenu_instance.create:
   path: '/admin/structure/ogmenu_instance/{ogmenu}/{og_group_entity_type}/{og_group}'
