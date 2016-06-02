@@ -6,7 +6,7 @@ entity.ogmenu_instance.canonical:
     _entity_form: ogmenu_instance.edit
     _title: 'OG Menu instance'
   requirements:
-    _permission: 'view og menu instance entities'
+    _entity_access: 'ogmenu_instance.view'
 
 entity.ogmenu_instance.edit_form:
   path: '/admin/structure/ogmenu_instance/{ogmenu_instance}/edit'
@@ -15,7 +15,7 @@ entity.ogmenu_instance.edit_form:
     _title_callback: '\Drupal\og_menu\Controller\OgMenuInstanceController::editFormTitle'
     _title: 'Edit OG Menu instance'
   requirements:
-    _permission: 'edit og menu instance entities'
+    _entity_access: 'ogmenu_instance.update'
   options:
     _admin_route: TRUE
 
@@ -25,7 +25,7 @@ entity.ogmenu_instance.delete_form:
     _entity_form: ogmenu_instance.delete
     _title: 'Delete OG Menu instance'
   requirements:
-    _permission: 'delete og menu instance entities'
+    _entity_access: 'ogmenu_instance.delete'
   options:
     _admin_route: TRUE
 
@@ -44,7 +44,7 @@ entity.ogmenu_instance.create:
     _title: 'Create a new OG menu instance'
   requirements:
     # @todo Needs access controller to validate user access to group, also check if the entity is a group.
-    _permission: 'add og menu instance entities'
+    _entity_create_access: 'ogmenu_instance'
   options:
     parameters:
       og_group:

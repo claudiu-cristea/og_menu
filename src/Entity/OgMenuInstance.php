@@ -50,7 +50,8 @@ use Drupal\user\UserInterface;
  *   links = {
  *     "canonical" = "/admin/ogmenu_instance/{ogmenu_instance}",
  *     "edit-form" = "/admin/ogmenu_instance/{ogmenu_instance}/edit",
- *     "delete-form" = "/admin/ogmenu_instance/{ogmenu_instance}/delete"
+ *     "delete-form" = "/admin/ogmenu_instance/{ogmenu_instance}/delete",
+ *     "add-link" = "/admin/structure/ogmenu_instance/{ogmenu_instance}/add-link"
  *   },
  *   bundle_entity_type = "ogmenu",
  *   field_ui_base_route = "entity.ogmenu.edit_form"
