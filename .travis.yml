@@ -42,7 +42,8 @@ before_script:
   - composer self-update && composer install
 
   # Download OG.
-  - travis_retry git clone --branch 8.x-1.x --depth 1 https://github.com/amitaibu/og.git modules/og
+  # Temporarily using the branch from PR #192 which adds OG permissions.
+  - travis_retry git clone --branch default-roles --depth 1 https://github.com/amitaibu/og.git modules/og
 
   # Reference OG in the Drupal site.
   - ln -s $TESTDIR modules/og_menu
