@@ -86,10 +86,21 @@ class OgMenuAccessTest extends KernelTestBase {
     $this->users['uid1'] = User::create(['name' => $this->randomString()]);
     $this->users['uid1']->save();
 
-    // Create a 'administrator' user who has the global 'administer group'
+    // Create an 'OG administrator' user who has the global 'administer group'
     // permission. This user should be able to access everything related to any
     // group.
-    $this->users['ogadmin'] = User::create(['name' => $this->randomString()]);
+    /** @var RoleInterface $og_menu_admin_role */
+    $admin_role = Role::create([
+      'id' => $this->randomMachineName(),
+      'label' => $this->randomString(),
+    ]);
+    $admin_role
+      ->grantPermission('administer group')
+      ->save();
+    $this->users['ogadmin'] = User::create([
+      'name' => $this->randomString(),
+      'roles' => [$admin_role->id()],
+    ]);
     $this->users['ogadmin']->save();
 
     // Create an 'OG Menu administrator' user who will get the global
@@ -102,7 +113,7 @@ class OgMenuAccessTest extends KernelTestBase {
     $og_menu_admin_role
       ->grantPermission('administer og menu')
       ->save();
-    
+
     $this->users['ogmenuadmin'] = User::create([
       'name' => $this->randomString(),
       'roles' => [$og_menu_admin_role->id()],
@@ -162,7 +173,6 @@ class OgMenuAccessTest extends KernelTestBase {
       'type' => $this->ogMenu->id(),
     ]);
     $this->ogMenuInstance->save();
-
   }
 
   /**
@@ -228,7 +238,7 @@ class OgMenuAccessTest extends KernelTestBase {
       'label' => $this->randomString(),
       'id' => $this->randomMachineName(),
     ]);
-    
+
     // Create an OG Menu Instance but don't save it.
     $ogmenu_instance = OgMenuInstance::create([
       'id' => $this->randomMachineName(),
@@ -251,6 +261,27 @@ class OgMenuAccessTest extends KernelTestBase {
         $message = "User $user_key should not be able to delete an unsaved $entity_type entity.";
         $this->assertFalse($$entity_type->access('delete'), $message);
       }
+    }
+  }
+
+  /**
+   * Tests that unsupported operations do not grant access.
+   */
+  public function testUnsupportedOperation() {
+    // In the context of a group UID1 and the OG admin are 'superadmins' which
+    // have access to everything, even to unsupported operations.
+    $user_keys = [
+      'uid1' => TRUE,
+      'ogadmin' => TRUE,
+      'ogmenuadmin' => FALSE,
+      'groupadmin' => FALSE,
+      'groupmember' => FALSE,
+      'authenticated' => FALSE,
+    ];
+
+    foreach ($user_keys as $user_key => $expected_access) {
+      $message = "User $user_key should " . ($expected_access ? '' : 'not') . " be granted access to an unsupported operation by default.";
+      $this->assertEquals($expected_access, $this->ogMenuInstance->access('some-non-existing-operation', $this->users[$user_key]), $message);
     }
   }
 
