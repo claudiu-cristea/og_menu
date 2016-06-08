@@ -224,8 +224,10 @@ class OgMenuBlock extends BlockBase implements ContainerFactoryPluginInterface, 
         ),
       );
     }
-    $menu_name = $menu_instance->getType();
-    $build['#theme'] = 'menu__og__' . strtr($menu_name, '-', '_');
+    if ($menu_instance) {
+      $menu_name = $menu_instance->getType();
+      $build['#theme'] = 'menu__og__' . strtr($menu_name, '-', '_');
+    }
     return $build;
   }
 
