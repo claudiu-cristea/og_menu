@@ -42,8 +42,7 @@ before_script:
   - composer self-update && composer install
 
   # Download OG.
-  # Temporarily using a branch that contains the permission related fixes from PRs #192, #214 and #217.
-  - travis_retry git clone --branch ISAICP-2362 --depth 1 https://github.com/ec-europa/og.git modules/og
+  - travis_retry git clone --branch 8.x-1.x --depth 1 https://github.com/gizra/og.git modules/og
 
   # Reference OG in the Drupal site.
   - ln -s $TESTDIR modules/og_menu
