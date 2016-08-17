@@ -155,9 +155,8 @@ class OgMenuAccessTest extends KernelTestBase {
     /** @var OgMembership $membership */
     $membership = OgMembership::create(['type' => OgMembershipInterface::TYPE_DEFAULT]);
     $membership
-      ->setUser($this->users['groupmember']->id())
-      ->setEntityId($this->group->id())
-      ->setGroupEntityType($this->group->getEntityTypeId())
+      ->setUser($this->users['groupmember'])
+      ->setGroup($this->group)
       ->save();
 
     // Add an OG Menu.
