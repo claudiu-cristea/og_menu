@@ -11,9 +11,8 @@ use Drupal\Component\Utility\Xss;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\og\Og;
+use Drupal\og\MembershipManagerInterface;
 use Drupal\og\OgGroupAudienceHelper;
 use Drupal\og_menu\Entity\OgMenu;
 use Drupal\og_menu\Entity\OgMenuInstance;
@@ -27,30 +26,54 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @package Drupal\og_menu\Controller
  */
 class OgMenuInstanceController extends ControllerBase {
-  public function __construct(EntityStorageInterface $storage, EntityStorageInterface $type_storage) {
-    $this->storage = $storage;
-    $this->typeStorage = $type_storage;
+
+  /**
+   * The OG membership manager service.
+   *
+   * @var \Drupal\og\MembershipManagerInterface
+   */
+  protected $membershipManager;
+
+  /**
+   * Constructs an OgMenuInstanceController object.
+   *
+   * @param \Drupal\og\MembershipManagerInterface $membership_manager
+   *   The OG membership manager service.
+   */
+  public function __construct(MembershipManagerInterface $membership_manager) {
+    $this->membershipManager = $membership_manager;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    /** @var EntityManagerInterface $entity_manager */
-    $entity_manager = $container->get('entity.manager');
     return new static(
-      $entity_manager->getStorage('ogmenu_instance'),
-      $entity_manager->getStorage('ogmenu')
+      $container->get('og.membership_manager')
     );
   }
 
+  /**
+   * Controller for the create menu instance form.
+   *
+   * Depending on whether the menu instance already exists, the user will be
+   * redirected to the entity create or edit form.
+   *
+   * @param \Drupal\og_menu\Entity\OgMenu $ogmenu
+   *   The OG Menu that is associated with the menu instance.
+   * @param \Drupal\Core\Entity\EntityInterface $og_group
+   *   The group that is associated with the menu instance.
+   *
+   * @return \Symfony\Component\HttpFoundation\RedirectResponse
+   *   The response.
+   */
   public function createMenuInstance(OgMenu $ogmenu, EntityInterface $og_group) {
     $values = [
       'type' => $ogmenu->id(),
       OgGroupAudienceHelper::DEFAULT_FIELD => $og_group->id(),
     ];
     // Menu exists, redirect to edit form.
-    $instances = $this->storage->loadByProperties($values);
+    $instances = $this->entityTypeManager()->getStorage('ogmenu_instance')->loadByProperties($values);
     if ($instances) {
       $instance = array_pop($instances);
       return $this->redirect('entity.ogmenu_instance.edit_form', [
@@ -126,7 +149,7 @@ class OgMenuInstanceController extends ControllerBase {
     }
 
     // Retrieve the associated group from the menu instance.
-    $og_groups = Og::getGroups($ogmenu_instance);
+    $og_groups =$this->membershipManager->getGroups($ogmenu_instance);
     // A menu should only be associated with a single group.
     $group_entity_type = key($og_groups);
     $og_group = reset($og_groups[$group_entity_type]);
@@ -136,7 +159,7 @@ class OgMenuInstanceController extends ControllerBase {
       return AccessResult::neutral();
     }
 
-    $membership = Og::getUserMembership($account, $og_group);
+    $membership = $this->membershipManager->getMembership($og_group, $account);
     // If the membership can not be found, access can not be determined.
     if (empty($membership)) {
       return AccessResult::neutral();
