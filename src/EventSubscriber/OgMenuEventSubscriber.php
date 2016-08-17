@@ -3,6 +3,7 @@
 namespace Drupal\og_menu\EventSubscriber;
 
 use Drupal\og\Event\PermissionEventInterface;
+use Drupal\og\GroupPermission;
 use Drupal\og\OgRoleInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -28,14 +29,13 @@ class OgMenuEventSubscriber implements EventSubscriberInterface {
    */
   public function provideDefaultOgPermissions(PermissionEventInterface $event) {
     // @todo Make granular per OG Menu instance.
-    $event->setPermissions(
-      [
-        'add new links to og menu instance entities' => [
-          'title' => t('Add new links to OG Menu instance entities'),
-          'default roles' => [OgRoleInterface::ADMINISTRATOR],
-        ],
-      ]
-    );
+    $event->setPermissions([
+      new GroupPermission([
+        'name' => 'add new links to og menu instance entities',
+        'title' => t('Add new links to OG Menu instance entities'),
+        'default roles' => [OgRoleInterface::ADMINISTRATOR],
+      ]),
+    ]);
   }
 
 }
