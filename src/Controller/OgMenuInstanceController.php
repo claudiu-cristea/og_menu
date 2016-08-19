@@ -114,11 +114,11 @@ class OgMenuInstanceController extends ControllerBase {
   /**
    * Route title callback.
    *
-   * @param \Drupal\rdf_entity\RdfInterface $rdf_entity
-   *   The rdf entity.
+   * @param \Drupal\og_menu\OgMenuInstanceInterface $ogmenu_instance
+   *   The OG Menu instance that is being edited.
    *
    * @return array
-   *   The rdf entity label as a render array.
+   *   The title as a render array.
    */
   public function editFormTitle(OgMenuInstanceInterface $ogmenu_instance) {
     return ['#markup' => t('Edit menu %menu of %group', [
