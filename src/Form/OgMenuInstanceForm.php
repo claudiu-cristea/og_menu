@@ -305,10 +305,18 @@ class OgMenuInstanceForm extends ContentEntityForm {
             'url' => $link->getTranslateRoute(),
           );
         }
-        $form[$id]['operations'] = array(
+
+        // Only display the operations to which the user has access.
+        foreach ($operations as $key => $operation) {
+          if (!$operation['url']->access()) {
+            unset($operations[$key]);
+          }
+        }
+
+        $form[$id]['operations'] = [
           '#type' => 'operations',
           '#links' => $operations,
-        );
+        ];
       }
 
       if ($element->subtree) {
