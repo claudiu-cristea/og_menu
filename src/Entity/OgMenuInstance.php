@@ -139,25 +139,35 @@ class OgMenuInstance extends ContentEntityBase implements OgMenuInstanceInterfac
   }
 
   /**
-   * Returns the label of the target group entity type of the instance.
-   *
-   * @return mixed The label of the entity type or null.
+   * {@inheritdoc}
    */
-  public function getFieldTargetTypeLabel() {
+  public function getGroup() {
     $field_storage = FieldStorageConfig::loadByName($this->getEntityTypeId(), OgGroupAudienceHelper::DEFAULT_FIELD);
     $target_type = $field_storage->getSetting('target_type');
 
     $value = $this->get(OgGroupAudienceHelper::DEFAULT_FIELD)->getValue();
     if (!$value || !$target_type) {
-      return NULL;
+      throw new \Exception('No group has been associated with the OG Menu instance.');
     }
     /** @var \Drupal\Core\Entity\EntityInterface $target_entity */
     $target_entity = $this->entityTypeManager()
       ->getStorage($target_type)
       ->load($value[0]['target_id']);
     if (!$target_entity) {
-      return NULL;
+      throw new \Exception('The group associated with the OG Menu instance could not be loaded.');
     }
-    return $target_entity->label();
+
+    return $target_entity;
   }
+
+  /**
+   * Returns the label of the target group entity type of the instance.
+   *
+   * @return string
+   *   The label of the entity type.
+   */
+  public function getFieldTargetTypeLabel() {
+    return $this->getGroup()->label();
+  }
+
 }

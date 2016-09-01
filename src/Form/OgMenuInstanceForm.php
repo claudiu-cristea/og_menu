@@ -356,10 +356,10 @@ class OgMenuInstanceForm extends ContentEntityForm {
     }
     $field_storage = FieldStorageConfig::loadByName($this->entity->getEntityTypeId(), OgGroupAudienceHelper::DEFAULT_FIELD);
     $target_type = $field_storage->getSetting('target_type');
-    $group_entity = $this->entity->get(OgGroupAudienceHelper::DEFAULT_FIELD)->getValue();
+    $group_entity = $this->entity->getGroup();
     // If possible, redirect to the group after save.
     if ($target_type && $group_entity) {
-      $form_state->setRedirect('entity.' . $target_type . '.canonical', [$target_type => $group_entity[0]['target_id']]);
+      $form_state->setRedirect('entity.' . $target_type . '.canonical', [$target_type => $group_entity]);
     }
     else {
       $form_state->setRedirect('entity.ogmenu_instance.edit_form', ['ogmenu_instance' => $menu->id()]);
