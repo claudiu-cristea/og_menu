@@ -139,7 +139,7 @@ class OgMenuAccessTest extends KernelTestBase {
     // Create a test group. We use the 'entity test' entity which is a bit
     // easier to set up since it has fake bundles.
     $this->groupBundle = Unicode::strtolower($this->randomMachineName());
-    Og::groupManager()->addGroup('entity_test', $this->groupBundle);
+    Og::groupTypeManager()->addGroup('entity_test', $this->groupBundle);
 
     // Create a group and associate with the group administrator. This user will
     // be subscribed to the group and inherit the administrator role
