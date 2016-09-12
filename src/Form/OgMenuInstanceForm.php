@@ -22,6 +22,7 @@ use Drupal\Core\Render\Element;
 use Drupal\Core\Url;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\og\OgAccessInterface;
 use Drupal\og\OgGroupAudienceHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -31,6 +32,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @ingroup og_menu
  */
 class OgMenuInstanceForm extends ContentEntityForm {
+
   /**
    * The factory for entity queries.
    *
@@ -60,11 +62,25 @@ class OgMenuInstanceForm extends ContentEntityForm {
   protected $linkGenerator;
 
   /**
+   * The OG access service.
+   *
+   * @var \Drupal\og\OgAccessInterface $og_access
+   */
+  protected $ogAccess;
+
+  /**
    * The overview tree form.
    *
    * @var array
    */
   protected $overviewTreeForm = array('#tree' => TRUE);
+
+  /**
+   * The entity being used by this form.
+   *
+   * @var \Drupal\og_menu\OgMenuInstanceInterface
+   */
+  protected $entity;
 
   /**
    * Constructs a MenuForm object.
@@ -77,13 +93,16 @@ class OgMenuInstanceForm extends ContentEntityForm {
    *   The menu tree service.
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The link generator.
+   * @param \Drupal\og\OgAccessInterface $og_access
+   *   The OG Access service.
    */
-  public function __construct(EntityManagerInterface $entity_manager, QueryFactory $entity_query_factory, MenuLinkManagerInterface $menu_link_manager, MenuLinkTreeInterface $menu_tree, LinkGeneratorInterface $link_generator) {
+  public function __construct(EntityManagerInterface $entity_manager, QueryFactory $entity_query_factory, MenuLinkManagerInterface $menu_link_manager, MenuLinkTreeInterface $menu_tree, LinkGeneratorInterface $link_generator, OgAccessInterface $og_access) {
     parent::__construct($entity_manager);
     $this->entityQueryFactory = $entity_query_factory;
     $this->menuLinkManager = $menu_link_manager;
     $this->menuTree = $menu_tree;
     $this->linkGenerator = $link_generator;
+    $this->ogAccess = $og_access;
   }
 
   /**
@@ -95,14 +114,14 @@ class OgMenuInstanceForm extends ContentEntityForm {
       $container->get('entity.query'),
       $container->get('plugin.manager.menu.link'),
       $container->get('menu.link_tree'),
-      $container->get('link_generator')
+      $container->get('link_generator'),
+      $container->get('og.access')
     );
   }
   /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    /* @var $entity \Drupal\og_menu\Entity\OgMenuInstance */
     $form = parent::buildForm($form, $form_state);
     // On entity add, no links are attached yet, so bail out here.
     if ($this->entity->isNew()) {
@@ -172,11 +191,24 @@ class OgMenuInstanceForm extends ContentEntityForm {
         ),
       ),
     );
-    $form['links']['#empty'] = $this->t('There are no menu links yet. <a href=":url">Add link</a>.', [
-      ':url' => $this->url('entity.ogmenu_instance.add_link', ['ogmenu_instance' => $this->entity->id()], [
-        'query' => ['destination' => $this->entity->url('edit-form')],
-      ]),
-    ]);
+
+    // Check if the user has the global permission to add new links to the menu
+    // instance, or has this permission inside the group.
+    $permission = 'add new links to og menu instance entities';
+    $has_permission = $this->currentUser()->hasPermission($permission) || $this->ogAccess->userAccess($this->entity->getGroup(), $permission, $this->currentUser(), FALSE, TRUE)->isAllowed();
+
+    // Supply the empty text.
+    if ($has_permission) {
+      $form['links']['#empty'] = $this->t('There are no menu links yet. <a href=":url">Add link</a>.', [
+        ':url' => $this->url('entity.ogmenu_instance.add_link', ['ogmenu_instance' => $this->entity->id()], [
+          'query' => ['destination' => $this->entity->url('edit-form')],
+        ]),
+      ]);
+    }
+    else {
+      $form['links']['#empty'] = $this->t('There are no menu links yet.');
+    }
+
     $links = $this->buildOverviewTreeForm($tree, $delta);
     foreach (Element::children($links) as $id) {
       if (isset($links[$id]['#item'])) {
@@ -305,10 +337,18 @@ class OgMenuInstanceForm extends ContentEntityForm {
             'url' => $link->getTranslateRoute(),
           );
         }
-        $form[$id]['operations'] = array(
+
+        // Only display the operations to which the user has access.
+        foreach ($operations as $key => $operation) {
+          if (!$operation['url']->access()) {
+            unset($operations[$key]);
+          }
+        }
+
+        $form[$id]['operations'] = [
           '#type' => 'operations',
           '#links' => $operations,
-        );
+        ];
       }
 
       if ($element->subtree) {
@@ -348,10 +388,10 @@ class OgMenuInstanceForm extends ContentEntityForm {
     }
     $field_storage = FieldStorageConfig::loadByName($this->entity->getEntityTypeId(), OgGroupAudienceHelper::DEFAULT_FIELD);
     $target_type = $field_storage->getSetting('target_type');
-    $group_entity = $this->entity->get(OgGroupAudienceHelper::DEFAULT_FIELD)->getValue();
+    $group_entity = $this->entity->getGroup();
     // If possible, redirect to the group after save.
     if ($target_type && $group_entity) {
-      $form_state->setRedirect('entity.' . $target_type . '.canonical', [$target_type => $group_entity[0]['target_id']]);
+      $form_state->setRedirect('entity.' . $target_type . '.canonical', [$target_type => $group_entity]);
     }
     else {
       $form_state->setRedirect('entity.ogmenu_instance.edit_form', ['ogmenu_instance' => $menu->id()]);

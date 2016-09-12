@@ -31,9 +31,12 @@ class OgMenuInstanceAccessControlHandler extends EntityAccessControlHandler {
 
       case 'delete':
         return AccessResult::allowedIfHasPermission($account, 'delete og menu instance entities');
+
+      case 'add-link':
+        return AccessResult::allowedIfHasPermission($account, 'add new links to og menu instance entities');
     }
 
-    return AccessResult::allowed();
+    return AccessResult::neutral();
   }
 
   /**
