@@ -8,16 +8,13 @@
 namespace Drupal\og_menu\Entity;
 
 use Drupal\Core\Cache\Cache;
-use Drupal\Core\Entity\EntityStorageInterface;
-use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\ContentEntityBase;
-use Drupal\Core\Entity\EntityChangedTrait;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\og\OgGroupAudienceHelper;
+use Drupal\og\OgGroupAudienceHelperInterface;
 use Drupal\og_menu\OgMenuInstanceInterface;
-use Drupal\system\MenuInterface;
-use Drupal\user\UserInterface;
 
 /**
  * Defines the OG Menu instance entity.
@@ -142,10 +139,10 @@ class OgMenuInstance extends ContentEntityBase implements OgMenuInstanceInterfac
    * {@inheritdoc}
    */
   public function getGroup() {
-    $field_storage = FieldStorageConfig::loadByName($this->getEntityTypeId(), OgGroupAudienceHelper::DEFAULT_FIELD);
+    $field_storage = FieldStorageConfig::loadByName($this->getEntityTypeId(), OgGroupAudienceHelperInterface::DEFAULT_FIELD);
     $target_type = $field_storage->getSetting('target_type');
 
-    $value = $this->get(OgGroupAudienceHelper::DEFAULT_FIELD)->getValue();
+    $value = $this->get(OgGroupAudienceHelperInterface::DEFAULT_FIELD)->getValue();
     if (!$value || !$target_type) {
       throw new \Exception('No group has been associated with the OG Menu instance.');
     }

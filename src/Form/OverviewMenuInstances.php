@@ -1,17 +1,11 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\taxonomy\Form\OverviewTerms.
- */
-
 namespace Drupal\og_menu\Form;
 
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\field\Entity\FieldStorageConfig;
-use Drupal\og\OgGroupAudienceHelper;
+use Drupal\og\OgGroupAudienceHelperInterface;
 use Drupal\og_menu\OgMenuInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -75,7 +69,7 @@ class OverviewMenuInstances extends FormBase {
     $list = array('#theme' => 'item_list');
     /** @var \Drupal\Core\Entity\EntityInterface $entity */
     foreach ($entities as $entity) {
-      $value = $entity->get(OgGroupAudienceHelper::DEFAULT_FIELD)->getValue();
+      $value = $entity->get(OgGroupAudienceHelperInterface::DEFAULT_FIELD)->getValue();
       if (!$value) {
         throw new \Exception('OG Menu requires an og group to be referenced.');
       }

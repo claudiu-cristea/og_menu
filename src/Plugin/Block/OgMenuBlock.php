@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\system\Plugin\Block\SystemMenuBlock.
- */
-
 namespace Drupal\og_menu\Plugin\Block;
 
 use Drupal\Component\Plugin\ContextAwarePluginInterface;
@@ -18,7 +13,7 @@ use Drupal\Core\Menu\MenuLinkTreeInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
-use Drupal\og\OgGroupAudienceHelper;
+use Drupal\og\OgGroupAudienceHelperInterface;
 use Drupal\og_menu\OgMenuInstanceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -273,7 +268,7 @@ class OgMenuBlock extends BlockBase implements ContainerFactoryPluginInterface, 
     $entity_id = $entity->id();
     $instances = $this->entityManager->getStorage('ogmenu_instance')->loadByProperties([
       'type' => $this->getDerivativeId(),
-      OgGroupAudienceHelper::DEFAULT_FIELD => $entity_id,
+      OgGroupAudienceHelperInterface::DEFAULT_FIELD => $entity_id,
     ]);
     if ($instances) {
       return array_pop($instances);

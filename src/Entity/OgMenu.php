@@ -10,7 +10,7 @@ namespace Drupal\og_menu\Entity;
 use Drupal\Core\Config\Entity\ConfigEntityBundleBase;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\og\Og;
-use Drupal\og\OgGroupAudienceHelper;
+use Drupal\og\OgGroupAudienceHelperInterface;
 use Drupal\og_menu\OgMenuInterface;
 
 /**
@@ -66,7 +66,7 @@ class OgMenu extends ConfigEntityBundleBase implements OgMenuInterface {
     parent::postSave($storage, $update);
      // When the menu bundle is saved, link it to og.
     if (!$update) {
-      Og::CreateField(OgGroupAudienceHelper::DEFAULT_FIELD, 'ogmenu_instance', $this->id());
+      Og::CreateField(OgGroupAudienceHelperInterface::DEFAULT_FIELD, 'ogmenu_instance', $this->id());
     }
     // Invalidate the block cache to update menu-based derivatives.
     if (\Drupal::moduleHandler()->moduleExists('block')) {

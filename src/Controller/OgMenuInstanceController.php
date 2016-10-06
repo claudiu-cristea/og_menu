@@ -13,7 +13,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\og\MembershipManagerInterface;
-use Drupal\og\OgGroupAudienceHelper;
+use Drupal\og\OgGroupAudienceHelperInterface;
 use Drupal\og_menu\Entity\OgMenu;
 use Drupal\og_menu\Entity\OgMenuInstance;
 use Drupal\og_menu\OgMenuInstanceInterface;
@@ -70,7 +70,7 @@ class OgMenuInstanceController extends ControllerBase {
   public function createMenuInstance(OgMenu $ogmenu, EntityInterface $og_group) {
     $values = [
       'type' => $ogmenu->id(),
-      OgGroupAudienceHelper::DEFAULT_FIELD => $og_group->id(),
+      OgGroupAudienceHelperInterface::DEFAULT_FIELD => $og_group->id(),
     ];
     // Menu exists, redirect to edit form.
     $instances = $this->entityTypeManager()->getStorage('ogmenu_instance')->loadByProperties($values);

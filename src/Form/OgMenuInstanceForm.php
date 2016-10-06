@@ -23,7 +23,7 @@ use Drupal\Core\Url;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\og\OgAccessInterface;
-use Drupal\og\OgGroupAudienceHelper;
+use Drupal\og\OgGroupAudienceHelperInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -386,7 +386,7 @@ class OgMenuInstanceForm extends ContentEntityForm {
           '%label' => $menu->label(),
         ]));
     }
-    $field_storage = FieldStorageConfig::loadByName($this->entity->getEntityTypeId(), OgGroupAudienceHelper::DEFAULT_FIELD);
+    $field_storage = FieldStorageConfig::loadByName($this->entity->getEntityTypeId(), OgGroupAudienceHelperInterface::DEFAULT_FIELD);
     $target_type = $field_storage->getSetting('target_type');
     $group_entity = $this->entity->getGroup();
     // If possible, redirect to the group after save.
