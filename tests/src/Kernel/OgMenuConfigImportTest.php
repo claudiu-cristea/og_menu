@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\Tests\og_menu\Kernel\OgMenuConfigImport.
+ * Contains \Drupal\Tests\og_menu\Kernel\OgMenuConfigImportTest.
  */
 
 namespace Drupal\Tests\og_menu\Kernel;
@@ -13,7 +13,7 @@ use Drupal\og\OgGroupAudienceHelper;
 /**
  * @group og_menu
  */
-class OgMenuConfigImport extends KernelTestBase {
+class OgMenuConfigImportTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
