@@ -1,9 +1,4 @@
 services:
-  og_menu.og_route_context:
-    class: Drupal\og_menu\ContextProvider\OgRouteContext
-    arguments: ['@current_route_match']
-    tags:
-      - { name: 'context_provider' }
   og_menu.event_subscriber:
     class: Drupal\og_menu\EventSubscriber\OgMenuEventSubscriber
     tags:
