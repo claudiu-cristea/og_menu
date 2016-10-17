@@ -391,7 +391,7 @@ class OgMenuInstanceForm extends ContentEntityForm {
     $group_entity = $this->entity->getGroup();
     // If possible, redirect to the group after save.
     if ($target_type && $group_entity) {
-      $form_state->setRedirect('entity.' . $target_type . '.canonical', [$target_type => $group_entity]);
+      $form_state->setRedirect('entity.' . $target_type . '.canonical', [$target_type => $group_entity->id()]);
     }
     else {
       $form_state->setRedirect('entity.ogmenu_instance.edit_form', ['ogmenu_instance' => $menu->id()]);
