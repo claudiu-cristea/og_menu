@@ -94,4 +94,40 @@ trait OgMenuTrait {
     $menu_link->save();
   }
 
+  /**
+   * Returns the menu link tree for the given OG Menu instance.
+   *
+   * @param \Drupal\og_menu\OgMenuInstanceInterface $instance
+   *   The OG Menu instance for which to return the menu tree.
+   * @param int $min_depth
+   *   Optional minimum depth for populating the tree. Defaults to 1.
+   * @param int $max_depth
+   *   Optional maximum depth for populating the tree. If omitted, the full
+   *   depth will be used.
+   *
+   * @return \Drupal\Core\Menu\MenuLinkTreeElement[]
+   *   A menu link tree.
+   */
+  protected function getOgMenuTree(OgMenuInstanceInterface $instance, $min_depth = 1, $max_depth = NULL) {
+    /** @var \Drupal\Core\Cache\CacheBackendInterface $menu_cache_service */
+    $menu_cache_service = \Drupal::service('cache.menu');
+    /** @var \Drupal\Core\Menu\MenuLinkTreeInterface $link_tree_service */
+    $link_tree_service = \Drupal::service('menu.link_tree');
+
+    // Load the menu link tree.
+    $menu_name = 'ogmenu-' . $instance->id();
+    $parameters = $link_tree_service->getCurrentRouteMenuTreeParameters($menu_name);
+    $parameters->setMinDepth($min_depth);
+    $parameters->setMaxDepth($max_depth);
+
+    // Clear the cache before loading it so we do not get outdated results. Sort
+    // 'expanded' and 'conditions' so that it exactly matches the original cid.
+    sort($parameters->expandedParents);
+    asort($parameters->conditions);
+    $tree_cid = "tree-data:$menu_name:" . serialize($parameters);
+    $menu_cache_service->invalidate($tree_cid);
+
+    return $link_tree_service->load($menu_name, $parameters);
+  }
+
 }
