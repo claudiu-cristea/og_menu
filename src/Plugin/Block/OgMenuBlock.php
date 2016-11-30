@@ -248,14 +248,18 @@ class OgMenuBlock extends BlockBase implements ContainerFactoryPluginInterface, 
    * {@inheritdoc}
    */
   public function getCacheContexts() {
-    // ::build() uses MenuLinkTreeInterface::getCurrentRouteMenuTreeParameters()
-    // to generate menu tree parameters, and those take the active menu trail
-    // into account. Therefore, we must vary the rendered menu by the active
-    // trail of the rendered menu.
-    // Additional cache contexts, e.g. those that determine link text or
-    // accessibility of a menu, will be bubbled automatically.
-    $menu_name = 'ogmenu-' . $this->getDerivativeId();
-    return Cache::mergeContexts(parent::getCacheContexts(), ['route.menu_active_trails:' . $menu_name]);
+    $tags = [
+      // We use MenuLinkTreeInterface::getCurrentRouteMenuTreeParameters() to
+      // generate menu tree parameters, and those take the active menu trail
+      // into account. Therefore, we must vary the rendered menu by the active
+      // trail of the rendered menu. Additional cache contexts, e.g. those that
+      // determine link text or accessibility of a menu, will be bubbled
+      // automatically.
+      'route.menu_active_trails:ogmenu-' . $this->getDerivativeId(),
+      // We also vary by the active group as found by OgContext.
+      'og_group_context',
+    ];
+    return Cache::mergeContexts(parent::getCacheContexts(), $tags);
   }
 
   /**
